@@ -1,13 +1,17 @@
 <template>
-  <div class="game-board">
-    <!-- Game Header -->
-    <div class="game-center">
-      <div class="turn-info">
-        <span class="turn-counter">Turn {{ currentTurn }}</span>
-        <span class="current-player">{{ currentPlayerName }}'s Turn</span>
+  <div class="game-container">
+    <!-- Left side - Game Board -->
+    <div class="game-board">
+      <!-- Game Header -->
+      <div class="game-center">
+        <div class="turn-info">
+          <span class="turn-counter">Turn {{ currentTurn }}</span>
+          <span class="current-player">{{ currentPlayerName }}'s Turn</span>
+        </div>
+        <div v-if="statusMessage" class="status-message" :class="statusType">
+          {{ statusMessage }}
+        </div>
       </div>
-      <div class="game-title">Wizards Dice</div>
-    </div>
 
     <!-- Player 1 Area (Top) -->
     <div class="player-area top-player">
@@ -126,10 +130,19 @@
         </div>
       </div>
     </div>
+    </div>
 
-    <!-- Status Messages -->
-    <div v-if="statusMessage" class="status-message" :class="statusType">
-      {{ statusMessage }}
+    <!-- Right side - Spellbook -->
+    <div class="spellbook-container">
+      <Spellbook 
+        :availableDice="currentPlayerResources"
+        :playerName="currentPlayerName"
+        :gamePhase="gamePhase"
+        :isCurrentPlayer="isCurrentPlayer"
+        @cast-spells="onCastSpells"
+        @end-turn="onEndTurn"
+        @close="() => {}"
+      />
     </div>
   </div>
 </template>
@@ -137,6 +150,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import ElementDice from './ElementDice.vue'
+import Spellbook from './Spellbook.vue'
 
 // Props passed from parent component
 const props = defineProps({
@@ -211,6 +225,12 @@ const diceToRoll = computed(() => {
   return Math.min(currentTurn.value, 7)
 })
 
+// Get current player's available dice for spellcasting
+const currentPlayerResources = computed(() => {
+  const playerKey = isHostTurn.value ? 'host' : 'guest'
+  return playerResources.value[playerKey] || []
+})
+
 // Helper function to set status message with timeout
 const setStatusMessage = (message, type, duration = 3000) => {
   statusMessage.value = message
@@ -231,11 +251,18 @@ const handleGameMessage = (data) => {
       playerResources.value[data.data.player] = data.data.resources
       setStatusMessage(`${data.data.player === 'host' ? topPlayerName.value : bottomPlayerName.value} rolled their dice!`, 'info', 2000)
       break
+    case 'spells_cast':
+      // Update other player's resources after spell casting
+      playerResources.value[data.data.player] = data.data.remainingResources
+      const playerName = data.data.player === 'host' ? topPlayerName.value : bottomPlayerName.value
+      setStatusMessage(`${playerName} cast ${data.data.spells.length} spell(s)!`, 'info', 3000)
+      break
     case 'turn_change':
       // Update turn state from other player
       currentTurn.value = data.data.turn
       isHostTurn.value = data.data.isHostTurn
       gamePhase.value = 'rolling'
+      setStatusMessage(`${isHostTurn.value ? topPlayerName.value : bottomPlayerName.value}'s turn to roll!`, 'info', 3000)
       break
     case 'game_state_sync':
       // Sync complete game state
@@ -280,7 +307,7 @@ const onDiceRolled = (result) => {
   
   // Check if all dice have been rolled
   if (playerResources.value[playerKey].length >= diceToRoll.value) {
-    setStatusMessage(`${currentPlayerName.value} rolled ${diceToRoll.value} dice!`, 'success', 3000)
+    setStatusMessage(`${currentPlayerName.value} rolled ${diceToRoll.value} dice! Choose spells to cast or end turn.`, 'success', 5000)
     
     // Send dice results to other player
     sendGameMessage('dice_rolled', {
@@ -289,11 +316,9 @@ const onDiceRolled = (result) => {
       turn: currentTurn.value
     })
     
-    // Move to casting phase (for now just end turn)
-    setTimeout(() => {
-      isRolling.value = false
-      endTurn()
-    }, 2000)
+    // Move to casting phase - don't end turn automatically
+    isRolling.value = false
+    gamePhase.value = 'casting'
   }
 }
 
@@ -324,14 +349,15 @@ const endTurn = () => {
   if (isHostTurn.value) {
     // Host finished, now guest's turn
     isHostTurn.value = false
-    setStatusMessage(`${bottomPlayerName.value}'s turn to roll!`, 'info', 2000)
+    setStatusMessage(`${bottomPlayerName.value}'s turn to roll!`, 'info', 3000)
   } else {
     // Guest finished, advance to next turn
     currentTurn.value++
     isHostTurn.value = true
-    setStatusMessage(`Turn ${currentTurn.value} - ${topPlayerName.value}'s turn!`, 'info', 2000)
+    setStatusMessage(`Turn ${currentTurn.value} - ${topPlayerName.value}'s turn!`, 'info', 3000)
   }
   
+  // Reset to rolling phase for the next player
   gamePhase.value = 'rolling'
   
   // Send turn update to other player
@@ -339,6 +365,39 @@ const endTurn = () => {
     turn: currentTurn.value,
     isHostTurn: isHostTurn.value
   })
+}
+
+// Handle spell casting from spellbook
+const onCastSpells = (spells) => {
+  console.log('Casting spells:', spells)
+  
+  // TODO: Implement spell effects
+  // For now, just show a message and consume the dice
+  const totalDiceUsed = spells.reduce((total, spell) => total + spell.cost.length, 0)
+  setStatusMessage(`${currentPlayerName.value} cast ${spells.length} spell(s) using ${totalDiceUsed} dice!`, 'success', 3000)
+  
+  // Remove used dice from player's resources
+  const playerKey = isHostTurn.value ? 'host' : 'guest'
+  spells.forEach(spell => {
+    spell.cost.forEach(requiredDice => {
+      const diceIndex = playerResources.value[playerKey].findIndex(dice => dice.emoji === requiredDice)
+      if (diceIndex > -1) {
+        playerResources.value[playerKey].splice(diceIndex, 1)
+      }
+    })
+  })
+  
+  // Send spell casting info to other player
+  sendGameMessage('spells_cast', {
+    player: playerKey,
+    spells: spells,
+    remainingResources: playerResources.value[playerKey]
+  })
+}
+
+// Handle end turn from spellbook
+const onEndTurn = () => {
+  endTurn()
 }
 const sendGameMessage = (messageType, data) => {
   const message = {
@@ -445,16 +504,30 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.game-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  color: white;
+}
+
 .game-board {
+  flex: 1;
   min-height: 100vh;
   background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
   display: flex;
   flex-direction: column;
   padding: 20px;
-  font-family: 'Inter', sans-serif;
-  color: white;
   margin: 0 auto;
-  width: 100%;
+  width: 50%;
+}
+
+.spellbook-container {
+  flex: 1;
+  width: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
 }
 
 .player-area {
@@ -633,21 +706,17 @@ onUnmounted(() => {
 }
 
 .status-message {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 1rem 2rem;
-  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   font-weight: 500;
-  z-index: 1000;
   backdrop-filter: blur(10px);
+  text-align: center;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
 .status-message.info {
-  background: rgba(102,126,234,0.2);
-  color: #667eea;
-  border: 1px solid rgba(102,126,234,0.3);
+  color: #a8c8ff;
 }
 
 /* Dice Grid Styles */
@@ -712,20 +781,25 @@ onUnmounted(() => {
 }
 
 .status-message.success {
-  background: rgba(46,160,67,0.2);
-  color: #2ea043;
-  border: 1px solid rgba(46,160,67,0.3);
+  color: #7dd87d;
 }
 
 .status-message.error {
-  background: rgba(248,81,73,0.2);
-  color: #f85149;
-  border: 1px solid rgba(248,81,73,0.3);
+  color: #ff9999;
 }
 
 @media (max-width: 768px) {
+  .game-container {
+    flex-direction: column;
+  }
+  
   .game-board {
+    width: 100%;
     padding: 10px;
+  }
+  
+  .spellbook-container {
+    width: 100%;
   }
   
   .player-header {

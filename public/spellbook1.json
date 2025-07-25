@@ -1,0 +1,280 @@
+{
+  "spells": [
+    {
+      "name": "Ember",
+      "cost": ["🔥"],
+      "effect": "Deal 2 damage",
+      "category": "damage"
+    },
+    {
+      "name": "Splash",
+      "cost": ["💧"],
+      "effect": "Roll (1d4), a 3 or 4 lets you recast a 1 cost spell at no cost",
+      "category": "utility"
+    },
+    {
+      "name": "Protect",
+      "cost": ["🌍"],
+      "effect": "Gain 2 armour",
+      "category": "defense"
+    },
+    {
+      "name": "Gust",
+      "cost": ["💨"],
+      "effect": "Re-roll 1 unspent dice",
+      "category": "utility"
+    },
+    {
+      "name": "Heal",
+      "cost": ["💖"],
+      "effect": "Heal 2 HP",
+      "category": "healing"
+    },
+    {
+      "name": "Blood Magic",
+      "cost": ["💀"],
+      "effect": "Deal (1d4) damage, take 2 damage",
+      "category": "damage"
+    },
+    {
+      "name": "Blaze",
+      "cost": ["🔥", "🔥"],
+      "effect": "Deal (1d10) damage",
+      "category": "damage"
+    },
+    {
+      "name": "Wavepool",
+      "cost": ["💧", "💧"],
+      "effect": "Recast any spell you've played this turn that is 2 dice or less at no cost",
+      "category": "utility"
+    },
+    {
+      "name": "Wild Growth",
+      "cost": ["🌍", "🌍"],
+      "effect": "Gain 2 armour for each previously spent dice, max of 8",
+      "category": "defense"
+    },
+    {
+      "name": "Strong Gusts",
+      "cost": ["💨", "💨"],
+      "effect": "Re-roll 2 unspent dice up to 3 times each",
+      "category": "utility"
+    },
+    {
+      "name": "Unfair Duel",
+      "cost": ["💀", "💀"],
+      "effect": "Roll (1d4), your opponent rolls (1d8), whoever rolls higher takes that amount as damage",
+      "category": "damage"
+    },
+    {
+      "name": "Fated Hearts",
+      "cost": ["💖", "💖"],
+      "effect": "Heal (1d6) + 2",
+      "category": "healing"
+    },
+    {
+      "name": "Refreshing Sips",
+      "cost": ["💧", "💖"],
+      "effect": "Gain (1d4) HP for each unspent dice in your hand, max of 10 HP",
+      "category": "healing"
+    },
+    {
+      "name": "Smog",
+      "cost": ["🌍", "💨"],
+      "effect": "Gain 3 armour and deal (1d4) damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Hotheaded",
+      "cost": ["🔥", "💀"],
+      "effect": "Roll (1d10), a 1 or 10 is taken as damage to you, anything else is damage to your opponent",
+      "category": "damage"
+    },
+    {
+      "name": "Risky Business",
+      "cost": ["💀", "💨"],
+      "effect": "Re-roll both these dice, if either are a death or wind take 4 damage",
+      "category": "utility"
+    },
+    {
+      "name": "Hot Coals",
+      "cost": ["🔥", "🌍"],
+      "effect": "Deal your current armour as damage, max of 8",
+      "category": "damage"
+    },
+    {
+      "name": "Waterjet",
+      "cost": ["💧", "💨"],
+      "effect": "Re-roll an unspent dice and deal 5 damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Aqua Mortis",
+      "cost": ["💧", "💀"],
+      "effect": "Roll (1d6) + 2 to deal as damage, you may choose to lose 2 hp and re-roll your d6 dice",
+      "category": "damage"
+    },
+    {
+      "name": "Explosion",
+      "cost": ["🔥", "🔥", "🔥"],
+      "effect": "Take 3 damage, then deal (1d4) + (2d6) as damage to your opponent",
+      "category": "damage"
+    },
+    {
+      "name": "Neverending Vines",
+      "cost": ["🌍", "🌍", "🌍"],
+      "effect": "Roll (1d8) repeatedly until a 1 is rolled, gain armour equal to the number of rolls, max of 12 armour",
+      "category": "defense"
+    },
+    {
+      "name": "Second Chance",
+      "cost": ["💧", "💖", "💨"],
+      "effect": "Roll (1d6) to be gained as HP and armour, you may choose to re-roll this dice once",
+      "category": "hybrid"
+    },
+    {
+      "name": "Deadly Swamp",
+      "cost": ["💧", "🌍", "💀"],
+      "effect": "If your opponent has 9 or more armour, remove all of it",
+      "category": "utility"
+    },
+    {
+      "name": "Odd Rod",
+      "cost": ["💀", "💧", "🔥"],
+      "effect": "Roll (1d8) as damage, if the roll was an odd number roll an additional (1d6) as damage",
+      "category": "damage"
+    },
+    {
+      "name": "Restorative Shock",
+      "cost": ["💖", "💖", "🔥"],
+      "effect": "Heal (1d8) + 2 and deal (1d6) damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Bloody Sacrifice",
+      "cost": ["💀", "💀", "💖"],
+      "effect": "Sacrifice as much HP as you want, then deal half that rounded down to your opponent as damage",
+      "category": "damage"
+    },
+    {
+      "name": "Downdraft",
+      "cost": ["💨", "💨", "💖"],
+      "effect": "Roll (2d20), gain the lowest roll as armour, minimum of 4 armour",
+      "category": "defense"
+    },
+    {
+      "name": "Troubled Waters",
+      "cost": ["💧", "🔥", "🔥"],
+      "effect": "Deal (3d6) - 3 damage",
+      "category": "damage"
+    },
+    {
+      "name": "Merciful Strike",
+      "cost": ["🌍", "🌍", "🔥"],
+      "effect": "Deal (1d10) + 5 damage, your opponent then gains half your dice roll rounded down as armour",
+      "category": "damage"
+    },
+    {
+      "name": "Washed Ashore",
+      "cost": ["💧", "💧", "💨"],
+      "effect": "Return any spent fire and death dice to your hand",
+      "category": "utility"
+    },
+    {
+      "name": "Lucky Ritual",
+      "cost": ["💀", "🌍", "🔥"],
+      "effect": "Take 7 damage, gain 7 armour, deal 7 damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "High Stakes",
+      "cost": ["💨", "💖", "💀"],
+      "effect": "Roll (3d6) heal any 3 or higher rolls, take damage on any 2 or less rolls",
+      "category": "utility"
+    },
+    {
+      "name": "Thick Armour",
+      "cost": ["🌍", "💖", "💧", "💀"],
+      "effect": "Take (1d6) damage, if this did not reduce your HP deal (1d12) + 6 damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Rejuvinating Waters",
+      "cost": ["💖", "💖", "💧", "💧"],
+      "effect": "Heal for (5d4)",
+      "category": "healing"
+    },
+    {
+      "name": "Fiery Passion",
+      "cost": ["💨", "💨", "🔥", "🔥"],
+      "effect": "Re-activate both winds and re-roll them, if a love or fire is rolled heal 4 HP and deal 4 damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Deadlier Curse",
+      "cost": ["💀", "💀", "🔥", "🔥"],
+      "effect": "Roll (2d6), deal as damage to you and 2x that to your opponent",
+      "category": "damage"
+    },
+    {
+      "name": "Fire Flower",
+      "cost": ["🔥", "🔥", "🌍", "💖"],
+      "effect": "Deal your opponents armour as direct damage to their HP, max of 13 damage",
+      "category": "damage"
+    },
+    {
+      "name": "Nullify",
+      "cost": ["🌍", "🌍", "💧", "💖"],
+      "effect": "Gain (1d10) + 6 armour, if you gained 12 or more armour lose (1d6) HP",
+      "category": "defense"
+    },
+    {
+      "name": "Fertile Soil",
+      "cost": ["🌍", "💖", "💧", "💀"],
+      "effect": "Gain (1d6) as armour, gain twice that as HP",
+      "category": "hybrid"
+    },
+    {
+      "name": "Even The Odds",
+      "cost": ["💨", "💧", "🔥", "💀"],
+      "effect": "Roll (5d10), deal 1 damage for each even roll and 3 for each odd roll",
+      "category": "damage"
+    },
+    {
+      "name": "Jet Stream",
+      "cost": ["💨", "💨", "💨", "💨", "💧"],
+      "effect": "De-activate 2 of your opponents dice, these dice can be re-gained",
+      "category": "utility"
+    },
+    {
+      "name": "Chain-Lightning",
+      "cost": ["🔥", "🔥", "💀", "💨", "💧"],
+      "effect": "Deal (1d4) damage, if roll was not a 4 deal (1d6) damage, if roll was not a 6 deal (1d10) damage",
+      "category": "damage"
+    },
+    {
+      "name": "Revive",
+      "cost": ["💨", "🌍", "💖", "💀", "💧"],
+      "effect": "Roll (3d6) 5s or higher are gained as HP, rolls 4 or lower are gained as armour",
+      "category": "hybrid"
+    },
+    {
+      "name": "Death & Taxes",
+      "cost": ["💀", "💀", "💀", "🔥", "🌍"],
+      "effect": "Swap you and your opponents HP, if your opponent now has less then 10 HP they gain 7 armour",
+      "category": "utility"
+    },
+    {
+      "name": "Mudslide",
+      "cost": ["💧", "💧", "💧", "💧", "🌍"],
+      "effect": "Roll (1d4, 1d6, 1d8, 1d10, 1d12, 1d20) and deal the highest 3 rolls as damage, max of 25 damage",
+      "category": "damage"
+    },
+    {
+      "name": "2/5 Elemental Flush",
+      "cost": ["🔥", "🌍", "💧", "💨", "💖", "💀"],
+      "effect": "Cast any two cost and five cost spell",
+      "category": "utility"
+    }
+  ]
+}
