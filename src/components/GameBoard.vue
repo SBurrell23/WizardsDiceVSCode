@@ -34,8 +34,8 @@
           <h4>Element Dice</h4>
           <div class="dice-container">
             <!-- Element dice will be displayed here -->
-            <!-- Show interactive dice if it's the host's turn and current player is host -->
-            <div v-if="isHostTurn && props.isHost" class="dice-grid">
+            <!-- Show interactive dice if it's the host's turn and current player is host AND in rolling phase -->
+            <div v-if="isHostTurn && props.isHost && gamePhase === 'rolling'" class="dice-grid">
               <ElementDice 
                 v-for="i in diceToRoll" 
                 :key="`top-${i}`"
@@ -47,15 +47,16 @@
             </div>
             <!-- Show rolled dice results for host -->
             <div v-else class="opponent-dice">
-              <div v-for="resource in playerResources.host" :key="resource.diceIndex" class="rolled-dice">
+              <div v-for="resource in playerResources.host" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
                 {{ resource.emoji }}
+                <div v-if="resource.used" class="dice-used-overlay">✕</div>
               </div>
               <div v-if="playerResources.host.length === 0" class="dice-placeholder">
                 🎲
               </div>
             </div>
           </div>
-          <div v-if="isHostTurn && props.isHost" class="roll-action">
+          <div v-if="isHostTurn && props.isHost && gamePhase === 'rolling'" class="roll-action">
             <button @click="startRolling" class="roll-button" :disabled="isRolling || !canRollDice">
               {{ isRolling ? 'Rolling...' : `Roll ${diceToRoll} Dice` }}
             </button>
@@ -79,8 +80,8 @@
           <h4>Element Dice</h4>
           <div class="dice-container">
             <!-- Element dice will be displayed here -->
-            <!-- Show interactive dice if it's the guest's turn and current player is guest -->
-            <div v-if="!isHostTurn && !props.isHost" class="dice-grid">
+            <!-- Show interactive dice if it's the guest's turn and current player is guest AND in rolling phase -->
+            <div v-if="!isHostTurn && !props.isHost && gamePhase === 'rolling'" class="dice-grid">
               <ElementDice 
                 v-for="i in diceToRoll" 
                 :key="`bottom-${i}`"
@@ -92,15 +93,16 @@
             </div>
             <!-- Show rolled dice results for guest -->
             <div v-else class="opponent-dice">
-              <div v-for="resource in playerResources.guest" :key="resource.diceIndex" class="rolled-dice">
+              <div v-for="resource in playerResources.guest" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
                 {{ resource.emoji }}
+                <div v-if="resource.used" class="dice-used-overlay">✕</div>
               </div>
               <div v-if="playerResources.guest.length === 0" class="dice-placeholder">
                 🎲
               </div>
             </div>
           </div>
-          <div v-if="!isHostTurn && !props.isHost" class="roll-action">
+          <div v-if="!isHostTurn && !props.isHost && gamePhase === 'rolling'" class="roll-action">
             <button @click="startRolling" class="roll-button" :disabled="isRolling || !canRollDice">
               {{ isRolling ? 'Rolling...' : `Roll ${diceToRoll} Dice` }}
             </button>
@@ -228,7 +230,8 @@ const diceToRoll = computed(() => {
 // Get current player's available dice for spellcasting
 const currentPlayerResources = computed(() => {
   const playerKey = isHostTurn.value ? 'host' : 'guest'
-  return playerResources.value[playerKey] || []
+  // Only return unused dice for spellcasting
+  return (playerResources.value[playerKey] || []).filter(dice => !dice.used)
 })
 
 // Helper function to set status message with timeout
@@ -253,7 +256,7 @@ const handleGameMessage = (data) => {
       break
     case 'spells_cast':
       // Update other player's resources after spell casting
-      playerResources.value[data.data.player] = data.data.remainingResources
+      playerResources.value[data.data.player] = data.data.playerResources
       const playerName = data.data.player === 'host' ? topPlayerName.value : bottomPlayerName.value
       setStatusMessage(`${playerName} cast ${data.data.spells.length} spell(s)!`, 'info', 3000)
       break
@@ -376,22 +379,30 @@ const onCastSpells = (spells) => {
   const totalDiceUsed = spells.reduce((total, spell) => total + spell.cost.length, 0)
   setStatusMessage(`${currentPlayerName.value} cast ${spells.length} spell(s) using ${totalDiceUsed} dice!`, 'success', 3000)
   
-  // Remove used dice from player's resources
+  // Mark used dice as consumed instead of removing them
   const playerKey = isHostTurn.value ? 'host' : 'guest'
   spells.forEach(spell => {
     spell.cost.forEach(requiredDice => {
-      const diceIndex = playerResources.value[playerKey].findIndex(dice => dice.emoji === requiredDice)
+      const diceIndex = playerResources.value[playerKey].findIndex(dice => dice.emoji === requiredDice && !dice.used)
       if (diceIndex > -1) {
-        playerResources.value[playerKey].splice(diceIndex, 1)
+        // Mark dice as used instead of removing it
+        playerResources.value[playerKey][diceIndex].used = true
       }
     })
+  })
+
+  sendGameMessage('game_state_sync', {
+    currentTurn: currentTurn.value,
+    isHostTurn: isHostTurn.value,
+    gamePhase: gamePhase.value,
+    playerResources: playerResources.value
   })
   
   // Send spell casting info to other player
   sendGameMessage('spells_cast', {
     player: playerKey,
     spells: spells,
-    remainingResources: playerResources.value[playerKey]
+    playerResources: playerResources.value[playerKey]
   })
 }
 
@@ -748,6 +759,32 @@ onUnmounted(() => {
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 8px;
   backdrop-filter: blur(10px);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.rolled-dice.used-dice {
+  opacity: 0.5;
+  background: rgba(255,0,0,0.1);
+  border-color: rgba(255,0,0,0.3);
+}
+
+.dice-used-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #ff4444;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+  backdrop-filter: blur(2px);
 }
 
 .roll-action {
