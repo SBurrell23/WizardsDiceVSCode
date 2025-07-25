@@ -31,7 +31,6 @@
       
       <div class="dice-area">
         <div class="element-dice-box">
-          <h4>Element Dice</h4>
           <div class="dice-container">
             <!-- Element dice will be displayed here -->
             <!-- Show interactive dice if it's the host's turn and current player is host AND in rolling phase -->
@@ -64,7 +63,6 @@
         </div>
         
         <div class="number-dice-box">
-          <h4>Number Dice</h4>
           <div class="dice-container small">
             <!-- Number dice will be displayed here -->
             <div class="dice-placeholder small">🎲</div>
@@ -77,7 +75,6 @@
     <div class="player-area bottom-player">
       <div class="dice-area">
         <div class="element-dice-box">
-          <h4>Element Dice</h4>
           <div class="dice-container">
             <!-- Element dice will be displayed here -->
             <!-- Show interactive dice if it's the guest's turn and current player is guest AND in rolling phase -->
@@ -110,7 +107,6 @@
         </div>
         
         <div class="number-dice-box">
-          <h4>Number Dice</h4>
           <div class="dice-container small">
             <!-- Number dice will be displayed here -->
             <div class="dice-placeholder small">🎲</div>
@@ -547,7 +543,7 @@ onUnmounted(() => {
 .player-area {
   flex: 1;
   display: flex;
-  padding: 1rem 2rem;
+  padding: 1rem;
   margin: 0.5rem 0;
   background: rgba(255,255,255,0.1);
   backdrop-filter: blur(10px);
@@ -614,18 +610,18 @@ onUnmounted(() => {
 
 .dice-area {
   display: flex;
-  gap: 4rem;
+  gap: 2rem;
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 0 4rem;
+  padding: 0 1rem;
 }
 
 .element-dice-box {
   flex: 2;
   background: rgba(255,255,255,0.2);
   border-radius: 15px;
-  padding: 1.5rem;
+  padding: 1rem;
   text-align: center;
   border: 2px solid rgba(255,255,255,0.3);
 }
@@ -748,16 +744,16 @@ onUnmounted(() => {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  min-height: 60px;
+  min-height: 70px;
 }
 
 .rolled-dice {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 2.2rem;
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 8px;
