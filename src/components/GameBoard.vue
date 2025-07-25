@@ -257,8 +257,8 @@ const handleGameMessage = (data) => {
     case 'spells_cast':
       // Update other player's resources after spell casting
       playerResources.value[data.data.player] = data.data.playerResources
-      const playerName = data.data.player === 'host' ? topPlayerName.value : bottomPlayerName.value
-      setStatusMessage(`${playerName} cast ${data.data.spells.length} spell(s)!`, 'info', 3000)
+      // Use the same message that was sent from the casting player
+      setStatusMessage(data.data.castMessage, 'info', 3000)
       break
     case 'turn_change':
       // Update turn state from other player
@@ -374,10 +374,13 @@ const endTurn = () => {
 const onCastSpells = (spells) => {
   console.log('Casting spells:', spells)
   
-  // TODO: Implement spell effects
-  // For now, just show a message and consume the dice
+  // Create notification message with spell names
+  const spellNames = spells.map(spell => spell.name).join(', ')
   const totalDiceUsed = spells.reduce((total, spell) => total + spell.cost.length, 0)
-  setStatusMessage(`${currentPlayerName.value} cast ${spells.length} spell(s) using ${totalDiceUsed} dice!`, 'success', 3000)
+  const castMessage = `${currentPlayerName.value} cast ${spellNames} using ${totalDiceUsed} dice!`
+  
+  // Show message to casting player
+  setStatusMessage(castMessage, 'success', 3000)
   
   // Mark used dice as consumed instead of removing them
   const playerKey = isHostTurn.value ? 'host' : 'guest'
@@ -398,11 +401,12 @@ const onCastSpells = (spells) => {
     playerResources: playerResources.value
   })
   
-  // Send spell casting info to other player
+  // Send spell casting info to other player with the same message
   sendGameMessage('spells_cast', {
     player: playerKey,
     spells: spells,
-    playerResources: playerResources.value[playerKey]
+    playerResources: playerResources.value[playerKey],
+    castMessage: castMessage
   })
 }
 

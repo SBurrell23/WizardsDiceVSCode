@@ -26,8 +26,8 @@
           :key="spell.name"
           class="spell-card"
           :class="{ 
-            'can-cast': canCastSpell(spell),
-            'selected': selectedSpells.includes(spell.name)
+            'can-cast': canCastSpell(spell) && props.isCurrentPlayer,
+            'not-selectable': !props.isCurrentPlayer
           }"
           @click="toggleSpell(spell)"
         >
@@ -40,26 +40,16 @@
             </div>
           </div>
           <p class="spell-effect">{{ spell.effect }}</p>
-          <div v-if="selectedSpells.includes(spell.name)" class="selected-indicator">
-            ✓ Selected
-          </div>
         </div>
       </div>
       
       <div class="spellbook-footer">
         <div class="cast-actions">
           <button 
-            @click="castSelectedSpells" 
-            :disabled="selectedSpells.length === 0"
-            class="cast-button"
-          >
-            Cast Selected Spells ({{ selectedSpells.length }})
-          </button>
-          <button 
             v-if="showEndTurnButton"
             @click="endTurn" 
             :disabled="!canEndTurn"
-            class="end-turn-button"
+            class="end-turn-button full-width"
             :class="{ 'active': canEndTurn }"
           >
             End Turn
@@ -100,7 +90,6 @@ const emit = defineEmits(['cast-spells', 'end-turn', 'close'])
 // Reactive data
 const spellbook = ref({ spells: [] })
 const selectedCategory = ref('all')
-const selectedSpells = ref([])
 
 // Categories for filtering
 const categories = computed(() => {
@@ -153,30 +142,20 @@ const canCastSpell = (spell) => {
   return true
 }
 
-// Toggle spell selection
+// Toggle spell selection - now immediately casts spells
 const toggleSpell = (spell) => {
-  if (!canCastSpell(spell)) {
+  // Only allow spell casting if it's the current player's turn
+  if (!props.isCurrentPlayer || !canCastSpell(spell)) {
     return
   }
   
-  const spellIndex = selectedSpells.value.indexOf(spell.name)
-  if (spellIndex > -1) {
-    selectedSpells.value.splice(spellIndex, 1)
-  } else {
-    selectedSpells.value.push(spell.name)
-  }
+  // Immediately cast the spell instead of selecting it
+  castSpell(spell)
 }
 
-// Cast selected spells
-const castSelectedSpells = () => {
-  if (selectedSpells.value.length === 0) return
-  
-  const spellsToCast = spellbook.value.spells.filter(spell => 
-    selectedSpells.value.includes(spell.name)
-  )
-  
-  emit('cast-spells', spellsToCast)
-  selectedSpells.value = []
+// Cast a single spell immediately
+const castSpell = (spell) => {
+  emit('cast-spells', [spell])
 }
 
 // End turn without casting
@@ -301,11 +280,6 @@ onMounted(() => {
   background: rgba(102, 126, 234, 0.1);
 }
 
-.spell-card.selected {
-  border-color: rgba(46, 160, 67, 0.8);
-  background: rgba(46, 160, 67, 0.2);
-}
-
 .spell-card:not(.can-cast) {
   opacity: 0.5;
   cursor: not-allowed;
@@ -341,18 +315,6 @@ onMounted(() => {
   font-size: 0.9rem;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.9);
-}
-
-.selected-indicator {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: rgba(46, 160, 67, 0.8);
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
 }
 
 .spellbook-footer {
@@ -412,7 +374,25 @@ onMounted(() => {
   color: white;
 }
 
-.end-turn-button.active:hover:not(:disabled) {
+.end-turn-button.full-width {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.end-turn-button.full-width:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.end-turn-button.full-width.active {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.end-turn-button.full-width.active:hover:not(:disabled) {
   background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);

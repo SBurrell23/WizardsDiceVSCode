@@ -587,7 +587,7 @@ onUnmounted(() => {
 }
 
 .start-game-button {
-  background: linear-gradient(135deg, #149a9c 0%, #09ad17 100%);
+  background: linear-gradient(135deg, #47a261 0%, #2ebb39 100%);
   color: white;
   border: none;
   padding: 1rem 2rem;
