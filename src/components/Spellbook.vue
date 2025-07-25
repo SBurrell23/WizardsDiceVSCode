@@ -2,21 +2,20 @@
   <div class="spellbook">
     <div class="spellbook-header">
       <h2>Spellbook</h2>
-      <div class="current-phase">
-        {{ gamePhase || 'Ready' }}
-      </div>
     </div>
     
     <div class="spellbook-content">
       <div class="spell-filters">
         <button 
-          v-for="category in categories" 
-          :key="category"
-          @click="selectedCategory = category"
-          :class="{ active: selectedCategory === category }"
+          v-for="element in elementTypes" 
+          :key="element"
+          @click="selectedElement = element"
+          :class="{ active: selectedElement === element }"
           class="filter-button"
         >
-          {{ category }}
+          <span v-if="element === 'all'">All</span>
+          <span v-else-if="element === 'castable'">Castable</span>
+          <span v-else class="element-icon">{{ element }}</span>
         </button>
       </div>
       
@@ -39,6 +38,7 @@
               </span>
             </div>
           </div>
+          <div class="spell-divider"></div>
           <p class="spell-effect">{{ spell.effect }}</p>
         </div>
       </div>
@@ -89,12 +89,11 @@ const emit = defineEmits(['cast-spells', 'end-turn', 'close'])
 
 // Reactive data
 const spellbook = ref({ spells: [] })
-const selectedCategory = ref('all')
+const selectedElement = ref('all')
 
-// Categories for filtering
-const categories = computed(() => {
-  const cats = ['all', ...new Set(spellbook.value.spells.map(spell => spell.category))]
-  return cats
+// Element dice types for filtering
+const elementTypes = computed(() => {
+  return ['all', 'castable', '🔥', '💧', '🌍', '💨', '💖', '💀']
 })
 
 // Available dice count
@@ -106,12 +105,19 @@ const availableDiceCount = computed(() => {
   return count
 })
 
-// Filtered spells based on category
+// Filtered spells based on selected element
 const filteredSpells = computed(() => {
-  if (selectedCategory.value === 'all') {
+  if (selectedElement.value === 'all') {
     return spellbook.value.spells
   }
-  return spellbook.value.spells.filter(spell => spell.category === selectedCategory.value)
+  if (selectedElement.value === 'castable') {
+    // Show only spells the player can currently cast
+    return spellbook.value.spells.filter(spell => canCastSpell(spell))
+  }
+  // Show spells that require at least one of the selected element
+  return spellbook.value.spells.filter(spell => 
+    spell.cost.includes(selectedElement.value)
+  )
 })
 
 // Show end turn button only if it's the current player's turn
@@ -244,6 +250,14 @@ onMounted(() => {
   transition: all 0.3s ease;
   text-transform: capitalize;
   font-weight: 500;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-button .element-icon {
+  font-size: 1.2rem;
 }
 
 .filter-button:hover, .filter-button.active {
@@ -258,6 +272,9 @@ onMounted(() => {
   gap: 1rem;
   overflow-y: auto;
   padding-right: 0.5rem;
+  padding-top: 5px;
+  align-content: start;
+  min-height: 0;
 }
 
 .spell-card {
@@ -290,6 +307,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 0.5rem;
+  min-height: 1.5rem;
 }
 
 .spell-name {
@@ -298,12 +316,23 @@ onMounted(() => {
   font-weight: 600;
   color: white;
   flex: 1;
+  text-align: left;
+  margin-right: 0.5rem;
+  min-width: 0;
 }
 
 .spell-cost {
   display: flex;
   gap: 2px;
-  margin-left: 0.5rem;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.spell-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0.5rem 0;
 }
 
 .dice-icon {
