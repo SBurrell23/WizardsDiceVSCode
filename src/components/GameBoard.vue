@@ -521,26 +521,25 @@ onUnmounted(() => {
 <style scoped>
 .game-container {
   display: flex;
-  min-height: 100vh;
+  height: calc(100vh - 1rem);
+  margin: 0.5rem 0;
   width: 100%;
   font-family: 'Inter', sans-serif;
   color: white;
 }
 
 .game-board {
-  flex: 1;
-  min-height: 100vh;
+  flex: 0 0 60%;
+  height: 100%;
   background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
   display: flex;
   flex-direction: column;
   padding: 20px;
   margin: 0 auto;
-  width: 50%;
 }
 
 .spellbook-container {
-  flex: 1;
-  width: 50%;
+  flex: 0 0 40%;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(5px);
 }
