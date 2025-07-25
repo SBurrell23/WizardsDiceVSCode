@@ -261,6 +261,10 @@ const handleGameMessage = (data) => {
       currentTurn.value = data.data.turn
       isHostTurn.value = data.data.isHostTurn
       gamePhase.value = 'rolling'
+      // Update player resources if provided (includes dice marked as used)
+      if (data.data.playerResources) {
+        playerResources.value = data.data.playerResources
+      }
       setStatusMessage(`${isHostTurn.value ? topPlayerName.value : bottomPlayerName.value}'s turn to roll!`, 'info', 3000)
       break
     case 'game_state_sync':
@@ -344,6 +348,16 @@ const startRolling = () => {
 }
 
 const endTurn = () => {
+  // Mark all unused dice as used before ending turn
+  const playerKey = isHostTurn.value ? 'host' : 'guest'
+  if (playerResources.value[playerKey]) {
+    playerResources.value[playerKey].forEach(dice => {
+      if (!dice.used) {
+        dice.used = true
+      }
+    })
+  }
+  
   // Switch to next player or next turn
   if (isHostTurn.value) {
     // Host finished, now guest's turn
@@ -359,10 +373,11 @@ const endTurn = () => {
   // Reset to rolling phase for the next player
   gamePhase.value = 'rolling'
   
-  // Send turn update to other player
+  // Send turn update to other player with updated dice state
   sendGameMessage('turn_change', {
     turn: currentTurn.value,
-    isHostTurn: isHostTurn.value
+    isHostTurn: isHostTurn.value,
+    playerResources: playerResources.value
   })
 }
 
