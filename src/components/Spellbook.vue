@@ -268,8 +268,8 @@ onMounted(() => {
 .spells-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
   overflow-y: auto;
   padding-right: 0.5rem;
   padding-top: 5px;
@@ -280,8 +280,8 @@ onMounted(() => {
 .spell-card {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 8px;
+  padding: 0.75rem;
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
@@ -289,6 +289,13 @@ onMounted(() => {
 
 .spell-card:hover {
   background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.spell-card.can-cast:hover {
+  border-color: rgba(34, 197, 94, 0.7);
+  background: rgba(34, 197, 94, 0.15);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
   transform: translateY(-2px);
 }
 
@@ -306,13 +313,13 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.5rem;
-  min-height: 1.5rem;
+  margin-bottom: 0.3rem;
+  min-height: 1.2rem;
 }
 
 .spell-name {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: white;
   flex: 1;
@@ -332,17 +339,17 @@ onMounted(() => {
   width: 100%;
   height: 1px;
   background: rgba(255, 255, 255, 0.2);
-  margin: 0.5rem 0;
+  margin: 0.3rem 0;
 }
 
 .dice-icon {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
 
 .spell-effect {
   margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 0.875rem;
+  line-height: 1.3;
   color: rgba(255, 255, 255, 0.9);
 }
 
