@@ -1,0 +1,9 @@
+Make the person whos turn it is entire box have yellow outline with glow
+    OR make your turn green glow and enemey turn red glow
+make floating hp/armour numbers stack if multiple come through
+Make the Turn box look a little better
+
+add game over modal and allow host to run new game
+implement the rest of the spellbook!
+
+sounds!
