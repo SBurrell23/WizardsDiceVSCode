@@ -177,7 +177,7 @@ const endTurn = () => {
 // Load spellbook data
 const loadSpellbook = async () => {
   try {
-    const response = await fetch('/spellbook1.json')
+    const response = await fetch('./spellbook1.json')
     const data = await response.json()
     spellbook.value = data
   } catch (error) {
