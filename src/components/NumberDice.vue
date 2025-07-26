@@ -161,14 +161,6 @@ defineExpose({
 </script>
 
 <style scoped>
-.number-dice-container {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 1rem;
-  margin: 0.5rem 0;
-  backdrop-filter: blur(10px);
-}
 
 .dice-info {
   display: flex;
@@ -187,7 +179,7 @@ defineExpose({
 
 .dice-grid {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.55rem;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;

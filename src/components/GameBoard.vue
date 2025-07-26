@@ -9,11 +9,23 @@
           <div class="player-stats">
             <div class="health-stat">
               <span class="stat-icon">❤️</span>
-              <span class="stat-value">{{ playerStats.host.health }}/{{ playerStats.host.maxHealth }}</span>
+              <span class="stat-value">{{ playerStats.host.health }}</span>
+              <!-- Floating indicator for health changes -->
+              <div v-if="floatingIndicators.host.health" 
+                   class="floating-indicator" 
+                   :class="{ 'positive': floatingIndicators.host.health.isPositive, 'negative': !floatingIndicators.host.health.isPositive }">
+                {{ floatingIndicators.host.health.value }}
+              </div>
             </div>
             <div class="armor-stat">
               <span class="stat-icon">🛡️</span>
               <span class="stat-value">{{ playerStats.host.armor }}</span>
+              <!-- Floating indicator for armor changes -->
+              <div v-if="floatingIndicators.host.armor" 
+                   class="floating-indicator" 
+                   :class="{ 'positive': floatingIndicators.host.armor.isPositive, 'negative': !floatingIndicators.host.armor.isPositive }">
+                {{ floatingIndicators.host.armor.value }}
+              </div>
             </div>
           </div>
         </div>
@@ -64,16 +76,15 @@
           <div class="number-dice-box">
             <div class="dice-container small">
               <!-- Show NumberDice when spell dice rolling is active AND it's the HOST's turn -->
-              <div v-if="spellDiceRoll && spellDiceRoll.isRolling && isHostTurn" class="spell-dice-rolling">
-                <NumberDice 
-                  :diceNotation="spellDiceRoll.notation"
-                  :autoRoll="true"
-                  :rollDelay="50"
-                  :forcedResult="spellDiceRoll.result"
-                  @rolled="onSpellDiceRolled"
-                  @rolling-finished="onSpellDiceFinished"
-                />
-              </div>
+              <NumberDice 
+                v-if="spellDiceRoll && spellDiceRoll.isRolling && isHostTurn"
+                :diceNotation="spellDiceRoll.notation"
+                :autoRoll="true"
+                :rollDelay="50"
+                :forcedResult="spellDiceRoll.result"
+                @rolled="onSpellDiceRolled"
+                @rolling-finished="onSpellDiceFinished"
+              />
               <!-- Show placeholder when no spell dice rolling -->
               <div v-else class="dice-placeholder small">🎲</div>
             </div>
@@ -143,16 +154,15 @@
         <div class="number-dice-box">
           <div class="dice-container small">
             <!-- Show NumberDice when spell dice rolling is active AND it's the GUEST's turn -->
-            <div v-if="spellDiceRoll && spellDiceRoll.isRolling && !isHostTurn" class="spell-dice-rolling">
-              <NumberDice 
-                :diceNotation="spellDiceRoll.notation"
-                :autoRoll="true"
-                :rollDelay="50"
-                :forcedResult="spellDiceRoll.result"
-                @rolled="onSpellDiceRolled"
-                @rolling-finished="onSpellDiceFinished"
-              />
-            </div>
+            <NumberDice 
+              v-if="spellDiceRoll && spellDiceRoll.isRolling && !isHostTurn"
+              :diceNotation="spellDiceRoll.notation"
+              :autoRoll="true"
+              :rollDelay="50"
+              :forcedResult="spellDiceRoll.result"
+              @rolled="onSpellDiceRolled"
+              @rolling-finished="onSpellDiceFinished"
+            />
             <!-- Show placeholder when no spell dice rolling -->
             <div v-else class="dice-placeholder small">🎲</div>
           </div>
@@ -164,11 +174,23 @@
         <div class="player-stats">
           <div class="health-stat">
             <span class="stat-icon">❤️</span>
-            <span class="stat-value">{{ playerStats.guest.health }}/{{ playerStats.guest.maxHealth }}</span>
+            <span class="stat-value">{{ playerStats.guest.health }}</span>
+            <!-- Floating indicator for health changes -->
+            <div v-if="floatingIndicators.guest.health" 
+                 class="floating-indicator" 
+                 :class="{ 'positive': floatingIndicators.guest.health.isPositive, 'negative': !floatingIndicators.guest.health.isPositive }">
+              {{ floatingIndicators.guest.health.value }}
+            </div>
           </div>
           <div class="armor-stat">
             <span class="stat-icon">🛡️</span>
             <span class="stat-value">{{ playerStats.guest.armor }}</span>
+            <!-- Floating indicator for armor changes -->
+            <div v-if="floatingIndicators.guest.armor" 
+                 class="floating-indicator" 
+                 :class="{ 'positive': floatingIndicators.guest.armor.isPositive, 'negative': !floatingIndicators.guest.armor.isPositive }">
+              {{ floatingIndicators.guest.armor.value }}
+            </div>
           </div>
         </div>
       </div>
@@ -266,6 +288,12 @@ const isRolling = ref(false)
 const isOpponentRolling = ref(false)
 const isSpellCasting = ref(false)
 
+// Floating indicator state
+const floatingIndicators = ref({
+  host: { health: null, armor: null },
+  guest: { health: null, armor: null }
+})
+
 // Spell dice rolling state
 const spellDiceRoll = ref(null) // { notation, spellName, isRolling }
 
@@ -343,6 +371,18 @@ const handleGameMessage = (data) => {
     case 'spell_cast_notification':
       // Show spell casting message to other player
       setStatusMessage(data.data.castMessage, data.data.statusType || 'info', 3000)
+      break
+    case 'floating_indicator':
+      // Show floating indicator from other player's stat changes
+      const { player, statType, indicatorData } = data.data
+      floatingIndicators.value[player][statType] = indicatorData
+      
+      // Clear the indicator after animation
+      setTimeout(() => {
+        if (floatingIndicators.value[player] && floatingIndicators.value[player][statType]) {
+          floatingIndicators.value[player][statType] = null
+        }
+      }, 2000)
       break
     case 'dice_used_update':
       // Update dice state immediately when other player casts spells
@@ -566,7 +606,21 @@ const onEndTurn = () => {
 // SpellEffects event handlers
 const onUpdatePlayerStats = ({ player, updates }) => {
   if (playerStats.value[player]) {
+    // Track changes for floating indicators
+    const oldStats = { ...playerStats.value[player] }
+    
     Object.assign(playerStats.value[player], updates)
+    
+    // Show floating indicators for changes
+    if (updates.health !== undefined && updates.health !== oldStats.health) {
+      const change = updates.health - oldStats.health
+      showFloatingIndicator(player, 'health', change)
+    }
+    
+    if (updates.armor !== undefined && updates.armor !== oldStats.armor) {
+      const change = updates.armor - oldStats.armor
+      showFloatingIndicator(player, 'armor', change)
+    }
   }
 }
 
@@ -574,6 +628,34 @@ const onUpdatePlayerResources = ({ player, updates }) => {
   if (playerResources.value[player]) {
     Object.assign(playerResources.value[player], updates)
   }
+}
+
+// Show floating indicator for stat changes
+const showFloatingIndicator = (player, statType, change) => {
+  if (change === 0) return
+  
+  const indicatorData = {
+    value: change > 0 ? `+${change}` : `${change}`,
+    isPositive: change > 0,
+    timestamp: Date.now()
+  }
+  
+  // Show on current player's screen
+  floatingIndicators.value[player][statType] = indicatorData
+  
+  // Send to opponent so they see it too
+  sendGameMessage('floating_indicator', {
+    player: player,
+    statType: statType,
+    indicatorData: indicatorData
+  })
+  
+  // Clear the indicator after animation
+  setTimeout(() => {
+    if (floatingIndicators.value[player] && floatingIndicators.value[player][statType]) {
+      floatingIndicators.value[player][statType] = null
+    }
+  }, 2000)
 }
 
 const onShowSpellMessage = ({ message, type }) => {
@@ -605,9 +687,6 @@ const onSpellCastingStarted = () => {
 const onSpellCastingEnded = () => {
   isSpellCasting.value = false
   console.log('Spell casting ended - turn ending enabled')
-  
-  // Don't clear spell dice display here - let the last dice roll finish naturally
-  // The display will be cleared by the last onSpellDiceFinished call
 }
 
 // Handle dice roll request from SpellEffects
@@ -662,7 +741,7 @@ const onSpellDiceFinished = () => {
     if (spellEffectsRef.value) {
       spellEffectsRef.value.onSpellDiceDisplayFinished()
     }
-  }, 3000)
+  }, 2750)
 }
 
 const sendGameMessage = (messageType, data) => {
@@ -868,6 +947,7 @@ onUnmounted(() => {
   padding: 0.5rem 1rem;
   border-radius: 10px;
   font-weight: 600;
+  position: relative;
 }
 
 .stat-icon {
@@ -877,6 +957,40 @@ onUnmounted(() => {
 .stat-value {
   font-size: 1.1rem;
   color: white;
+}
+
+/* Floating damage/heal indicators */
+.floating-indicator {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1000;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.floating-indicator.positive {
+  color: #4ade80;
+  animation: floatDown 3s ease-out forwards;
+}
+
+.floating-indicator.negative {
+  color: #f87171;
+  animation: floatDown 3s ease-out forwards;
+}
+
+@keyframes floatDown {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(30px);
+  }
 }
 
 .dice-area {
@@ -928,7 +1042,7 @@ onUnmounted(() => {
 }
 
 .dice-container.small {
-  min-height: 50px;
+  min-height: 100px;
 }
 
 .dice-placeholder {
