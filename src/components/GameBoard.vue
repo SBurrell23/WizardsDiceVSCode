@@ -35,11 +35,21 @@
               </div>
               <!-- Show rolled dice results for host -->
               <div v-else class="opponent-dice">
-                <div v-for="resource in playerResources.host" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
-                  {{ resource.emoji }}
-                  <div v-if="resource.used" class="dice-used-overlay">✕</div>
+                <!-- Show rolling animation if opponent is rolling and it's host area -->
+                <div v-if="isOpponentRolling && isHostTurn" class="rolling-dice-display">
+                  <div v-for="i in diceToRoll" :key="`rolling-top-${i}`" class="rolling-dice">
+                    🎲
+                  </div>
                 </div>
-                <div v-if="playerResources.host.length === 0" class="dice-placeholder">
+                <!-- Show actual dice results when not rolling -->
+                <div v-else-if="playerResources.host.length > 0" class="dice-results">
+                  <div v-for="resource in playerResources.host" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
+                    {{ resource.emoji }}
+                    <div v-if="resource.used" class="dice-used-overlay">✕</div>
+                  </div>
+                </div>
+                <!-- Show placeholder when no dice -->
+                <div v-else class="dice-placeholder">
                   🎲
                 </div>
               </div>
@@ -104,11 +114,21 @@
             </div>
             <!-- Show rolled dice results for guest -->
             <div v-else class="opponent-dice">
-              <div v-for="resource in playerResources.guest" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
-                {{ resource.emoji }}
-                <div v-if="resource.used" class="dice-used-overlay">✕</div>
+              <!-- Show rolling animation if opponent is rolling and it's guest area -->
+              <div v-if="isOpponentRolling && !isHostTurn" class="rolling-dice-display">
+                <div v-for="i in diceToRoll" :key="`rolling-bottom-${i}`" class="rolling-dice">
+                  🎲
+                </div>
               </div>
-              <div v-if="playerResources.guest.length === 0" class="dice-placeholder">
+              <!-- Show actual dice results when not rolling -->
+              <div v-else-if="playerResources.guest.length > 0" class="dice-results">
+                <div v-for="resource in playerResources.guest" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
+                  {{ resource.emoji }}
+                  <div v-if="resource.used" class="dice-used-overlay">✕</div>
+                </div>
+              </div>
+              <!-- Show placeholder when no dice -->
+              <div v-else class="dice-placeholder">
                 🎲
               </div>
             </div>
@@ -245,6 +265,7 @@ const playerStats = ref({
 const diceRefs = ref([])
 const spellEffectsRef = ref(null)
 const isRolling = ref(false)
+const isOpponentRolling = ref(false)
 const isSpellCasting = ref(false)
 
 // Spell dice rolling state
@@ -299,10 +320,15 @@ const setStatusMessage = (message, type, duration = 3000) => {
 // Handle game-related messages
 const handleGameMessage = (data) => {
   switch (data.type) {
+    case 'dice_rolling_start':
+      // Show rolling animation for other player
+      isOpponentRolling.value = true
+      console.log('Other player started rolling dice')
+      break
     case 'dice_rolled':
-      // Update other player's resources
+      // Update other player's resources and stop rolling animation
+      isOpponentRolling.value = false
       playerResources.value[data.data.player] = data.data.resources
-      setStatusMessage(`${data.data.player === 'host' ? topPlayerName.value : bottomPlayerName.value} rolled their dice!`, 'info', 2000)
       break
     case 'spells_cast':
       // Update other player's resources after spell casting
@@ -311,13 +337,14 @@ const handleGameMessage = (data) => {
       if (data.data.playerStats) {
         playerStats.value = data.data.playerStats
       }
-      // Use the same message that was sent from the casting player
+      break
+    case 'spell_cast_notification':
+      // Show spell casting message to other player
       setStatusMessage(data.data.castMessage, 'info', 3000)
       break
     case 'dice_used_update':
       // Update dice state immediately when other player casts spells
       playerResources.value[data.data.player] = data.data.playerResources
-      setStatusMessage(data.data.castMessage, 'info', 3000)
       console.log('Updated dice state - spells being cast by other player')
       break
     case 'spell_dice_start':
@@ -342,7 +369,6 @@ const handleGameMessage = (data) => {
       if (data.data.playerResources) {
         playerResources.value = data.data.playerResources
       }
-      setStatusMessage(`${isHostTurn.value ? topPlayerName.value : bottomPlayerName.value}'s turn to roll!`, 'info', 3000)
       break
     case 'game_state_sync':
       // Sync complete game state
@@ -378,7 +404,6 @@ const handleGameMessage = (data) => {
       break
     case 'player_disconnect':
       // Handle when the other player disconnects
-      setStatusMessage('Other player disconnected. Returning to menu...', 'error', 3000)
       setTimeout(() => {
         emit('leave-game')
       }, 3000)
@@ -398,8 +423,6 @@ const onDiceRolled = (result) => {
   
   // Check if all dice have been rolled
   if (playerResources.value[playerKey].length >= diceToRoll.value) {
-    setStatusMessage(`Choose spells to cast or end turn.`, 'success', 5000)
-    
     // Send dice results to other player
     sendGameMessage('dice_rolled', {
       player: playerKey,
@@ -417,11 +440,17 @@ const startRolling = () => {
   if (!canRollDice.value) return
   
   isRolling.value = true
-  setStatusMessage(`${currentPlayerName.value} is rolling ${diceToRoll.value} dice...`, 'info', 0)
   
   // Reset current player's resources for this turn
   const playerKey = isHostTurn.value ? 'host' : 'guest'
   playerResources.value[playerKey] = []
+  
+  // Send dice rolling start message to other player
+  sendGameMessage('dice_rolling_start', {
+    player: playerKey,
+    diceCount: diceToRoll.value,
+    playerName: currentPlayerName.value
+  })
   
   // Auto-roll all dice for now (can be made manual later)
   setTimeout(() => {
@@ -450,12 +479,10 @@ const endTurn = () => {
   if (isHostTurn.value) {
     // Host finished, now guest's turn
     isHostTurn.value = false
-    setStatusMessage(`${bottomPlayerName.value}'s turn to roll!`, 'info', 3000)
   } else {
     // Guest finished, advance to next turn
     currentTurn.value++
     isHostTurn.value = true
-    setStatusMessage(`Turn ${currentTurn.value} - ${topPlayerName.value}'s turn!`, 'info', 3000)
   }
   
   // Reset to rolling phase for the next player
@@ -475,12 +502,16 @@ const onCastSpells = async (spells) => {
   
   // Create notification message with spell names
   const spellNames = spells.map(spell => spell.name).join(', ')
-  const totalDiceUsed = spells.reduce((total, spell) => total + spell.cost.length, 0)
-  const castMessage = `${currentPlayerName.value} cast ${spellNames} using ${totalDiceUsed} dice!`
+  const castMessage = `${currentPlayerName.value} cast ${spellNames}!`
   
   // Show initial message to casting player
-  setStatusMessage(castMessage, 'success', 3000)
-  
+  setStatusMessage(castMessage, 'info', 3000)
+
+  // Send immediate spell cast notification to other player
+  sendGameMessage('spell_cast_notification', {
+    castMessage: castMessage
+  })
+
   // Mark used dice as consumed
   const playerKey = isHostTurn.value ? 'host' : 'guest'
   spells.forEach(spell => {
@@ -495,8 +526,7 @@ const onCastSpells = async (spells) => {
   // Send immediate dice state update to other player so they see dice marked as used right away
   sendGameMessage('dice_used_update', {
     player: playerKey,
-    playerResources: playerResources.value[playerKey],
-    castMessage: castMessage
+    playerResources: playerResources.value[playerKey]
   })
 
   // Execute each spell using SpellEffects component
@@ -507,7 +537,6 @@ const onCastSpells = async (spells) => {
         console.log('Spell executed:', result)
       } catch (error) {
         console.error('Error executing spell:', spell.name, error)
-        setStatusMessage(`Failed to cast ${spell.name}`, 'error', 3000)
       }
     }
   }
@@ -520,14 +549,12 @@ const onCastSpells = async (spells) => {
     playerResources: playerResources.value,
     playerStats: playerStats.value
   })
-  
-  // Send spell casting info to other player
+
   sendGameMessage('spells_cast', {
     player: playerKey,
     spells: spells,
     playerResources: playerResources.value[playerKey],
-    playerStats: playerStats.value,
-    castMessage: castMessage
+    playerStats: playerStats.value
   })
 }
 
@@ -558,18 +585,16 @@ const onShowSpellMessage = ({ message, type }) => {
     'warning': 'error',
     'error': 'error'
   }
-  setStatusMessage(message, statusTypes[type] || 'info', 3000)
+  // Remove status message display for spell effects
 }
 
 const onTriggerReroll = ({ player, count, message }) => {
   // TODO: Implement reroll mechanism
-  setStatusMessage(message, 'info', 5000)
   console.log(`Reroll triggered for ${player}: ${count} dice`)
 }
 
 const onRecastSpell = ({ maxCost, message }) => {
   // TODO: Implement recast mechanism
-  setStatusMessage(message, 'success', 5000)
   console.log(`Recast available: max cost ${maxCost}`)
 }
 
@@ -604,13 +629,11 @@ const onRequestDiceRoll = ({ notation }) => {
   }
   
   // Send spell dice start to other player with the pre-determined result
-  //wait 100 ms before sending to ensure UI updates
-  setTimeout(() => {
-    sendGameMessage('spell_dice_start', {
-      notation,
-      result
-    })
-  }, 100)
+  sendGameMessage('spell_dice_start', {
+    notation,
+    result
+  })
+
   
   console.log('Sent spell_dice_start with synchronized result:', result)
 }
@@ -636,8 +659,7 @@ const onSpellDiceFinished = () => {
     console.log('Clearing spell dice display and continuing...')
     // Clear the spell dice rolling state
     spellDiceRoll.value = null
-    setStatusMessage('', 'info', 0)
-    
+
     // Notify SpellEffects that the display is finished and next action can start
     if (spellEffectsRef.value) {
       spellEffectsRef.value.onSpellDiceDisplayFinished()
@@ -688,8 +710,6 @@ const leaveGame = () => {
     message: 'Player disconnected'
   })
   
-  setStatusMessage('Leaving game...', 'info', 1000)
-  
   setTimeout(() => {
     emit('leave-game')
   }, 1000)
@@ -697,8 +717,6 @@ const leaveGame = () => {
 
 // Initialize component
 onMounted(() => {
-  setStatusMessage('Game ready!', 'success', 3000)
-  
   // Set up peer event listeners for game events
   if (props.isHost && props.peerInstance) {
     // For host: listen to messages from all connected peers
@@ -709,7 +727,6 @@ onMounted(() => {
           
           // Listen for connection close (guest disconnected)
           conn.on('close', () => {
-            setStatusMessage('Guest player disconnected. Returning to menu...', 'error', 3000)
             setTimeout(() => {
               emit('leave-game')
             }, 3000)
@@ -725,7 +742,6 @@ onMounted(() => {
         
         // Listen for connection close on new connections
         conn.on('close', () => {
-          setStatusMessage('Guest player disconnected. Returning to menu...', 'error', 3000)
           setTimeout(() => {
             emit('leave-game')
           }, 3000)
@@ -761,9 +777,8 @@ onMounted(() => {
     
     // Listen for host connection close
     props.connection.on('close', () => {
-      setStatusMessage('Host disconnected. Returning to menu...', 'error', 3000)
       setTimeout(() => {
-        emit('leave-game')
+        emit('leave-game') 
       }, 3000)
     })
     
@@ -779,7 +794,7 @@ onUnmounted(() => {
   console.log('GameBoard component unmounted')
   
   // Call leaveGame to properly disconnect from the game
-  leaveGame()
+  //leaveGame()
 })
 </script>
 
@@ -1121,6 +1136,46 @@ onUnmounted(() => {
 
 .status-message.error {
   color: #ff9999;
+}
+
+/* Rolling dice animation styles */
+.rolling-dice-display {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  min-height: 70px;
+}
+
+.rolling-dice {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid #ff6b6b;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  animation: shake 0.1s infinite;
+  box-shadow: 0 0 10px rgba(255,107,107,0.3);
+}
+
+.dice-results {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  min-height: 70px;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
 }
 
 @media (max-width: 768px) {
