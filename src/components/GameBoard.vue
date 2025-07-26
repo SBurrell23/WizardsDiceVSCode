@@ -271,6 +271,7 @@ const statusMessage = ref('')
 const statusType = ref('info')
 const currentTurn = ref(6)
 const isHostTurn = ref(true) // Host always starts
+let statusMessageTimeoutId = null // Track the current timeout
 
 // Game state
 const gamePhase = ref('rolling') // 'rolling', 'casting', 'waiting'
@@ -335,16 +336,41 @@ const currentPlayerResources = computed(() => {
   return (playerResources.value[playerKey] || []).filter(dice => !dice.used)
 })
 
-// Helper function to set status message with timeout
-const setStatusMessage = (message, type, duration = 3000) => {
+// Unified message display function that handles both local and remote messages
+const displayStatusMessage = (message, type = 'info', duration = 3000, sendToOpponent = false) => {
+  // Clear any existing timeout to prevent old messages from clearing new ones
+  if (statusMessageTimeoutId) {
+    clearTimeout(statusMessageTimeoutId)
+    statusMessageTimeoutId = null
+  }
+  
+  // Set the new message
   statusMessage.value = message
   statusType.value = type
   
+  // Send to opponent if requested
+  if (sendToOpponent) {
+    sendGameMessage('spell_cast_notification', {
+      castMessage: message,
+      statusType: type
+    })
+  }
+  
+  // Set timeout to clear message
   if (duration > 0) {
-    setTimeout(() => {
-      statusMessage.value = ''
+    statusMessageTimeoutId = setTimeout(() => {
+      // Only clear if this is still the current message (no newer message has been set)
+      if (statusMessage.value === message) {
+        statusMessage.value = ''
+      }
+      statusMessageTimeoutId = null
     }, duration)
   }
+}
+
+// Helper function to set status message with timeout and send to other player
+const setStatusMessage = (message, type, duration = 3000) => {
+  displayStatusMessage(message, type, duration, true)
 }
 
 // Handle game-related messages
@@ -369,8 +395,8 @@ const handleGameMessage = (data) => {
       }
       break
     case 'spell_cast_notification':
-      // Show spell casting message to other player
-      setStatusMessage(data.data.castMessage, data.data.statusType || 'info', 3000)
+      // Show spell casting message to other player (without sending back)
+      displayStatusMessage(data.data.castMessage, data.data.statusType || 'info', 3000, false)
       break
     case 'floating_indicator':
       // Show floating indicator from other player's stat changes
@@ -544,13 +570,9 @@ const onCastSpells = async (spells) => {
   
   // Create notification message with spell names
   const spellNames = spells.map(spell => spell.name).join(', ')
-  const castMessageForSelf = `You cast ${spellNames}!`
-  const castMessageForOther = `Enemy Wizard cast ${spellNames}!`
+  const castMessage = `${spellNames} was cast!`
   
-  // Show initial message to casting player
-  setStatusMessage(castMessageForSelf, 'info', 3000)
-  // Send immediate spell cast notification to other player
-  sendGameMessage('spell_cast_notification', { castMessage: castMessageForOther})
+  setStatusMessage(castMessage, 'info', 3000)
 
   // Mark used dice as consumed
   const playerKey = isHostTurn.value ? 'host' : 'guest'
@@ -668,14 +690,7 @@ const onShowSpellMessage = ({ message, type }) => {
     'error': 'error'
   }
   
-  // Show spell message to current player
   setStatusMessage(message, statusTypes[type] || 'info', 3000)
-  
-  // Send the same spell message to the opponent with status type
-  sendGameMessage('spell_cast_notification', {
-    castMessage: message,
-    statusType: statusTypes[type] || 'info'
-  })
 }
 
 // Handle spell casting state changes

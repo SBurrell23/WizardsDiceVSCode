@@ -6,16 +6,30 @@
     
     <div class="spellbook-content">
       <div class="spell-filters">
+        <!-- Castability filters -->
         <button 
-          v-for="element in elementTypes" 
-          :key="element"
-          @click="selectedElement = element"
-          :class="{ active: selectedElement === element }"
+          v-for="type in castabilityTypes" 
+          :key="type"
+          @click="toggleCastability(type)"
+          :class="{ active: selectedCastability === type }"
           class="filter-button"
         >
-          <span v-if="element === 'all'">All</span>
-          <span v-else-if="element === 'castable'">Castable</span>
-          <span v-else class="element-icon">{{ element }}</span>
+          <span v-if="type === 'all'">All</span>
+          <span v-else-if="type === 'castable'">Castable</span>
+        </button>
+        
+        <!-- Divider -->
+        <span class="filter-divider">/</span>
+        
+        <!-- Cost filters -->
+        <button 
+          v-for="cost in costTypes" 
+          :key="cost"
+          @click="toggleCost(cost)"
+          :class="{ active: selectedCosts.includes(cost) }"
+          class="filter-button cost-filter"
+        >
+          {{ cost }}
         </button>
       </div>
       
@@ -94,11 +108,16 @@ const emit = defineEmits(['cast-spells', 'end-turn', 'close'])
 
 // Reactive data
 const spellbook = ref({ spells: [] })
-const selectedElement = ref('all')
+const selectedCastability = ref('all') // 'all' or 'castable'
+const selectedCosts = ref([]) // Array of selected cost filters: '1', '2', '3', '4+'
 
 // Element dice types for filtering
-const elementTypes = computed(() => {
-  return ['all', 'castable', '🔥', '💧', '🌍', '💨', '💖', '💀']
+const castabilityTypes = computed(() => {
+  return ['all', 'castable']
+})
+
+const costTypes = computed(() => {
+  return ['1', '2', '3', '4+']
 })
 
 // Available dice count
@@ -110,19 +129,29 @@ const availableDiceCount = computed(() => {
   return count
 })
 
-// Filtered spells based on selected element
+// Filtered spells based on selected filters
 const filteredSpells = computed(() => {
-  if (selectedElement.value === 'all') {
-    return spellbook.value.spells
+  let spells = spellbook.value.spells
+
+  // First filter by castability
+  if (selectedCastability.value === 'castable') {
+    spells = spells.filter(spell => canCastSpell(spell))
   }
-  if (selectedElement.value === 'castable') {
-    // Show only spells the player can currently cast
-    return spellbook.value.spells.filter(spell => canCastSpell(spell))
+
+  // Then filter by cost if any cost filters are selected
+  if (selectedCosts.value.length > 0) {
+    spells = spells.filter(spell => {
+      return selectedCosts.value.some(costFilter => {
+        if (costFilter === '1') return spell.cost.length === 1
+        if (costFilter === '2') return spell.cost.length === 2
+        if (costFilter === '3') return spell.cost.length === 3
+        if (costFilter === '4+') return spell.cost.length >= 4
+        return false
+      })
+    })
   }
-  // Show spells that require at least one of the selected element
-  return spellbook.value.spells.filter(spell => 
-    spell.cost.includes(selectedElement.value)
-  )
+
+  return spells
 })
 
 // Show end turn button only if it's the current player's turn
@@ -151,6 +180,23 @@ const canCastSpell = (spell) => {
   }
   
   return true
+}
+
+// Toggle castability filter (all or castable)
+const toggleCastability = (type) => {
+  selectedCastability.value = type
+}
+
+// Toggle cost filter (can select multiple)
+const toggleCost = (cost) => {
+  const index = selectedCosts.value.indexOf(cost)
+  if (index > -1) {
+    // Remove if already selected
+    selectedCosts.value.splice(index, 1)
+  } else {
+    // Add if not selected
+    selectedCosts.value.push(cost)
+  }
 }
 
 // Toggle spell selection - now immediately casts spells
@@ -243,13 +289,22 @@ onMounted(() => {
   gap: 0.5rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-divider {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0 0.25rem;
+  user-select: none;
 }
 
 .filter-button {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem .9rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -261,13 +316,20 @@ onMounted(() => {
   justify-content: center;
 }
 
-.filter-button .element-icon {
-  font-size: 1.2rem;
+.filter-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-.filter-button:hover, .filter-button.active {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+.filter-button.active {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.6);
+  color: #22c55e;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+}
+
+.cost-filter {
+  min-width: 45px;
 }
 
 .spells-grid {
@@ -275,7 +337,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 0.75rem;
-  overflow-y: auto;
+  overflow-y: scroll;
   padding-right: 0.5rem;
   padding-top: 5px;
   align-content: start;
@@ -470,6 +532,12 @@ onMounted(() => {
 
 .spells-grid::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
+}
+
+.spells-grid {
+  /* Force scrollbar to always be visible */
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 @media (max-width: 768px) {
