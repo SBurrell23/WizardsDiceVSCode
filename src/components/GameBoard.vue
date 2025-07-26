@@ -229,7 +229,7 @@ const emit = defineEmits(['leave-game'])
 // Reactive data
 const statusMessage = ref('')
 const statusType = ref('info')
-const currentTurn = ref(1)
+const currentTurn = ref(6)
 const isHostTurn = ref(true) // Host always starts
 
 // Game state
@@ -330,7 +330,7 @@ const handleGameMessage = (data) => {
         isRolling: true,
         result: data.data.result // Pre-determined result from casting player
       }
-      setStatusMessage(`Rolling ${data.data.notation}...`, 'info', 0)
+
       console.log('Started spell dice rolling for remote player with result:', data.data.result)
       break
     case 'turn_change':
@@ -375,6 +375,13 @@ const handleGameMessage = (data) => {
       break
     case 'game_state_update':
       console.log('Game state update received:', data)
+      break
+    case 'player_disconnect':
+      // Handle when the other player disconnects
+      setStatusMessage('Other player disconnected. Returning to menu...', 'error', 3000)
+      setTimeout(() => {
+        emit('leave-game')
+      }, 3000)
       break
     default:
       console.log('Unknown game message:', data)
@@ -597,10 +604,13 @@ const onRequestDiceRoll = ({ notation }) => {
   }
   
   // Send spell dice start to other player with the pre-determined result
-  sendGameMessage('spell_dice_start', {
-    notation,
-    result
-  })
+  //wait 100 ms before sending to ensure UI updates
+  setTimeout(() => {
+    sendGameMessage('spell_dice_start', {
+      notation,
+      result
+    })
+  }, 100)
   
   console.log('Sent spell_dice_start with synchronized result:', result)
 }
@@ -673,6 +683,11 @@ const nextTurn = () => {
 
 // Leave game and return to landing page
 const leaveGame = () => {
+  // Send disconnect message to other player before leaving
+  sendGameMessage('player_disconnect', {
+    message: 'Player disconnected'
+  })
+  
   setStatusMessage('Leaving game...', 'info', 1000)
   
   setTimeout(() => {
@@ -691,6 +706,14 @@ onMounted(() => {
       connections.forEach(conn => {
         if (conn.open) {
           conn.on('data', handleGameMessage)
+          
+          // Listen for connection close (guest disconnected)
+          conn.on('close', () => {
+            setStatusMessage('Guest player disconnected. Returning to menu...', 'error', 3000)
+            setTimeout(() => {
+              emit('leave-game')
+            }, 3000)
+          })
         }
       })
     })
@@ -699,6 +722,14 @@ onMounted(() => {
     props.peerInstance.on('connection', (conn) => {
       conn.on('open', () => {
         conn.on('data', handleGameMessage)
+        
+        // Listen for connection close on new connections
+        conn.on('close', () => {
+          setStatusMessage('Guest player disconnected. Returning to menu...', 'error', 3000)
+          setTimeout(() => {
+            emit('leave-game')
+          }, 3000)
+        })
         
         // Send initial game state to newly connected player
         setTimeout(() => {
@@ -728,6 +759,14 @@ onMounted(() => {
     // For guest: listen to messages from host
     props.connection.on('data', handleGameMessage)
     
+    // Listen for host connection close
+    props.connection.on('close', () => {
+      setStatusMessage('Host disconnected. Returning to menu...', 'error', 3000)
+      setTimeout(() => {
+        emit('leave-game')
+      }, 3000)
+    })
+    
     // Request initial game state from host
     setTimeout(() => {
       sendGameMessage('request_game_state', {})
@@ -738,6 +777,9 @@ onMounted(() => {
 // Cleanup on component unmount
 onUnmounted(() => {
   console.log('GameBoard component unmounted')
+  
+  // Call leaveGame to properly disconnect from the game
+  leaveGame()
 })
 </script>
 
