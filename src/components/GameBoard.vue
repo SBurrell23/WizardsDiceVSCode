@@ -69,6 +69,8 @@
               <NumberDice 
                 :diceNotation="spellDiceRoll.notation"
                 :autoRoll="true"
+                :rollDelay="50"
+                :forcedResult="spellDiceRoll.result"
                 @rolled="onSpellDiceRolled"
                 @rolling-finished="onSpellDiceFinished"
               />
@@ -122,6 +124,8 @@
               <NumberDice 
                 :diceNotation="spellDiceRoll.notation"
                 :autoRoll="true"
+                :rollDelay="50"
+                :forcedResult="spellDiceRoll.result"
                 @rolled="onSpellDiceRolled"
                 @rolling-finished="onSpellDiceFinished"
               />
@@ -155,6 +159,7 @@
         :playerName="currentPlayerName"
         :gamePhase="gamePhase"
         :isCurrentPlayer="isCurrentPlayer"
+        :isSpellCasting="isSpellCasting"
         @cast-spells="onCastSpells"
         @end-turn="onEndTurn"
         @close="() => {}"
@@ -174,6 +179,8 @@
       @triggerReroll="onTriggerReroll"
       @recastSpell="onRecastSpell"
       @requestDiceRoll="onRequestDiceRoll"
+      @spellCastingStarted="onSpellCastingStarted"
+      @spellCastingEnded="onSpellCastingEnded"
     />
   </div>
 </template>
@@ -235,6 +242,7 @@ const playerStats = ref({
 const diceRefs = ref([])
 const spellEffectsRef = ref(null)
 const isRolling = ref(false)
+const isSpellCasting = ref(false)
 
 // Spell dice rolling state
 const spellDiceRoll = ref(null) // { notation, spellName, isRolling }
@@ -305,27 +313,26 @@ const handleGameMessage = (data) => {
       break
     case 'spell_dice_start':
       // Show spell dice rolling for other player
+      console.log('Received spell_dice_start:', data.data.notation, 'result:', data.data.result)
+      
+      // Clear any previous dice display and start new roll immediately
       spellDiceRoll.value = {
         notation: data.data.notation,
-        isRolling: true
+        isRolling: true,
+        result: data.data.result // Pre-determined result from casting player
       }
       setStatusMessage(`Rolling ${data.data.notation}...`, 'info', 0)
+      console.log('Started spell dice rolling for remote player with result:', data.data.result)
       break
-    case 'spell_dice_result':
-      // Handle spell dice result from other player
-      if (spellEffectsRef.value) {
-        spellEffectsRef.value.handleDiceRollResult(data.data.result)
+    case 'spell_dice_complete':
+      // Other player's dice finished rolling - just acknowledge, don't clear yet
+      // Only process this if we're NOT currently casting spells (i.e., we're the observer)
+      if (!isSpellCasting.value) {
+        console.log('Received spell_dice_complete - dice will remain visible until next roll')
+        // Don't clear the display here - let it stay visible until the next spell_dice_start
+      } else {
+        console.log('Ignoring spell_dice_complete - we are the casting player')
       }
-      break
-    case 'spell_dice_finished':
-      // Clear spell dice display when other player's dice finished
-      setTimeout(() => {
-        spellDiceRoll.value = null
-        setStatusMessage('', 'info', 0)
-        if (spellEffectsRef.value) {
-          spellEffectsRef.value.onSpellDiceDisplayFinished()
-        }
-      }, 5000)
       break
     case 'turn_change':
       // Update turn state from other player
@@ -553,49 +560,77 @@ const onRecastSpell = ({ maxCost, message }) => {
   console.log(`Recast available: max cost ${maxCost}`)
 }
 
+// Handle spell casting state changes
+const onSpellCastingStarted = () => {
+  isSpellCasting.value = true
+  console.log('Spell casting started - turn ending disabled')
+}
+
+const onSpellCastingEnded = () => {
+  isSpellCasting.value = false
+  console.log('Spell casting ended - turn ending enabled')
+  
+  // Don't clear spell dice display here - let the last dice roll finish naturally
+  // The display will be cleared by the last onSpellDiceFinished call
+}
+
 // Handle dice roll request from SpellEffects
 const onRequestDiceRoll = ({ notation }) => {
+  console.log('Requesting dice roll:', notation)
+  
+  // Generate the dice result for both players to use
+  const [count, sides] = notation.split('d').map(Number)
+  const result = Math.floor(Math.random() * sides) + 1
+  console.log('Generated dice result for synchronization:', result)
+  
+  // Clear any previous dice display and start new roll
   spellDiceRoll.value = {
     notation,
-    isRolling: true
+    isRolling: true,
+    result // Pre-determined result
   }
   setStatusMessage(`Rolling ${notation}...`, 'info', 0)
   
-  // Send spell dice start to other player
+  // Send spell dice start to other player with the pre-determined result
   sendGameMessage('spell_dice_start', {
-    notation
+    notation,
+    result
   })
+  
+  console.log('Sent spell_dice_start with synchronized result:', result)
 }
 
 // Handle spell dice roll completion
 const onSpellDiceRolled = (result) => {
-  console.log('Spell dice rolled:', result)
-  // Pass result back to SpellEffects
+  console.log('Spell dice rolled with result:', result)
+  // Pass result back to SpellEffects (only on casting player)
   if (spellEffectsRef.value) {
-    spellEffectsRef.value.handleDiceRollResult(result)
+    // Use the synchronized result if available, otherwise use the rolled result
+    const finalResult = spellDiceRoll.value.result !== undefined ? 
+      { ...result, value: spellDiceRoll.value.result } : result
+    console.log('Passing result to SpellEffects:', finalResult)
+    spellEffectsRef.value.handleDiceRollResult(finalResult)
   }
-  
-  // Send spell dice result to other player
-  sendGameMessage('spell_dice_result', {
-    result
-  })
 }
 
 const onSpellDiceFinished = () => {
-  // Send spell dice finished to other player
-  sendGameMessage('spell_dice_finished', {})
+  console.log('Spell dice finished rolling')
   
-  // Add a 5-second delay for players to process the dice result
+  // Send completion message to other player immediately
+  sendGameMessage('spell_dice_complete', {})
+  
+  // Add a 5-second delay for the casting player to process the dice result and continue
   setTimeout(() => {
+    console.log('Clearing spell dice display and continuing...')
     // Clear the spell dice rolling state
     spellDiceRoll.value = null
-    setStatusMessage('', 'info', 0) // Clear status message
+    setStatusMessage('', 'info', 0)
     
-    // Notify SpellEffects that the display is finished and next roll can start
+    // Notify SpellEffects that the display is finished and next action can start
     if (spellEffectsRef.value) {
       spellEffectsRef.value.onSpellDiceDisplayFinished()
     }
-  }, 5000) // 5 second delay
+  }, 5000)
 }
 
 const sendGameMessage = (messageType, data) => {

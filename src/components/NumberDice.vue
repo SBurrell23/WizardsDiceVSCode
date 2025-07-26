@@ -51,6 +51,10 @@ const props = defineProps({
   rollDelay: {
     type: Number,
     default: 1000 // milliseconds
+  },
+  forcedResult: {
+    type: Number,
+    default: null // If provided, use this as the final result instead of random
   }
 })
 
@@ -102,12 +106,14 @@ const rollDice = async () => {
       if (rollCount >= 10) { // Roll animation duration
         clearInterval(rollInterval)
         
-        // Final roll result
-        const result = Math.floor(Math.random() * sides.value) + 1
+        // Final roll result - use forced result if provided, otherwise random
+        const result = props.forcedResult !== null ? props.forcedResult : Math.floor(Math.random() * sides.value) + 1
         currentValue.value = result
         finalValue.value = result
         isRolling.value = false
         hasRolled.value = true
+        
+        console.log('NumberDice final result:', result, 'forcedResult:', props.forcedResult)
         
         // Emit results
         const rollResult = {

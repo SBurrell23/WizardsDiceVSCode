@@ -81,6 +81,10 @@ const props = defineProps({
   isCurrentPlayer: {
     type: Boolean,
     default: false
+  },
+  isSpellCasting: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -125,9 +129,9 @@ const showEndTurnButton = computed(() => {
   return props.isCurrentPlayer
 })
 
-// Enable end turn button only if dice have been rolled (casting phase)
+// Enable end turn button only if dice have been rolled (casting phase) and no spell is being cast
 const canEndTurn = computed(() => {
-  return props.isCurrentPlayer && props.gamePhase === 'casting'
+  return props.isCurrentPlayer && props.gamePhase === 'casting' && !props.isSpellCasting
 })
 
 // Check if player can cast a spell

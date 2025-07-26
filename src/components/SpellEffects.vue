@@ -33,13 +33,15 @@ const emit = defineEmits([
   'showMessage',
   'triggerReroll',
   'recastSpell',
-  'requestDiceRoll'
+  'requestDiceRoll',
+  'spellCastingStarted',
+  'spellCastingEnded'
 ])
 
 // Reactive data for tracking effects
 const diceRollResult = ref(null)
-const pendingSpellExecution = ref(null) // Track spell waiting for dice result
-const diceRollQueue = ref([]) // Queue for multiple dice rolls
+const pendingDiceRoll = ref(null) // Track current dice roll promise
+const isSpellCasting = ref(false) // Track if a spell is currently being cast
 
 // Helper function to update player stats
 const updateStats = (player, updates) => {
@@ -53,82 +55,35 @@ const showMessage = (message, type = 'info') => {
 
 // Helper function to request dice roll from GameBoard
 const requestDiceRoll = async (notation) => {
+  console.log('SpellEffects requesting dice roll:', notation)
   return new Promise((resolve) => {
-    // Add this request to the queue
-    diceRollQueue.value.push({
-      notation,
-      resolver: resolve
-    })
+    // Store the resolver for this dice roll
+    pendingDiceRoll.value = { resolve }
     
-    // If this is the only item in queue, start processing it
-    if (diceRollQueue.value.length === 1) {
-      processNextDiceRoll()
-    }
+    // Request GameBoard to show NumberDice
+    emit('requestDiceRoll', { notation })
   })
-}
-
-// Process the next dice roll in the queue
-const processNextDiceRoll = () => {
-  if (diceRollQueue.value.length === 0) return
-  
-  const currentRoll = diceRollQueue.value[0]
-  
-  // Store the current execution context
-  pendingSpellExecution.value = {
-    resolver: currentRoll.resolver
-  }
-  
-  // Request GameBoard to show NumberDice
-  emit('requestDiceRoll', { notation: currentRoll.notation })
-}
-
-// Helper function to roll multiple dice sequentially (e.g., "2d6" becomes two "1d6" rolls)
-const requestMultipleDiceRolls = async (notation) => {
-  const [count, sides] = notation.split('d').map(Number)
-  const results = []
-  
-  for (let i = 0; i < count; i++) {
-    const rollNotation = `1d${sides}`
-    const result = await requestDiceRoll(rollNotation)
-    results.push(result.value)
-  }
-  
-  return {
-    notation,
-    count,
-    sides,
-    individual: results,
-    total: results.reduce((sum, value) => sum + value, 0)
-  }
 }
 
 // Method to be called by GameBoard when dice roll completes
 const handleDiceRollResult = (result) => {
-  if (pendingSpellExecution.value && pendingSpellExecution.value.resolver) {
+  if (pendingDiceRoll.value) {
     diceRollResult.value = result
-    // DON'T resolve the promise yet - store the result and resolver for later
-    pendingSpellExecution.value.result = result
-    // The promise will be resolved in onSpellDiceDisplayFinished
+    // Store the result, will be resolved after 5-second display
+    pendingDiceRoll.value.result = result
   }
 }
 
 // Method to be called when spell dice display is finished (after 5-second delay)
 const onSpellDiceDisplayFinished = () => {
-  // Resolve the current pending promise with the stored result
-  if (pendingSpellExecution.value && pendingSpellExecution.value.resolver && pendingSpellExecution.value.result) {
-    pendingSpellExecution.value.resolver(pendingSpellExecution.value.result)
-    pendingSpellExecution.value = null
-    
-    // Remove the completed roll from queue
-    diceRollQueue.value.shift()
-    
-    // Process next roll in queue if any
-    if (diceRollQueue.value.length > 0) {
-      // Small delay to ensure clean state
-      setTimeout(() => {
-        processNextDiceRoll()
-      }, 100)
-    }
+  console.log('SpellEffects: dice display finished')
+  if (pendingDiceRoll.value && pendingDiceRoll.value.result) {
+    console.log('SpellEffects: resolving dice roll with result:', pendingDiceRoll.value.result)
+    // Resolve the promise with the dice result
+    pendingDiceRoll.value.resolve(pendingDiceRoll.value.result)
+    pendingDiceRoll.value = null
+  } else {
+    console.log('SpellEffects: no pending dice roll to resolve')
   }
 }
 
@@ -333,6 +288,10 @@ const bloodMagic = async () => {
 const executeSpell = async (spellName) => {
   console.log(`Executing spell: ${spellName}`)
   
+  // Set spell casting state and notify parent
+  isSpellCasting.value = true
+  emit('spellCastingStarted')
+  
   try {
     switch (spellName) {
       case 'Ember':
@@ -360,6 +319,10 @@ const executeSpell = async (spellName) => {
   } catch (error) {
     console.error(`Error executing spell ${spellName}:`, error)
     showMessage(`Failed to cast ${spellName}`, 'error')
+  } finally {
+    // Clear spell casting state and notify parent
+    isSpellCasting.value = false
+    emit('spellCastingEnded')
   }
 }
 
