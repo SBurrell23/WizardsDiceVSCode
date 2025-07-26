@@ -157,6 +157,11 @@ const protect = async () => {
 
 // Gust: Re-roll 1 unspent dice
 const gust = async () => {
+
+ await requestDiceRoll('1d4')
+await requestDiceRoll('1d6')
+await requestDiceRoll('1d8')
+await requestDiceRoll('1d20')
   
   // Find unspent dice for current player
   const playerKey = props.currentPlayer

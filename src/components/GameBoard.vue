@@ -333,16 +333,6 @@ const handleGameMessage = (data) => {
       setStatusMessage(`Rolling ${data.data.notation}...`, 'info', 0)
       console.log('Started spell dice rolling for remote player with result:', data.data.result)
       break
-    case 'spell_dice_complete':
-      // Other player's dice finished rolling - just acknowledge, don't clear yet
-      // Only process this if we're NOT currently casting spells (i.e., we're the observer)
-      if (!isSpellCasting.value) {
-        console.log('Received spell_dice_complete - dice will remain visible until next roll')
-        // Don't clear the display here - let it stay visible until the next spell_dice_start
-      } else {
-        console.log('Ignoring spell_dice_complete - we are the casting player')
-      }
-      break
     case 'turn_change':
       // Update turn state from other player
       currentTurn.value = data.data.turn
@@ -630,9 +620,6 @@ const onSpellDiceRolled = (result) => {
 
 const onSpellDiceFinished = () => {
   console.log('Spell dice finished rolling')
-  
-  // Send completion message to other player immediately
-  sendGameMessage('spell_dice_complete', {})
   
   // Add a 5-second delay for the casting player to process the dice result and continue
   setTimeout(() => {
