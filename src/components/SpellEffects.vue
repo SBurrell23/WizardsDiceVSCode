@@ -252,24 +252,15 @@ const bloodMagic = async () => {
   // Show appropriate messages
   const opponentArmorLost = currentTargetArmor - newTargetArmor
   const opponentHealthLost = currentTargetHealth - newTargetHealth
-  const casterArmorLost = currentCasterArmor - newCasterArmor
-  const casterHealthLost = currentCasterHealth - newCasterHealth
-  
+
   if (opponentArmorLost > 0 && opponentHealthLost > 0) {
-    showMessage(`💀 Blood Magic rolled ${damageDealt}! Removes ${opponentArmorLost} armor and deals ${opponentHealthLost} damage to opponent!`, 'damage')
+    showMessage(`💀 Blood Magic removes ${opponentArmorLost} armor and deals ${opponentHealthLost} damage to opponent!`, 'damage')
   } else if (opponentArmorLost > 0) {
-    showMessage(`💀 Blood Magic rolled ${damageDealt}! Removes ${opponentArmorLost} armor from opponent!`, 'damage')
+    showMessage(`💀 Blood Magic removes ${opponentArmorLost} armor from opponent!`, 'damage')
   } else if (opponentHealthLost > 0) {
-    showMessage(`💀 Blood Magic rolled ${damageDealt}! Deals ${opponentHealthLost} damage to opponent!`, 'damage')
+    showMessage(`💀 Blood Magic deals ${opponentHealthLost} damage to opponent!`, 'damage')
   }
-  
-  if (casterArmorLost > 0 && casterHealthLost > 0) {
-    showMessage(`💀 Blood Magic's cost: loses ${casterArmorLost} armor and takes ${casterHealthLost} damage!`, 'warning')
-  } else if (casterArmorLost > 0) {
-    showMessage(`💀 Blood Magic's cost: loses ${casterArmorLost} armor!`, 'warning')
-  } else if (casterHealthLost > 0) {
-    showMessage(`💀 Blood Magic's cost: takes ${casterHealthLost} damage!`, 'warning')
-  }
+
 }
 
 // ============================================================================

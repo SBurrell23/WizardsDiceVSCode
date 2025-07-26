@@ -605,7 +605,6 @@ const onRequestDiceRoll = ({ notation }) => {
     isRolling: true,
     result // Pre-determined result
   }
-  setStatusMessage(`Rolling ${notation}...`, 'info', 0)
   
   // Send spell dice start to other player with the pre-determined result
   sendGameMessage('spell_dice_start', {

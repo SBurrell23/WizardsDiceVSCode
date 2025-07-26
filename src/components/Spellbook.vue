@@ -25,8 +25,9 @@
           :key="spell.name"
           class="spell-card"
           :class="{ 
-            'can-cast': canCastSpell(spell) && props.isCurrentPlayer,
-            'not-selectable': !props.isCurrentPlayer
+            'can-cast': canCastSpell(spell) && props.isCurrentPlayer && !props.isSpellCasting,
+            'not-selectable': !props.isCurrentPlayer,
+            'casting-disabled': props.isSpellCasting
           }"
           @click="toggleSpell(spell)"
         >
@@ -154,8 +155,8 @@ const canCastSpell = (spell) => {
 
 // Toggle spell selection - now immediately casts spells
 const toggleSpell = (spell) => {
-  // Only allow spell casting if it's the current player's turn
-  if (!props.isCurrentPlayer || !canCastSpell(spell)) {
+  // Only allow spell casting if it's the current player's turn and no spell is currently being cast
+  if (!props.isCurrentPlayer || !canCastSpell(spell) || props.isSpellCasting) {
     return
   }
   
@@ -311,6 +312,20 @@ onMounted(() => {
 .spell-card:not(.can-cast) {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.spell-card.casting-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.spell-card.casting-disabled:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 .spell-header {
