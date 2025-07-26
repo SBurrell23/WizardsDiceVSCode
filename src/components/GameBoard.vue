@@ -553,6 +553,11 @@ const onSpellDiceFinished = () => {
     // Clear the spell dice rolling state
     spellDiceRoll.value = null
     setStatusMessage('', 'info', 0) // Clear status message
+    
+    // Notify SpellEffects that the display is finished and next roll can start
+    if (spellEffectsRef.value) {
+      spellEffectsRef.value.onSpellDiceDisplayFinished()
+    }
   }, 5000) // 5 second delay
 }
 

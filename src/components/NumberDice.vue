@@ -1,5 +1,9 @@
 <template>
   <div class="number-dice-container">
+    <div class="dice-info">
+      <span class="dice-notation">d{{ sides }}</span>
+    </div>
+    
     <div class="dice-grid">
       <div 
         class="number-die"
@@ -160,6 +164,21 @@ defineExpose({
   backdrop-filter: blur(10px);
 }
 
+.dice-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.dice-notation {
+  font-size: 1.1rem;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .dice-grid {
   display: flex;
   gap: 0.75rem;
@@ -216,7 +235,7 @@ defineExpose({
 .number-die.d10 {
   background: #f97316; /* Orange */
   border-color: #ea580c;
-  clip-path: polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%); /* Hexagon */
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); /* Hexagon */
 }
 
 .number-die.d12 {
@@ -228,7 +247,7 @@ defineExpose({
 .number-die.d20 {
   background: #1e40af; /* Blue */
   border-color: #1d4ed8;
-  border-radius: 50%; /* Circle (representing dodecagon) */
+  clip-path: polygon(50% 0%, 80% 10%, 98% 35%, 98% 65%, 80% 90%, 50% 100%, 20% 90%, 2% 65%, 2% 35%, 20% 10%); /* Decagon */
   width: 55px;
   height: 55px;
 }

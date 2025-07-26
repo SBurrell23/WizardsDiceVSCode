@@ -39,6 +39,7 @@ const emit = defineEmits([
 // Reactive data for tracking effects
 const diceRollResult = ref(null)
 const pendingSpellExecution = ref(null) // Track spell waiting for dice result
+const diceRollQueue = ref([]) // Queue for multiple dice rolls
 
 // Helper function to update player stats
 const updateStats = (player, updates) => {
@@ -53,14 +54,32 @@ const showMessage = (message, type = 'info') => {
 // Helper function to request dice roll from GameBoard
 const requestDiceRoll = async (notation) => {
   return new Promise((resolve) => {
-    // Store the spell execution context
-    pendingSpellExecution.value = {
+    // Add this request to the queue
+    diceRollQueue.value.push({
+      notation,
       resolver: resolve
-    }
+    })
     
-    // Request GameBoard to show NumberDice
-    emit('requestDiceRoll', { notation })
+    // If this is the only item in queue, start processing it
+    if (diceRollQueue.value.length === 1) {
+      processNextDiceRoll()
+    }
   })
+}
+
+// Process the next dice roll in the queue
+const processNextDiceRoll = () => {
+  if (diceRollQueue.value.length === 0) return
+  
+  const currentRoll = diceRollQueue.value[0]
+  
+  // Store the current execution context
+  pendingSpellExecution.value = {
+    resolver: currentRoll.resolver
+  }
+  
+  // Request GameBoard to show NumberDice
+  emit('requestDiceRoll', { notation: currentRoll.notation })
 }
 
 // Helper function to roll multiple dice sequentially (e.g., "2d6" becomes two "1d6" rolls)
@@ -87,8 +106,29 @@ const requestMultipleDiceRolls = async (notation) => {
 const handleDiceRollResult = (result) => {
   if (pendingSpellExecution.value && pendingSpellExecution.value.resolver) {
     diceRollResult.value = result
-    pendingSpellExecution.value.resolver(result)
+    // DON'T resolve the promise yet - store the result and resolver for later
+    pendingSpellExecution.value.result = result
+    // The promise will be resolved in onSpellDiceDisplayFinished
+  }
+}
+
+// Method to be called when spell dice display is finished (after 5-second delay)
+const onSpellDiceDisplayFinished = () => {
+  // Resolve the current pending promise with the stored result
+  if (pendingSpellExecution.value && pendingSpellExecution.value.resolver && pendingSpellExecution.value.result) {
+    pendingSpellExecution.value.resolver(pendingSpellExecution.value.result)
     pendingSpellExecution.value = null
+    
+    // Remove the completed roll from queue
+    diceRollQueue.value.shift()
+    
+    // Process next roll in queue if any
+    if (diceRollQueue.value.length > 0) {
+      // Small delay to ensure clean state
+      setTimeout(() => {
+        processNextDiceRoll()
+      }, 100)
+    }
   }
 }
 
@@ -162,6 +202,15 @@ const protect = async () => {
 
 // Gust: Re-roll 1 unspent dice
 const gust = async () => {
+  // Test sequential dice rolling
+  const roll1 = await requestDiceRoll('1d4')
+  const roll2 = await requestDiceRoll('1d6')
+  const roll3 = await requestDiceRoll('1d8')
+  const roll4 = await requestDiceRoll('1d10')
+  const roll5 = await requestDiceRoll('1d12')
+  const roll6 = await requestDiceRoll('1d20')
+  
+  showMessage(`💨 Gust test: d4 rolled ${roll1.value}, d6 rolled ${roll2.value}`, 'info')
 
   // Find unspent dice for current player
   const playerKey = props.currentPlayer
@@ -318,6 +367,7 @@ const executeSpell = async (spellName) => {
 defineExpose({
   executeSpell,
   handleDiceRollResult,
+  onSpellDiceDisplayFinished,
   diceRollResult
 })
 </script>
