@@ -64,8 +64,8 @@
         
         <div class="number-dice-box">
           <div class="dice-container small">
-            <!-- Show NumberDice when spell dice rolling is active AND it's this player's turn (HOST) -->
-            <div v-if="spellDiceRoll && spellDiceRoll.isRolling && isHostTurn && props.isHost" class="spell-dice-rolling">
+            <!-- Show NumberDice when spell dice rolling is active AND it's the HOST's turn -->
+            <div v-if="spellDiceRoll && spellDiceRoll.isRolling && isHostTurn" class="spell-dice-rolling">
               <NumberDice 
                 :diceNotation="spellDiceRoll.notation"
                 :autoRoll="true"
@@ -117,8 +117,8 @@
         
         <div class="number-dice-box">
           <div class="dice-container small">
-            <!-- Show NumberDice when spell dice rolling is active AND it's this player's turn (GUEST) -->
-            <div v-if="spellDiceRoll && spellDiceRoll.isRolling && !isHostTurn && !props.isHost" class="spell-dice-rolling">
+            <!-- Show NumberDice when spell dice rolling is active AND it's the GUEST's turn -->
+            <div v-if="spellDiceRoll && spellDiceRoll.isRolling && !isHostTurn" class="spell-dice-rolling">
               <NumberDice 
                 :diceNotation="spellDiceRoll.notation"
                 :autoRoll="true"
@@ -302,6 +302,30 @@ const handleGameMessage = (data) => {
       }
       // Use the same message that was sent from the casting player
       setStatusMessage(data.data.castMessage, 'info', 3000)
+      break
+    case 'spell_dice_start':
+      // Show spell dice rolling for other player
+      spellDiceRoll.value = {
+        notation: data.data.notation,
+        isRolling: true
+      }
+      setStatusMessage(`Rolling ${data.data.notation}...`, 'info', 0)
+      break
+    case 'spell_dice_result':
+      // Handle spell dice result from other player
+      if (spellEffectsRef.value) {
+        spellEffectsRef.value.handleDiceRollResult(data.data.result)
+      }
+      break
+    case 'spell_dice_finished':
+      // Clear spell dice display when other player's dice finished
+      setTimeout(() => {
+        spellDiceRoll.value = null
+        setStatusMessage('', 'info', 0)
+        if (spellEffectsRef.value) {
+          spellEffectsRef.value.onSpellDiceDisplayFinished()
+        }
+      }, 5000)
       break
     case 'turn_change':
       // Update turn state from other player
@@ -536,6 +560,11 @@ const onRequestDiceRoll = ({ notation }) => {
     isRolling: true
   }
   setStatusMessage(`Rolling ${notation}...`, 'info', 0)
+  
+  // Send spell dice start to other player
+  sendGameMessage('spell_dice_start', {
+    notation
+  })
 }
 
 // Handle spell dice roll completion
@@ -545,9 +574,17 @@ const onSpellDiceRolled = (result) => {
   if (spellEffectsRef.value) {
     spellEffectsRef.value.handleDiceRollResult(result)
   }
+  
+  // Send spell dice result to other player
+  sendGameMessage('spell_dice_result', {
+    result
+  })
 }
 
 const onSpellDiceFinished = () => {
+  // Send spell dice finished to other player
+  sendGameMessage('spell_dice_finished', {})
+  
   // Add a 5-second delay for players to process the dice result
   setTimeout(() => {
     // Clear the spell dice rolling state
