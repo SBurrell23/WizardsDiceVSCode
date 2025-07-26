@@ -53,48 +53,9 @@ const showMessage = (message, type = 'info') => {
   emit('showMessage', { message, type })
 }
 
-// Helper function to request dice roll from GameBoard
-const requestDiceRoll = async (notation) => {
-  console.log('SpellEffects requesting dice roll:', notation)
-  return new Promise((resolve) => {
-    // Store the resolver for this dice roll
-    pendingDiceRoll.value = { resolve }
-    
-    // Request GameBoard to show NumberDice
-    emit('requestDiceRoll', { notation })
-  })
-}
-
-// Method to be called by GameBoard when dice roll completes
-const handleDiceRollResult = (result) => {
-  if (pendingDiceRoll.value) {
-    diceRollResult.value = result
-    // Store the result, will be resolved after 5-second display
-    pendingDiceRoll.value.result = result
-  }
-}
-
-// Method to be called when spell dice display is finished (after 5-second delay)
-const onSpellDiceDisplayFinished = () => {
-  console.log('SpellEffects: dice display finished')
-  if (pendingDiceRoll.value && pendingDiceRoll.value.result) {
-    console.log('SpellEffects: resolving dice roll with result:', pendingDiceRoll.value.result)
-    // Resolve the promise with the dice result
-    pendingDiceRoll.value.resolve(pendingDiceRoll.value.result)
-    pendingDiceRoll.value = null
-  } else {
-    console.log('SpellEffects: no pending dice roll to resolve')
-  }
-}
-
-// ============================================================================
-// SPELL IMPLEMENTATIONS - First 4 one-cost spells
-// ============================================================================
-
-// Ember: Deal 2 damage
-const ember = async () => {
-  const damage = 2
-  const targetStats = props.playerStats[props.opponentPlayer]
+// Helper function to deal damage to a player (handles armor reduction first)
+const dealDamage = (damage, player) => {
+  const targetStats = props.playerStats[player]
   const currentArmor = targetStats.armor || 0
   const currentHealth = targetStats.health || 0
   
@@ -114,18 +75,77 @@ const ember = async () => {
     newHealth = Math.max(0, currentHealth - remainingDamage)
   }
   
-  updateStats(props.opponentPlayer, { armor: newArmor, health: newHealth })
+  updateStats(player, { armor: newArmor, health: newHealth })
   
+  // Return damage breakdown for messaging
   const armorLost = currentArmor - newArmor
   const healthLost = currentHealth - newHealth
   
-  if (armorLost > 0 && healthLost > 0) {
-    showMessage(`🔥 Ember removes ${armorLost} armor and deals ${healthLost} damage!`, 'damage')
-  } else if (armorLost > 0) {
-    showMessage(`🔥 Ember removes ${armorLost} armor!`, 'damage')
-  } else if (healthLost > 0) {
-    showMessage(`🔥 Ember deals ${healthLost} damage!`, 'damage')
+  return { armorLost, healthLost, totalDamage: armorLost + healthLost }
+}
+
+// Helper function to heal a player's health (respects max health)
+const healHP = (healing, player) => {
+  const currentStats = props.playerStats[player]
+  const currentHealth = currentStats.health || 0
+  const maxHealth = currentStats.maxHealth || 25
+  
+  const newHealth = Math.min(maxHealth, currentHealth + healing)
+  const actualHealing = newHealth - currentHealth
+  
+  updateStats(player, { health: newHealth })
+  
+  return { actualHealing, wasAtFullHealth: actualHealing === 0 }
+}
+
+// Helper function to grant armor to a player
+const gainArmor = (armor, player) => {
+  const currentStats = props.playerStats[player]
+  const currentArmor = currentStats.armor || 0
+  const newArmor = currentArmor + armor
+  
+  updateStats(player, { armor: newArmor })
+  
+  return { armorGained: armor, newTotalArmor: newArmor }
+}
+
+// Helper function to request dice roll from GameBoard
+const requestDiceRoll = async (notation) => {
+  console.log('SpellEffects requesting dice roll:', notation)
+  return new Promise((resolve) => {
+    // Store the resolver for this dice roll
+    pendingDiceRoll.value = { resolve }
+    
+    // Request GameBoard to show NumberDice
+    emit('requestDiceRoll', { notation })
+  })
+}
+
+// Method to be called by GameBoard when dice roll completes
+const handleDiceRollResult = (result) => {
+  if (pendingDiceRoll.value) {
+    diceRollResult.value = result
+    pendingDiceRoll.value.result = result
   }
+}
+
+// Method to be called when spell dice display is finished (after 5-second delay)
+const onSpellDiceDisplayFinished = () => {
+  if (pendingDiceRoll.value && pendingDiceRoll.value.result) {
+    pendingDiceRoll.value.resolve(pendingDiceRoll.value.result)
+    pendingDiceRoll.value = null
+  } else {
+    console.log('SpellEffects: no pending dice roll to resolve')
+  }
+}
+
+// ============================================================================
+// SPELL IMPLEMENTATIONS
+// ============================================================================
+
+// Ember: Deal 2 damage
+const ember = async () => {
+  dealDamage(2, props.opponentPlayer)
 }
 
 // Splash: Roll (1d4), a 3 or 4 lets you recast a 1 cost spell at no cost
@@ -147,22 +167,11 @@ const splash = async () => {
 
 // Protect: Gain 2 armour
 const protect = async () => {
-  const armor = 2
-  const currentStats = props.playerStats[props.currentPlayer]
-  const newArmor = (currentStats.armor || 0) + armor
-  
-  updateStats(props.currentPlayer, { armor: newArmor })
-  showMessage(`🌍 Protect grants ${armor} armor!`, 'buff')
+  gainArmor(2, props.currentPlayer)
 }
 
 // Gust: Re-roll 1 unspent dice
 const gust = async () => {
-
- await requestDiceRoll('1d4')
-await requestDiceRoll('1d6')
-await requestDiceRoll('1d8')
-await requestDiceRoll('1d20')
-  
   // Find unspent dice for current player
   const playerKey = props.currentPlayer
   const unspentDice = props.playerResources[playerKey]?.filter(dice => !dice.used) || []
@@ -184,21 +193,7 @@ await requestDiceRoll('1d20')
 
 // Heal: Heal 2 HP
 const heal = async () => {
-  const healing = 2
-  const currentStats = props.playerStats[props.currentPlayer]
-  const currentHealth = currentStats.health || 0
-  const maxHealth = currentStats.maxHealth // Use actual maxHealth from playerStats only
-  
-  const newHealth = Math.min(maxHealth, currentHealth + healing)
-  const actualHealing = newHealth - currentHealth
-  
-  updateStats(props.currentPlayer, { health: newHealth })
-  
-  if (actualHealing > 0) {
-    showMessage(`💖 Heal restores ${actualHealing} HP!`, 'healing')
-  } else {
-    showMessage(`💖 Heal has no effect - already at full health!`, 'info')
-  }
+  healHP(2, props.currentPlayer)
 }
 
 // Blood Magic: Deal (1d4) damage, take 2 damage
@@ -209,63 +204,19 @@ const bloodMagic = async () => {
   const selfDamage = 2
   
   // Apply damage to opponent
-  const targetStats = props.playerStats[props.opponentPlayer]
-  const currentTargetArmor = targetStats.armor || 0
-  const currentTargetHealth = targetStats.health || 0
+  const opponentDamage = dealDamage(damageDealt, props.opponentPlayer)
   
-  let remainingDamage = damageDealt
-  let newTargetArmor = currentTargetArmor
-  let newTargetHealth = currentTargetHealth
+  // Apply self damage
+  const selfDamageResult = dealDamage(selfDamage, props.currentPlayer)
   
-  // First, damage opponent's armor
-  if (currentTargetArmor > 0) {
-    const armorDamage = Math.min(remainingDamage, currentTargetArmor)
-    newTargetArmor = currentTargetArmor - armorDamage
-    remainingDamage -= armorDamage
+  // Show appropriate messages for opponent damage
+  if (opponentDamage.armorLost > 0 && opponentDamage.healthLost > 0) {
+    showMessage(`💀 Blood Magic removes ${opponentDamage.armorLost} armor and deals ${opponentDamage.healthLost} damage to opponent!`, 'damage')
+  } else if (opponentDamage.armorLost > 0) {
+    showMessage(`💀 Blood Magic removes ${opponentDamage.armorLost} armor from opponent!`, 'damage')
+  } else if (opponentDamage.healthLost > 0) {
+    showMessage(`💀 Blood Magic deals ${opponentDamage.healthLost} damage to opponent!`, 'damage')
   }
-  
-  // Then, damage opponent's health
-  if (remainingDamage > 0) {
-    newTargetHealth = Math.max(0, currentTargetHealth - remainingDamage)
-  }
-  
-  updateStats(props.opponentPlayer, { armor: newTargetArmor, health: newTargetHealth })
-  
-  // Apply self damage (armor absorbs this too)
-  const casterStats = props.playerStats[props.currentPlayer]
-  const currentCasterArmor = casterStats.armor || 0
-  const currentCasterHealth = casterStats.health || 0
-  
-  let remainingSelfDamage = selfDamage
-  let newCasterArmor = currentCasterArmor
-  let newCasterHealth = currentCasterHealth
-  
-  // Self damage hits armor first
-  if (currentCasterArmor > 0) {
-    const selfArmorDamage = Math.min(remainingSelfDamage, currentCasterArmor)
-    newCasterArmor = currentCasterArmor - selfArmorDamage
-    remainingSelfDamage -= selfArmorDamage
-  }
-  
-  // Then self damage hits health
-  if (remainingSelfDamage > 0) {
-    newCasterHealth = Math.max(0, currentCasterHealth - remainingSelfDamage)
-  }
-  
-  updateStats(props.currentPlayer, { armor: newCasterArmor, health: newCasterHealth })
-  
-  // Show appropriate messages
-  const opponentArmorLost = currentTargetArmor - newTargetArmor
-  const opponentHealthLost = currentTargetHealth - newTargetHealth
-
-  if (opponentArmorLost > 0 && opponentHealthLost > 0) {
-    showMessage(`💀 Blood Magic removes ${opponentArmorLost} armor and deals ${opponentHealthLost} damage to opponent!`, 'damage')
-  } else if (opponentArmorLost > 0) {
-    showMessage(`💀 Blood Magic removes ${opponentArmorLost} armor from opponent!`, 'damage')
-  } else if (opponentHealthLost > 0) {
-    showMessage(`💀 Blood Magic deals ${opponentHealthLost} damage to opponent!`, 'damage')
-  }
-
 }
 
 // ============================================================================

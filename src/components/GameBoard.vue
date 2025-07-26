@@ -507,7 +507,7 @@ const onCastSpells = async (spells) => {
   // Create notification message with spell names
   const spellNames = spells.map(spell => spell.name).join(', ')
   const castMessageForSelf = `You cast ${spellNames}!`
-  const castMessageForOther = `Opponent cast ${spellNames}!`
+  const castMessageForOther = `Enemy Wizard cast ${spellNames}!`
   
   // Show initial message to casting player
   setStatusMessage(castMessageForSelf, 'info', 3000)
