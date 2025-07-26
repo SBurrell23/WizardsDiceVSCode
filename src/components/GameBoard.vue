@@ -199,8 +199,6 @@
       @updatePlayerStats="onUpdatePlayerStats"
       @updatePlayerResources="onUpdatePlayerResources"
       @showMessage="onShowSpellMessage"
-      @triggerReroll="onTriggerReroll"
-      @recastSpell="onRecastSpell"
       @requestDiceRoll="onRequestDiceRoll"
       @spellCastingStarted="onSpellCastingStarted"
       @spellCastingEnded="onSpellCastingEnded"
@@ -344,7 +342,7 @@ const handleGameMessage = (data) => {
       break
     case 'spell_cast_notification':
       // Show spell casting message to other player
-      setStatusMessage(data.data.castMessage, 'info', 3000)
+      setStatusMessage(data.data.castMessage, data.data.statusType || 'info', 3000)
       break
     case 'dice_used_update':
       // Update dice state immediately when other player casts spells
@@ -511,11 +509,8 @@ const onCastSpells = async (spells) => {
   
   // Show initial message to casting player
   setStatusMessage(castMessageForSelf, 'info', 3000)
-
   // Send immediate spell cast notification to other player
-  sendGameMessage('spell_cast_notification', {
-    castMessage: castMessageForOther
-  })
+  sendGameMessage('spell_cast_notification', { castMessage: castMessageForOther})
 
   // Mark used dice as consumed
   const playerKey = isHostTurn.value ? 'host' : 'guest'
@@ -590,17 +585,15 @@ const onShowSpellMessage = ({ message, type }) => {
     'warning': 'error',
     'error': 'error'
   }
-  // Remove status message display for spell effects
-}
-
-const onTriggerReroll = ({ player, count, message }) => {
-  // TODO: Implement reroll mechanism
-  console.log(`Reroll triggered for ${player}: ${count} dice`)
-}
-
-const onRecastSpell = ({ maxCost, message }) => {
-  // TODO: Implement recast mechanism
-  console.log(`Recast available: max cost ${maxCost}`)
+  
+  // Show spell message to current player
+  setStatusMessage(message, statusTypes[type] || 'info', 3000)
+  
+  // Send the same spell message to the opponent with status type
+  sendGameMessage('spell_cast_notification', {
+    castMessage: message,
+    statusType: statusTypes[type] || 'info'
+  })
 }
 
 // Handle spell casting state changes
@@ -669,7 +662,7 @@ const onSpellDiceFinished = () => {
     if (spellEffectsRef.value) {
       spellEffectsRef.value.onSpellDiceDisplayFinished()
     }
-  }, 5000)
+  }, 3000)
 }
 
 const sendGameMessage = (messageType, data) => {
@@ -696,17 +689,6 @@ const sendGameMessage = (messageType, data) => {
   }
 }
 
-// Switch to next turn
-const nextTurn = () => {
-  currentTurn.value++
-  isHostTurn.value = !isHostTurn.value
-  
-  // Send turn update to other player
-  sendGameMessage('turn_change', {
-    turn: currentTurn.value,
-    isHostTurn: isHostTurn.value
-  })
-}
 
 // Leave game and return to landing page
 const leaveGame = () => {

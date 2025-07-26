@@ -31,7 +31,6 @@ const emit = defineEmits([
   'updatePlayerStats',
   'updatePlayerResources', 
   'showMessage',
-  'triggerReroll',
   'recastSpell',
   'requestDiceRoll',
   'spellCastingStarted',
@@ -51,6 +50,11 @@ const updateStats = (player, updates) => {
 // Helper function to show message
 const showMessage = (message, type = 'info') => {
   emit('showMessage', { message, type })
+}
+
+// Helper function to update player resources
+const updateResources = (player, updates) => {
+  emit('updatePlayerResources', { player, updates })
 }
 
 // Helper function to deal damage to a player (handles armor reduction first)
@@ -148,20 +152,35 @@ const ember = async () => {
   dealDamage(2, props.opponentPlayer)
 }
 
-// Splash: Roll (1d4), a 3 or 4 lets you recast a 1 cost spell at no cost
+// Splash: Roll (1d4), a 3 or 4 casts another random 1 cost spell
 const splash = async () => {
   const roll = await requestDiceRoll('1d4')
   
-  if (roll.value >= 3) {
-    showMessage(`💧 Splash rolled ${roll.value}! You can recast a 1-cost spell for free!`, 'success')
-    
-    // Emit event to allow recasting
-    emit('recastSpell', { 
-      maxCost: 1, 
-      message: 'Choose a 1-cost spell to recast for free' 
-    })
-  } else {
-    showMessage(`💧 Splash rolled ${roll.value}. No effect.`, 'info')
+  if (roll.value > 2) {
+    const randomSpell = ['Ember', 'Protect', 'Gust', 'Heal', 'Blood Magic'][Math.floor(Math.random() * 5)]
+    showMessage(`💦 Splash casts ${randomSpell}!`, 'info')
+    switch (randomSpell) {
+      case 'Ember':
+        await ember()
+        break
+      case 'Protect':
+        await protect()
+        break
+      case 'Gust':
+        await gust()
+        break
+      case 'Heal':
+        await heal()
+        break
+      case 'Blood Magic':
+        await bloodMagic()
+        break
+      default:
+        console.warn(`Spell "${randomSpell}" not implemented yet`)
+    }
+  }
+  else {
+    showMessage(`💦 Splash missed!`, 'info')
   }
 }
 
@@ -170,25 +189,33 @@ const protect = async () => {
   gainArmor(2, props.currentPlayer)
 }
 
-// Gust: Re-roll 1 unspent dice
+// Gust: Re-activate an unspent non-wind die at random
 const gust = async () => {
-  // Find unspent dice for current player
-  const playerKey = props.currentPlayer
-  const unspentDice = props.playerResources[playerKey]?.filter(dice => !dice.used) || []
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
   
-  if (unspentDice.length === 0) {
-    showMessage(`💨 Gust has no unspent dice to reroll!`, 'warning')
+  // Find all used non-wind dice (wind emoji is 💨)
+  const usedNonWindDice = currentPlayerResources.filter(dice => dice.used && dice.emoji !== '💨')
+  
+  if (usedNonWindDice.length === 0) {
+    showMessage('💨 Gust found no spent non-wind dice to reactivate!', 'warning')
     return
   }
   
-  showMessage(`💨 Gust lets you reroll 1 unspent die!`, 'utility')
+  // Pick a random used non-wind die
+  const randomDie = usedNonWindDice[Math.floor(Math.random() * usedNonWindDice.length)]
   
-  // Emit event to trigger reroll mechanism
-  emit('triggerReroll', { 
-    player: props.currentPlayer, 
-    count: 1,
-    message: 'Choose 1 die to reroll'
+  // Find the die in the current player's resources and mark it as unused
+  const updatedResources = currentPlayerResources.map(dice => {
+    if (dice.diceIndex === randomDie.diceIndex && dice.emoji === randomDie.emoji && dice.used) {
+      return { ...dice, used: false }
+    }
+    return dice
   })
+  
+  // Update the player's resources
+  updateResources(props.currentPlayer, updatedResources)
+  
+  showMessage(`💨 Gust reactivates a ${randomDie.emoji} die!`, 'utility')
 }
 
 // Heal: Heal 2 HP
@@ -211,11 +238,11 @@ const bloodMagic = async () => {
   
   // Show appropriate messages for opponent damage
   if (opponentDamage.armorLost > 0 && opponentDamage.healthLost > 0) {
-    showMessage(`💀 Blood Magic removes ${opponentDamage.armorLost} armor and deals ${opponentDamage.healthLost} damage to opponent!`, 'damage')
+    showMessage(`💀 Blood Magic removes ${opponentDamage.armorLost} armor and deals ${opponentDamage.healthLost} damage!`, 'damage')
   } else if (opponentDamage.armorLost > 0) {
-    showMessage(`💀 Blood Magic removes ${opponentDamage.armorLost} armor from opponent!`, 'damage')
+    showMessage(`💀 Blood Magic removes ${opponentDamage.armorLost} armor!`, 'damage')
   } else if (opponentDamage.healthLost > 0) {
-    showMessage(`💀 Blood Magic deals ${opponentDamage.healthLost} damage to opponent!`, 'damage')
+    showMessage(`💀 Blood Magic deals ${opponentDamage.healthLost} damage!`, 'damage')
   }
 }
 

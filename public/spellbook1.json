@@ -9,7 +9,7 @@
     {
       "name": "Splash",
       "cost": ["💧"],
-      "effect": "Roll (1d4), a 3 or 4 lets you recast a 1 cost spell at no cost",
+      "effect": "Roll (1d4), a 3 or 4  casts another random 1 cost spell",
       "category": "utility"
     },
     {
@@ -21,7 +21,7 @@
     {
       "name": "Gust",
       "cost": ["💨"],
-      "effect": "Re-roll 1 unspent dice",
+      "effect": "Re-activate an unspent non-wind die at random",
       "category": "utility"
     },
     {
