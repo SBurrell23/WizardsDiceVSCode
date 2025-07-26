@@ -1,22 +1,15 @@
 <template>
   <div class="number-dice-container">
-    <div class="dice-info">
-      <span class="dice-notation">{{ diceNotation }}</span>
-      <span v-if="hasRolled" class="total-result">Total: {{ totalResult }}</span>
-    </div>
-    
     <div class="dice-grid">
       <div 
-        v-for="(die, index) in diceArray" 
-        :key="index"
         class="number-die"
         :class="{ 
-          'rolling': die.isRolling,
+          'rolling': isRolling,
           [`d${sides}`]: true
         }"
       >
         <div class="die-face">
-          {{ die.currentValue || '?' }}
+          {{ currentValue || '?' }}
         </div>
       </div>
     </div>
@@ -27,7 +20,7 @@
         :disabled="isRolling"
         class="roll-button"
       >
-        {{ isRolling ? 'Rolling...' : 'Roll Dice' }}
+        {{ isRolling ? 'Rolling...' : 'Roll Die' }}
       </button>
     </div>
   </div>
@@ -43,8 +36,8 @@ const props = defineProps({
     required: true,
     default: '1d6',
     validator: (value) => {
-      // Validate format like "2d8", "1d20", etc.
-      return /^\d+d(4|6|8|10|12|20)$/.test(value)
+      // Validate format like "1d4", "1d6", etc. - only single dice
+      return /^1d(4|6|8|10|12|20)$/.test(value)
     }
   },
   autoRoll: {
@@ -63,58 +56,26 @@ const emit = defineEmits(['rolled', 'rolling-started', 'rolling-finished'])
 // Parse dice notation
 const parsedDice = computed(() => {
   const [count, sides] = props.diceNotation.split('d').map(Number)
-  return { count, sides }
+  return { count: 1, sides } // Always count = 1 for single die
 })
 
-const count = computed(() => parsedDice.value.count)
 const sides = computed(() => parsedDice.value.sides)
 
-// Reactive data
-const diceArray = ref([])
+// Reactive data - single die only
+const currentValue = ref(null)
+const finalValue = ref(null)
 const isRolling = ref(false)
 const hasRolled = ref(false)
-const totalResult = ref(0)
 
-// Initialize dice array
-const initializeDice = () => {
-  diceArray.value = Array(count.value).fill().map((_, index) => ({
-    id: index,
-    currentValue: null,
-    finalValue: null,
-    isRolling: false
-  }))
+// Initialize single die
+const initializeDie = () => {
+  currentValue.value = null
+  finalValue.value = null
   hasRolled.value = false
-  totalResult.value = 0
+  isRolling.value = false
 }
 
-// Roll a single die
-const rollSingleDie = (dieIndex) => {
-  return new Promise((resolve) => {
-    const die = diceArray.value[dieIndex]
-    die.isRolling = true
-    
-    let rollCount = 0
-    const rollInterval = setInterval(() => {
-      // Show random values during animation
-      die.currentValue = Math.floor(Math.random() * sides.value) + 1
-      rollCount++
-      
-      if (rollCount >= 10) { // Roll animation duration
-        clearInterval(rollInterval)
-        
-        // Final roll result
-        const finalValue = Math.floor(Math.random() * sides.value) + 1
-        die.currentValue = finalValue
-        die.finalValue = finalValue
-        die.isRolling = false
-        
-        resolve(finalValue)
-      }
-    }, 100)
-  })
-}
-
-// Roll all dice
+// Roll the single die
 const rollDice = async () => {
   if (isRolling.value) return
   
@@ -122,50 +83,52 @@ const rollDice = async () => {
   hasRolled.value = false
   emit('rolling-started')
   
-  // Reset all dice
-  diceArray.value.forEach(die => {
-    die.currentValue = null
-    die.finalValue = null
+  // Reset die
+  currentValue.value = null
+  finalValue.value = null
+  
+  // Roll animation
+  return new Promise((resolve) => {
+    let rollCount = 0
+    const rollInterval = setInterval(() => {
+      // Show random values during animation
+      currentValue.value = Math.floor(Math.random() * sides.value) + 1
+      rollCount++
+      
+      if (rollCount >= 10) { // Roll animation duration
+        clearInterval(rollInterval)
+        
+        // Final roll result
+        const result = Math.floor(Math.random() * sides.value) + 1
+        currentValue.value = result
+        finalValue.value = result
+        isRolling.value = false
+        hasRolled.value = true
+        
+        // Emit results
+        const rollResult = {
+          notation: props.diceNotation,
+          sides: sides.value,
+          value: result
+        }
+        
+        emit('rolled', rollResult)
+        emit('rolling-finished', rollResult)
+        
+        resolve(rollResult)
+      }
+    }, 100)
   })
-  
-  // Roll each die with a slight delay between them
-  const results = []
-  for (let i = 0; i < count.value; i++) {
-    // Stagger the dice rolls slightly
-    if (i > 0) {
-      await new Promise(resolve => setTimeout(resolve, 200))
-    }
-    
-    const result = await rollSingleDie(i)
-    results.push(result)
-  }
-  
-  // Calculate total
-  totalResult.value = results.reduce((sum, value) => sum + value, 0)
-  hasRolled.value = true
-  isRolling.value = false
-  
-  // Emit results
-  const rollResult = {
-    notation: props.diceNotation,
-    count: count.value,
-    sides: sides.value,
-    individual: results,
-    total: totalResult.value
-  }
-  
-  emit('rolled', rollResult)
-  emit('rolling-finished', rollResult)
 }
 
 // Reset dice
 const reset = () => {
-  initializeDice()
+  initializeDie()
 }
 
 // Watch for dice notation changes
 watch(() => props.diceNotation, () => {
-  initializeDice()
+  initializeDie()
 }, { immediate: true })
 
 // Auto-roll if enabled
@@ -183,8 +146,7 @@ defineExpose({
   reset,
   isRolling: computed(() => isRolling.value),
   hasRolled: computed(() => hasRolled.value),
-  totalResult: computed(() => totalResult.value),
-  individualResults: computed(() => diceArray.value.map(die => die.finalValue).filter(Boolean))
+  result: computed(() => finalValue.value)
 })
 </script>
 
@@ -196,30 +158,6 @@ defineExpose({
   padding: 1rem;
   margin: 0.5rem 0;
   backdrop-filter: blur(10px);
-}
-
-.dice-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  font-weight: 600;
-}
-
-.dice-notation {
-  font-size: 1.1rem;
-  color: #ffd700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.total-result {
-  font-size: 1.2rem;
-  color: #4ade80;
-  background: rgba(74, 222, 128, 0.2);
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid rgba(74, 222, 128, 0.3);
 }
 
 .dice-grid {
@@ -249,39 +187,48 @@ defineExpose({
 
 /* Different styles for different die types */
 .number-die.d4 {
-  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  background: #4ade80; /* Green */
+  border-color: #22c55e;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%); /* Triangle */
+}
+
+.number-die.d4 .die-face {
+  transform: translateY(8px); /* Move number down to visual center of triangle */
 }
 
 .number-die.d6 {
-  border-radius: 8px;
-  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  background: #ffffff; /* White */
+  border-color: #e5e7eb;
+  border-radius: 8px; /* Square */
+  color: #1f2937; /* Dark text for white background */
+}
+
+.number-die.d6 .die-face {
+  color: #1f2937; /* Dark text for white background */
 }
 
 .number-die.d8 {
-  border-radius: 20px;
-  background: linear-gradient(135deg, #a8e6cf 0%, #7fcdcd 100%);
-  transform: rotate(45deg);
-}
-
-.number-die.d8 .die-face {
-  transform: rotate(-45deg);
+  background: #3b82f6; /* Blue */
+  border-color: #2563eb;
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); /* Pentagon */
 }
 
 .number-die.d10 {
-  border-radius: 50% 10px;
-  background: linear-gradient(135deg, #ffd93d 0%, #ff9800 100%);
+  background: #f97316; /* Orange */
+  border-color: #ea580c;
+  clip-path: polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%); /* Hexagon */
 }
 
 .number-die.d12 {
-  border-radius: 12px;
-  background: linear-gradient(135deg, #b19cd9 0%, #9b59b6 100%);
-  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  background: #ec4899; /* Pink */
+  border-color: #db2777;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); /* Octagon */
 }
 
 .number-die.d20 {
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+  background: #1e40af; /* Blue */
+  border-color: #1d4ed8;
+  border-radius: 50%; /* Circle (representing dodecagon) */
   width: 55px;
   height: 55px;
 }

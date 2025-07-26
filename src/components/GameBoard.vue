@@ -20,11 +20,11 @@
         <div class="player-stats">
           <div class="health-stat">
             <span class="stat-icon">❤️</span>
-            <span class="stat-value">25/25</span>
+            <span class="stat-value">{{ playerStats.host.health }}/{{ playerStats.host.maxHealth }}</span>
           </div>
           <div class="armor-stat">
             <span class="stat-icon">🛡️</span>
-            <span class="stat-value">0</span>
+            <span class="stat-value">{{ playerStats.host.armor }}</span>
           </div>
         </div>
       </div>
@@ -64,8 +64,17 @@
         
         <div class="number-dice-box">
           <div class="dice-container small">
-            <!-- Number dice will be displayed here -->
-            <div class="dice-placeholder small">🎲</div>
+            <!-- Show NumberDice when spell dice rolling is active AND it's this player's turn (HOST) -->
+            <div v-if="spellDiceRoll && spellDiceRoll.isRolling && isHostTurn && props.isHost" class="spell-dice-rolling">
+              <NumberDice 
+                :diceNotation="spellDiceRoll.notation"
+                :autoRoll="true"
+                @rolled="onSpellDiceRolled"
+                @rolling-finished="onSpellDiceFinished"
+              />
+            </div>
+            <!-- Show placeholder when no spell dice rolling -->
+            <div v-else class="dice-placeholder small">🎲</div>
           </div>
         </div>
       </div>
@@ -108,8 +117,17 @@
         
         <div class="number-dice-box">
           <div class="dice-container small">
-            <!-- Number dice will be displayed here -->
-            <div class="dice-placeholder small">🎲</div>
+            <!-- Show NumberDice when spell dice rolling is active AND it's this player's turn (GUEST) -->
+            <div v-if="spellDiceRoll && spellDiceRoll.isRolling && !isHostTurn && !props.isHost" class="spell-dice-rolling">
+              <NumberDice 
+                :diceNotation="spellDiceRoll.notation"
+                :autoRoll="true"
+                @rolled="onSpellDiceRolled"
+                @rolling-finished="onSpellDiceFinished"
+              />
+            </div>
+            <!-- Show placeholder when no spell dice rolling -->
+            <div v-else class="dice-placeholder small">🎲</div>
           </div>
         </div>
       </div>
@@ -119,11 +137,11 @@
         <div class="player-stats">
           <div class="health-stat">
             <span class="stat-icon">❤️</span>
-            <span class="stat-value">25/25</span>
+            <span class="stat-value">{{ playerStats.guest.health }}/{{ playerStats.guest.maxHealth }}</span>
           </div>
           <div class="armor-stat">
             <span class="stat-icon">🛡️</span>
-            <span class="stat-value">0</span>
+            <span class="stat-value">{{ playerStats.guest.armor }}</span>
           </div>
         </div>
       </div>
@@ -142,13 +160,30 @@
         @close="() => {}"
       />
     </div>
+    
+    <!-- Spell Effects Component (invisible) -->
+    <SpellEffects
+      ref="spellEffectsRef"
+      :playerStats="playerStats"
+      :playerResources="playerResources"
+      :currentPlayer="isHostTurn ? 'host' : 'guest'"
+      :opponentPlayer="isHostTurn ? 'guest' : 'host'"
+      @updatePlayerStats="onUpdatePlayerStats"
+      @updatePlayerResources="onUpdatePlayerResources"
+      @showMessage="onShowSpellMessage"
+      @triggerReroll="onTriggerReroll"
+      @recastSpell="onRecastSpell"
+      @requestDiceRoll="onRequestDiceRoll"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import ElementDice from './ElementDice.vue'
+import NumberDice from './NumberDice.vue'
 import Spellbook from './Spellbook.vue'
+import SpellEffects from './SpellEffects.vue'
 
 // Props passed from parent component
 const props = defineProps({
@@ -193,8 +228,16 @@ const playerResources = ref({
   host: [],
   guest: []
 })
+const playerStats = ref({
+  host: { health: 25, armor: 0, maxHealth: 25 },
+  guest: { health: 25, armor: 0, maxHealth: 25 }
+})
 const diceRefs = ref([])
+const spellEffectsRef = ref(null)
 const isRolling = ref(false)
+
+// Spell dice rolling state
+const spellDiceRoll = ref(null) // { notation, spellName, isRolling }
 
 // Computed properties for player names
 const topPlayerName = computed(() => {
@@ -253,6 +296,10 @@ const handleGameMessage = (data) => {
     case 'spells_cast':
       // Update other player's resources after spell casting
       playerResources.value[data.data.player] = data.data.playerResources
+      // Update player stats if provided
+      if (data.data.playerStats) {
+        playerStats.value = data.data.playerStats
+      }
       // Use the same message that was sent from the casting player
       setStatusMessage(data.data.castMessage, 'info', 3000)
       break
@@ -273,6 +320,9 @@ const handleGameMessage = (data) => {
       isHostTurn.value = data.data.isHostTurn
       gamePhase.value = data.data.gamePhase
       playerResources.value = data.data.playerResources
+      if (data.data.playerStats) {
+        playerStats.value = data.data.playerStats
+      }
       console.log('Game state synced:', data.data)
       break
     case 'request_game_state':
@@ -282,7 +332,8 @@ const handleGameMessage = (data) => {
           currentTurn: currentTurn.value,
           isHostTurn: isHostTurn.value,
           gamePhase: gamePhase.value,
-          playerResources: playerResources.value
+          playerResources: playerResources.value,
+          playerStats: playerStats.value
         })
       }
       break
@@ -382,7 +433,7 @@ const endTurn = () => {
 }
 
 // Handle spell casting from spellbook
-const onCastSpells = (spells) => {
+const onCastSpells = async (spells) => {
   console.log('Casting spells:', spells)
   
   // Create notification message with spell names
@@ -390,33 +441,48 @@ const onCastSpells = (spells) => {
   const totalDiceUsed = spells.reduce((total, spell) => total + spell.cost.length, 0)
   const castMessage = `${currentPlayerName.value} cast ${spellNames} using ${totalDiceUsed} dice!`
   
-  // Show message to casting player
+  // Show initial message to casting player
   setStatusMessage(castMessage, 'success', 3000)
   
-  // Mark used dice as consumed instead of removing them
+  // Mark used dice as consumed
   const playerKey = isHostTurn.value ? 'host' : 'guest'
   spells.forEach(spell => {
     spell.cost.forEach(requiredDice => {
       const diceIndex = playerResources.value[playerKey].findIndex(dice => dice.emoji === requiredDice && !dice.used)
       if (diceIndex > -1) {
-        // Mark dice as used instead of removing it
         playerResources.value[playerKey][diceIndex].used = true
       }
     })
   })
 
+  // Execute each spell using SpellEffects component
+  if (spellEffectsRef.value) {
+    for (const spell of spells) {
+      try {
+        const result = await spellEffectsRef.value.executeSpell(spell.name)
+        console.log('Spell executed:', result)
+      } catch (error) {
+        console.error('Error executing spell:', spell.name, error)
+        setStatusMessage(`Failed to cast ${spell.name}`, 'error', 3000)
+      }
+    }
+  }
+
+  // Send updated game state
   sendGameMessage('game_state_sync', {
     currentTurn: currentTurn.value,
     isHostTurn: isHostTurn.value,
     gamePhase: gamePhase.value,
-    playerResources: playerResources.value
+    playerResources: playerResources.value,
+    playerStats: playerStats.value
   })
   
-  // Send spell casting info to other player with the same message
+  // Send spell casting info to other player
   sendGameMessage('spells_cast', {
     player: playerKey,
     spells: spells,
     playerResources: playerResources.value[playerKey],
+    playerStats: playerStats.value,
     castMessage: castMessage
   })
 }
@@ -425,6 +491,71 @@ const onCastSpells = (spells) => {
 const onEndTurn = () => {
   endTurn()
 }
+
+// SpellEffects event handlers
+const onUpdatePlayerStats = ({ player, updates }) => {
+  if (playerStats.value[player]) {
+    Object.assign(playerStats.value[player], updates)
+  }
+}
+
+const onUpdatePlayerResources = ({ player, updates }) => {
+  if (playerResources.value[player]) {
+    Object.assign(playerResources.value[player], updates)
+  }
+}
+
+const onShowSpellMessage = ({ message, type }) => {
+  const statusTypes = {
+    'damage': 'error',
+    'healing': 'success', 
+    'buff': 'success',
+    'utility': 'info',
+    'warning': 'error',
+    'error': 'error'
+  }
+  setStatusMessage(message, statusTypes[type] || 'info', 3000)
+}
+
+const onTriggerReroll = ({ player, count, message }) => {
+  // TODO: Implement reroll mechanism
+  setStatusMessage(message, 'info', 5000)
+  console.log(`Reroll triggered for ${player}: ${count} dice`)
+}
+
+const onRecastSpell = ({ maxCost, message }) => {
+  // TODO: Implement recast mechanism
+  setStatusMessage(message, 'success', 5000)
+  console.log(`Recast available: max cost ${maxCost}`)
+}
+
+// Handle dice roll request from SpellEffects
+const onRequestDiceRoll = ({ notation }) => {
+  spellDiceRoll.value = {
+    notation,
+    isRolling: true
+  }
+  setStatusMessage(`Rolling ${notation}...`, 'info', 0)
+}
+
+// Handle spell dice roll completion
+const onSpellDiceRolled = (result) => {
+  console.log('Spell dice rolled:', result)
+  // Pass result back to SpellEffects
+  if (spellEffectsRef.value) {
+    spellEffectsRef.value.handleDiceRollResult(result)
+  }
+}
+
+const onSpellDiceFinished = () => {
+  // Add a 5-second delay for players to process the dice result
+  setTimeout(() => {
+    // Clear the spell dice rolling state
+    spellDiceRoll.value = null
+    setStatusMessage('', 'info', 0) // Clear status message
+  }, 5000) // 5 second delay
+}
+
 const sendGameMessage = (messageType, data) => {
   const message = {
     type: messageType,
@@ -496,7 +627,8 @@ onMounted(() => {
             currentTurn: currentTurn.value,
             isHostTurn: isHostTurn.value,
             gamePhase: gamePhase.value,
-            playerResources: playerResources.value
+            playerResources: playerResources.value,
+            playerStats: playerStats.value
           })
         }, 100)
       })
@@ -508,7 +640,8 @@ onMounted(() => {
         currentTurn: currentTurn.value,
         isHostTurn: isHostTurn.value,
         gamePhase: gamePhase.value,
-        playerResources: playerResources.value
+        playerResources: playerResources.value,
+        playerStats: playerStats.value
       })
     }, 100)
     
@@ -682,6 +815,24 @@ onUnmounted(() => {
 
 .dice-placeholder.small {
   font-size: 1.8rem;
+}
+
+.spell-dice-rolling {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spell-dice-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffd700;
+  text-align: center;
+  background: rgba(255, 215, 0, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .game-center {
