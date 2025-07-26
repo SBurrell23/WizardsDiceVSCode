@@ -273,11 +273,15 @@ const spellDiceRoll = ref(null) // { notation, spellName, isRolling }
 
 // Computed properties for player names
 const topPlayerName = computed(() => {
-  return props.hostName
+  // Top player is always the host
+  // If current user is the host, show "You", otherwise show "Opponent"
+  return props.isHost ? 'You' : 'Enemy Wizard'
 })
 
 const bottomPlayerName = computed(() => {
-  return props.guestName
+  // Bottom player is always the guest
+  // If current user is the guest, show "You", otherwise show "Opponent"
+  return props.isHost ? 'Enemy Wizard' : 'You'
 })
 
 const currentPlayerName = computed(() => {
@@ -502,14 +506,15 @@ const onCastSpells = async (spells) => {
   
   // Create notification message with spell names
   const spellNames = spells.map(spell => spell.name).join(', ')
-  const castMessage = `${currentPlayerName.value} cast ${spellNames}!`
+  const castMessageForSelf = `You cast ${spellNames}!`
+  const castMessageForOther = `Opponent cast ${spellNames}!`
   
   // Show initial message to casting player
-  setStatusMessage(castMessage, 'info', 3000)
+  setStatusMessage(castMessageForSelf, 'info', 3000)
 
   // Send immediate spell cast notification to other player
   sendGameMessage('spell_cast_notification', {
-    castMessage: castMessage
+    castMessage: castMessageForOther
   })
 
   // Mark used dice as consumed
