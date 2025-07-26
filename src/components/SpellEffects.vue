@@ -157,16 +157,7 @@ const protect = async () => {
 
 // Gust: Re-roll 1 unspent dice
 const gust = async () => {
-  // Test sequential dice rolling
-  const roll1 = await requestDiceRoll('1d4')
-  const roll2 = await requestDiceRoll('1d6')
-  const roll3 = await requestDiceRoll('1d8')
-  const roll4 = await requestDiceRoll('1d10')
-  const roll5 = await requestDiceRoll('1d12')
-  const roll6 = await requestDiceRoll('1d20')
   
-  showMessage(`💨 Gust test: d4 rolled ${roll1.value}, d6 rolled ${roll2.value}`, 'info')
-
   // Find unspent dice for current player
   const playerKey = props.currentPlayer
   const unspentDice = props.playerResources[playerKey]?.filter(dice => !dice.used) || []

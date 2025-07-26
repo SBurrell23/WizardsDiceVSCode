@@ -2,85 +2,88 @@
   <div class="game-container">
     <!-- Left side - Game Board -->
     <div class="game-board">
-      <!-- Game Header -->
+      <!-- Player 1 Area (Top) -->
+      <div class="player-area top-player">
+        <div class="player-header">
+          <h3 class="player-name">{{ topPlayerName }}</h3>
+          <div class="player-stats">
+            <div class="health-stat">
+              <span class="stat-icon">❤️</span>
+              <span class="stat-value">{{ playerStats.host.health }}/{{ playerStats.host.maxHealth }}</span>
+            </div>
+            <div class="armor-stat">
+              <span class="stat-icon">🛡️</span>
+              <span class="stat-value">{{ playerStats.host.armor }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dice-area">
+          <div class="element-dice-box">
+            <div class="dice-container">
+              <!-- Element dice will be displayed here -->
+              <!-- Show interactive dice if it's the host's turn and current player is host AND in rolling phase -->
+              <div v-if="isHostTurn && props.isHost && gamePhase === 'rolling'" class="dice-grid">
+                <ElementDice 
+                  v-for="i in diceToRoll" 
+                  :key="`top-${i}`"
+                  :ref="el => { if (el) diceRefs[i-1] = el }"
+                  :can-roll="canRollDice"
+                  :dice-index="i-1"
+                  @rolled="onDiceRolled"
+                />
+              </div>
+              <!-- Show rolled dice results for host -->
+              <div v-else class="opponent-dice">
+                <div v-for="resource in playerResources.host" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
+                  {{ resource.emoji }}
+                  <div v-if="resource.used" class="dice-used-overlay">✕</div>
+                </div>
+                <div v-if="playerResources.host.length === 0" class="dice-placeholder">
+                  🎲
+                </div>
+              </div>
+            </div>
+            <div v-if="isHostTurn && props.isHost && gamePhase === 'rolling'" class="roll-action">
+              <button @click="startRolling" class="roll-button" :disabled="isRolling || !canRollDice">
+                {{ isRolling ? 'Rolling...' : `Roll ${diceToRoll} Dice` }}
+              </button>
+            </div>
+          </div>
+          
+          <div class="number-dice-box">
+            <div class="dice-container small">
+              <!-- Show NumberDice when spell dice rolling is active AND it's the HOST's turn -->
+              <div v-if="spellDiceRoll && spellDiceRoll.isRolling && isHostTurn" class="spell-dice-rolling">
+                <NumberDice 
+                  :diceNotation="spellDiceRoll.notation"
+                  :autoRoll="true"
+                  :rollDelay="50"
+                  :forcedResult="spellDiceRoll.result"
+                  @rolled="onSpellDiceRolled"
+                  @rolling-finished="onSpellDiceFinished"
+                />
+              </div>
+              <!-- Show placeholder when no spell dice rolling -->
+              <div v-else class="dice-placeholder small">🎲</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Center - Turn Info and Status -->
       <div class="game-center">
         <div class="turn-info">
+          <div class="turn-indicator">
+            <div class="chevron-up" :class="{ 'active': isHostTurn }">▲</div>
+            <div class="chevron-down" :class="{ 'active': !isHostTurn }">▼</div>
+          </div>
           <span class="turn-counter">Turn {{ currentTurn }}</span>
-          <span class="current-player">{{ currentPlayerName }}'s Turn</span>
         </div>
         <div v-if="statusMessage" class="status-message" :class="statusType">
           {{ statusMessage }}
         </div>
       </div>
-
-    <!-- Player 1 Area (Top) -->
-    <div class="player-area top-player">
-      <div class="player-header">
-        <h3 class="player-name">{{ topPlayerName }}</h3>
-        <div class="player-stats">
-          <div class="health-stat">
-            <span class="stat-icon">❤️</span>
-            <span class="stat-value">{{ playerStats.host.health }}/{{ playerStats.host.maxHealth }}</span>
-          </div>
-          <div class="armor-stat">
-            <span class="stat-icon">🛡️</span>
-            <span class="stat-value">{{ playerStats.host.armor }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="dice-area">
-        <div class="element-dice-box">
-          <div class="dice-container">
-            <!-- Element dice will be displayed here -->
-            <!-- Show interactive dice if it's the host's turn and current player is host AND in rolling phase -->
-            <div v-if="isHostTurn && props.isHost && gamePhase === 'rolling'" class="dice-grid">
-              <ElementDice 
-                v-for="i in diceToRoll" 
-                :key="`top-${i}`"
-                :ref="el => { if (el) diceRefs[i-1] = el }"
-                :can-roll="canRollDice"
-                :dice-index="i-1"
-                @rolled="onDiceRolled"
-              />
-            </div>
-            <!-- Show rolled dice results for host -->
-            <div v-else class="opponent-dice">
-              <div v-for="resource in playerResources.host" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
-                {{ resource.emoji }}
-                <div v-if="resource.used" class="dice-used-overlay">✕</div>
-              </div>
-              <div v-if="playerResources.host.length === 0" class="dice-placeholder">
-                🎲
-              </div>
-            </div>
-          </div>
-          <div v-if="isHostTurn && props.isHost && gamePhase === 'rolling'" class="roll-action">
-            <button @click="startRolling" class="roll-button" :disabled="isRolling || !canRollDice">
-              {{ isRolling ? 'Rolling...' : `Roll ${diceToRoll} Dice` }}
-            </button>
-          </div>
-        </div>
-        
-        <div class="number-dice-box">
-          <div class="dice-container small">
-            <!-- Show NumberDice when spell dice rolling is active AND it's the HOST's turn -->
-            <div v-if="spellDiceRoll && spellDiceRoll.isRolling && isHostTurn" class="spell-dice-rolling">
-              <NumberDice 
-                :diceNotation="spellDiceRoll.notation"
-                :autoRoll="true"
-                :rollDelay="50"
-                :forcedResult="spellDiceRoll.result"
-                @rolled="onSpellDiceRolled"
-                @rolling-finished="onSpellDiceFinished"
-              />
-            </div>
-            <!-- Show placeholder when no spell dice rolling -->
-            <div v-else class="dice-placeholder small">🎲</div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Player 2 Area (Bottom) -->
     <div class="player-area bottom-player">
@@ -311,6 +314,12 @@ const handleGameMessage = (data) => {
       // Use the same message that was sent from the casting player
       setStatusMessage(data.data.castMessage, 'info', 3000)
       break
+    case 'dice_used_update':
+      // Update dice state immediately when other player casts spells
+      playerResources.value[data.data.player] = data.data.playerResources
+      setStatusMessage(data.data.castMessage, 'info', 3000)
+      console.log('Updated dice state - spells being cast by other player')
+      break
     case 'spell_dice_start':
       // Show spell dice rolling for other player
       console.log('Received spell_dice_start:', data.data.notation, 'result:', data.data.result)
@@ -392,7 +401,7 @@ const onDiceRolled = (result) => {
   
   // Check if all dice have been rolled
   if (playerResources.value[playerKey].length >= diceToRoll.value) {
-    setStatusMessage(`${currentPlayerName.value} rolled ${diceToRoll.value} dice! Choose spells to cast or end turn.`, 'success', 5000)
+    setStatusMessage(`Choose spells to cast or end turn.`, 'success', 5000)
     
     // Send dice results to other player
     sendGameMessage('dice_rolled', {
@@ -484,6 +493,13 @@ const onCastSpells = async (spells) => {
         playerResources.value[playerKey][diceIndex].used = true
       }
     })
+  })
+
+  // Send immediate dice state update to other player so they see dice marked as used right away
+  sendGameMessage('dice_used_update', {
+    player: playerKey,
+    playerResources: playerResources.value[playerKey],
+    castMessage: castMessage
   })
 
   // Execute each spell using SpellEffects component
@@ -920,8 +936,9 @@ onUnmounted(() => {
   background: rgba(255,255,255,0.1);
   backdrop-filter: blur(10px);
   border-radius: 15px;
-  margin: 0 0 1rem 0;
+  margin: 1rem 0;
   border: 1px solid rgba(255,255,255,0.2);
+  flex-shrink: 0;
 }
 
 .game-title {
@@ -947,15 +964,25 @@ onUnmounted(() => {
   border: 1px solid rgba(255,255,255,0.3);
 }
 
-.current-player {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #ffd700;
+.turn-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.chevron-up, .chevron-down {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: rgba(255,255,255,0.3);
+  transition: all 0.3s ease;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-  background: rgba(255,215,0,0.2);
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255,215,0,0.3);
+}
+
+.chevron-up.active, .chevron-down.active {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255,215,0,0.5), 2px 2px 4px rgba(0,0,0,0.8);
+  transform: scale(1.2);
 }
 
 .status-message {
@@ -966,6 +993,7 @@ onUnmounted(() => {
   text-align: center;
   background: rgba(0,0,0,0.6);
   border: 1px solid rgba(255,255,255,0.2);
+  font-size: 14px;
 }
 
 .status-message.info {
