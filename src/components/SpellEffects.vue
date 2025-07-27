@@ -235,16 +235,13 @@ const splash = async () => {
     
     // Convert to method name and execute
     const methodName = getMethodName(randomSpell)
+    const spellFunction = spellMap[methodName]
     
-    try {
-      if (typeof eval(methodName) === 'function') {
-        showMessage(`💦 Splash casts ${randomSpell}!`, 'utility')
-        await eval(methodName)()
-      } else {
-        showMessage(`💦 Splash tried to cast ${randomSpell} but it's not implemented!`, 'warning')
-      }
-    } catch (error) {
-      showMessage(`💦 Splash failed to cast ${randomSpell}!`, 'warning')
+    if (typeof spellFunction === 'function') {
+      showMessage(`💦 Splash casts ${randomSpell}!`, 'utility')
+      await spellFunction()
+    } else {
+      showMessage(`💦 Splash tried to cast ${randomSpell} but it's not implemented!`, 'warning')
     }
   } else {
     showMessage(`💦 Splash missed!`, 'info')
@@ -359,16 +356,13 @@ const wavepool = async () => {
   
   // Convert to method name and execute
   const methodName = getMethodName(randomSpell)
+  const spellFunction = spellMap[methodName]
   
-  try {
-    if (typeof eval(methodName) === 'function') {
-      showMessage(`💧 Wavepool casts ${randomSpell}!`, 'utility')
-      await eval(methodName)()
-    } else {
-      showMessage(`💧 Wavepool tried to cast ${randomSpell} but it's not implemented!`, 'warning')
-    }
-  } catch (error) {
-    showMessage(`💧 Wavepool failed to cast ${randomSpell}!`, 'warning')
+  if (typeof spellFunction === 'function') {
+    showMessage(`💧 Wavepool casts ${randomSpell}!`, 'utility')
+    await spellFunction()
+  } else {
+    showMessage(`💧 Wavepool tried to cast ${randomSpell} but it's not implemented!`, 'warning')
   }
 }
 
@@ -1068,6 +1062,60 @@ const selfDestruct = async () => {
 
 
 // ============================================================================
+// SPELL MAP FOR PRODUCTION BUILD COMPATIBILITY
+// ============================================================================
+
+// Create a map of all spell functions for production build compatibility
+const spellMap = {
+  ember,
+  splash,
+  protect,
+  gust,
+  heal,
+  bloodMagic,
+  blaze,
+  strongGusts,
+  wavepool,
+  wildGrowth,
+  unfairDuel,
+  fatedHearts,
+  refreshingSips,
+  smog,
+  hotheaded,
+  riskyBusiness,
+  hotCoals,
+  waterjet,
+  aquaMortis,
+  explosion,
+  neverendingVines,
+  secondChance,
+  deadlySwamp,
+  oddRod,
+  evenSteven,
+  restorativeShock,
+  bloodySacrifice,
+  downdraft,
+  troubledWaters,
+  mercifulStrike,
+  washedAshore,
+  luckyRitual,
+  highStakes,
+  thickArmour,
+  rejuvinatingWaters,
+  fieryPassion,
+  deadlierCurse,
+  fireFlower,
+  nullify,
+  fertileSoil,
+  evenTheOdds,
+  chainLightning,
+  revive,
+  deathTaxes,
+  mudslide,
+  selfDestruct
+}
+
+// ============================================================================
 // MAIN SPELL EXECUTION METHOD
 // ============================================================================
 
@@ -1083,18 +1131,17 @@ const executeSpell = async (spellName) => {
     const methodName = getMethodName(spellName)
     console.log(`Looking for method: ${methodName}`)
     
-    // Get the method dynamically from the current context
-    // This way the spellbook is the source of truth - if a method exists, it can be called
-    try {
-      if (typeof eval(methodName) === 'function') {
-        await eval(methodName)()
-      } else {
-        showMessage(`${spellName} is not a function`, 'warning')
-      }
-    } catch (evalError) {
+    // Get the method from the spell map (production-safe)
+    const spellFunction = spellMap[methodName]
+    
+    if (typeof spellFunction === 'function') {
+      await spellFunction()
+    } else {
       showMessage(`${spellName} is not yet implemented!`, 'warning')
+      console.warn(`Spell method '${methodName}' not found in spellMap for spell '${spellName}'`)
     }
   } catch (error) {
+    console.error('Error executing spell:', error)
     showMessage(`Failed to cast ${spellName}`, 'error')
   } finally {
     // Clear spell casting state and notify parent
