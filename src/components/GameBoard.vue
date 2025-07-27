@@ -364,14 +364,26 @@ const spellDiceRoll = ref(null) // { notation, spellName, isRolling }
 // Computed properties for player names
 const topPlayerName = computed(() => {
   // Top player is always the host
-  // If current user is the host, show "You", otherwise show "Opponent"
-  return props.isHost ? 'You' : 'Enemy Wizard'
+  // If current user is the host, show "You" (unless they have a custom name), otherwise show host's name or "Enemy Wizard"
+  if (props.isHost) {
+    // Current user is the host looking at their own area
+    return props.hostName === 'Host' ? 'You' : props.hostName
+  } else {
+    // Current user is the guest looking at the host's area
+    return props.hostName === 'Enemy Wizard' ? 'Enemy Wizard' : props.hostName
+  }
 })
 
 const bottomPlayerName = computed(() => {
   // Bottom player is always the guest
-  // If current user is the guest, show "You", otherwise show "Opponent"
-  return props.isHost ? 'Enemy Wizard' : 'You'
+  // If current user is the guest, show "You" (unless they have a custom name), otherwise show guest's name or "Enemy Wizard"
+  if (!props.isHost) {
+    // Current user is the guest looking at their own area
+    return props.guestName === 'Guest' ? 'You' : props.guestName
+  } else {
+    // Current user is the host looking at the guest's area
+    return props.guestName === 'Enemy Wizard' ? 'Enemy Wizard' : props.guestName
+  }
 })
 
 const currentPlayerName = computed(() => {
