@@ -143,6 +143,20 @@ const onSpellDiceDisplayFinished = () => {
   }
 }
 
+// Helper function to convert spell name to method name (camelCase, no spaces)
+const getMethodName = (spellName) => {
+  return spellName
+    .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters except spaces
+    .split(' ')
+    .map((word, index) => {
+      if (index === 0) {
+        return word.toLowerCase()
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    })
+    .join('')
+}
+
 // ============================================================================
 // SPELL IMPLEMENTATIONS
 // ============================================================================
@@ -246,6 +260,16 @@ const bloodMagic = async () => {
   }
 }
 
+// Blaze: Deal (1d10) damage
+const blaze = async () => {
+  const damageRoll = await requestDiceRoll('1d10')
+  const damageDealt = damageRoll.value
+  
+  dealDamage(damageDealt, props.opponentPlayer)
+  
+  showMessage(`🔥 Blaze deals ${damageDealt} damage!`, 'damage')
+}
+
 // ============================================================================
 // MAIN SPELL EXECUTION METHOD
 // ============================================================================
@@ -258,31 +282,22 @@ const executeSpell = async (spellName) => {
   emit('spellCastingStarted')
   
   try {
-    switch (spellName) {
-      case 'Ember':
-        await ember()
-        break
-      case 'Splash':
-        await splash()
-        break
-      case 'Protect':
-        await protect()
-        break
-      case 'Gust':
-        await gust()
-        break
-      case 'Heal':
-        await heal()
-        break
-      case 'Blood Magic':
-        await bloodMagic()
-        break
-      default:
-        console.warn(`Spell "${spellName}" not implemented yet`)
-        showMessage(`${spellName} is not implemented yet`, 'warning')
+    // Convert spell name to method name (camelCase) Rushing Waters -> rushingWaters
+    const methodName = getMethodName(spellName)
+    console.log(`Looking for method: ${methodName}`)
+    
+    // Get the method dynamically from the current context
+    // This way the spellbook is the source of truth - if a method exists, it can be called
+    try {
+      if (typeof eval(methodName) === 'function') {
+        await eval(methodName)()
+      } else {
+        showMessage(`${spellName} is not a function`, 'warning')
+      }
+    } catch (evalError) {
+      showMessage(`${spellName} is not yet implemented!`, 'warning')
     }
   } catch (error) {
-    console.error(`Error executing spell ${spellName}:`, error)
     showMessage(`Failed to cast ${spellName}`, 'error')
   } finally {
     // Clear spell casting state and notify parent

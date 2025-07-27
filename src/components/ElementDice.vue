@@ -90,8 +90,8 @@ defineExpose({
 
 <style scoped>
 .element-dice {
-  width: 60px;
-  height: 60px;
+  width: 30px; /* 60px */
+  height: 30px; /* 60px */
   background: rgba(255,255,255,0.1);
   border-radius: 8px;
   display: flex;

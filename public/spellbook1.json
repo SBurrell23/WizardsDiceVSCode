@@ -45,7 +45,7 @@
     {
       "name": "Wavepool",
       "cost": ["💧", "💧"],
-      "effect": "Recast any spell you've played this turn that is 2 dice or less at no cost",
+      "effect": "Cast any two cost spell at random",
       "category": "utility"
     },
     {

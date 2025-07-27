@@ -1291,6 +1291,7 @@ onUnmounted(() => {
 
 .dice-container {
   min-height: 80px;
+  max-height: 275px;
   padding: .75rem;
   display: flex;
   align-items: center;
@@ -1453,8 +1454,8 @@ onUnmounted(() => {
 }
 
 .rolled-dice {
-  width: 60px;
-  height: 60px;
+  width: 60px;/* 60px */
+  height: 60px; /* 60px */
   display: flex;
   align-items: center;
   justify-content: center;
