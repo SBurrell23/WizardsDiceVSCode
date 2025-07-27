@@ -190,6 +190,10 @@ const getMethodName = (spellName) => {
 // SPELL IMPLEMENTATIONS
 // ============================================================================
 
+// ============================================================================
+// 1-COST SPELLS
+// ============================================================================
+
 // Ember: Deal 2 damage
 const ember = async () => {
   dealDamage(2, props.opponentPlayer)
@@ -285,6 +289,10 @@ const bloodMagic = async () => {
     showMessage(`💀 Blood Magic deals ${opponentDamage.healthLost} damage!`, 'damage')
   }
 }
+
+// ============================================================================
+// 2-COST SPELLS
+// ============================================================================
 
 // Blaze: Deal (1d10) damage
 const blaze = async () => {
@@ -456,6 +464,232 @@ const aquaMortis = async () => {
   const attackRoll = await requestDiceRoll('1d6')
   dealDamage(attackRoll.value + 3, props.opponentPlayer)
   showMessage(`💧 Aqua Mortis deals ${attackRoll.value + 3} damage!`, 'damage')
+}
+
+// ============================================================================
+// 3-COST SPELLS
+// ============================================================================
+
+// Explosion: Take 3 damage, then deal (1d4) + (2d6) as damage to your opponent
+const explosion = async () => {
+  dealDamage(3, props.currentPlayer)
+  showMessage(`💥 Explosion self-inflicts 3 damage!`, 'damage')
+  
+  const d4Roll = await requestDiceRoll('1d4')
+  const d6Roll1 = await requestDiceRoll('2d6')
+  const totalDamage = d4Roll.value + d6Roll1.value
+  
+  dealDamage(totalDamage, props.opponentPlayer)
+  showMessage(`💥 Explosion deals ${totalDamage} damage!`, 'damage')
+}
+
+// Neverending Vines: Roll (1d8) repeatedly until a 1 is rolled, gain armour equal to the number of rolls, max of 12 armour
+const neverendingVines = async () => {
+  let rollCount = 0
+  let keepRolling = true
+  
+  while (keepRolling) {
+    const roll = await requestDiceRoll('1d8')
+    rollCount++
+    
+    if (roll.value === 1 || rollCount >= 12) {
+      keepRolling = false
+    }else{
+      showMessage(`🌿 Total vines so far... ${rollCount}`, 'utility')
+      await new Promise(resolve => setTimeout(resolve, 25))
+    }
+  }
+  
+  const armorToGain = Math.min(rollCount, 12)
+  gainArmor(armorToGain, props.currentPlayer)
+  showMessage(`🌿 Neverending Vines gains ${armorToGain} armor after ${rollCount} rolls!`, 'defense')
+}
+
+// Second Chance: Roll (1d6) to be gained as HP and armour, if you roll a 1 or 2 re-roll a (1d6) + 2 and use that value instead
+const secondChance = async () => {
+  let roll = await requestDiceRoll('1d6')
+  let finalValue = roll.value
+  
+  if (roll.value <= 2) {
+    const reroll = await requestDiceRoll('1d6')
+    finalValue = reroll.value + 2
+    showMessage(`🔄 Second Chance rerolls and gets ${finalValue}!`, 'utility')
+  }
+  
+  healHP(finalValue, props.currentPlayer)
+  gainArmor(finalValue, props.currentPlayer)
+  showMessage(`🔄 Second Chance grants ${finalValue} HP and ${finalValue} armor!`, 'hybrid')
+}
+
+// Deadly Swamp: If your opponent has 9 or more armour, remove all of it
+const deadlySwamp = async () => {
+  const opponentArmor = props.playerStats[props.opponentPlayer].armor || 0
+  
+  if (opponentArmor >= 9) {
+    updateStats(props.opponentPlayer, { armor: 0 })
+    showMessage(`🐊 Deadly Swamp removes all ${opponentArmor} armor!`, 'utility')
+  } else {
+    showMessage(`🐊 Deadly Swamp has no effect - opponent has ${opponentArmor} armor!`, 'info')
+  }
+}
+
+// Odd Rod: Roll (1d8) as damage, if the roll was an odd number roll an additional (1d6) as damage
+const oddRod = async () => {
+  const initialRoll = await requestDiceRoll('1d8')
+  let totalDamage = initialRoll.value
+  
+  if (initialRoll.value % 2 === 1) { // Odd number
+    showMessage(`⚡ Odd Rod rolls odd, rolling bonus damage!`, 'utility')
+    const bonusRoll = await requestDiceRoll('1d6')
+    totalDamage += bonusRoll.value
+  }
+  
+  dealDamage(totalDamage, props.opponentPlayer)
+  showMessage(`⚡ Odd Rod deals ${totalDamage} damage!`, 'damage')
+}
+
+// Even Steven: Roll (1d6) + 4 as damage, if the roll was an even number gain a re-roll
+const evenSteven = async () => {
+  const roll = await requestDiceRoll('1d6')
+  const damage = roll.value + 4
+  
+  dealDamage(damage, props.opponentPlayer)
+  showMessage(`🎯 Even Steven deals ${damage} damage!`, 'damage')
+  
+  if (roll.value % 2 === 0) { // Even number
+    // Trigger a re-roll for any unspent dice
+    await requestElementDiceReroll(
+      dice => !dice.used,  // Filter: only unspent dice
+      1,                   // Max 1 reroll
+      'Even Steven grants a re-roll! Select an unspent die'
+    )
+  }
+}
+
+// Restorative Shock: Heal (1d8) + 2 and deal (1d6) damage
+const restorativeShock = async () => {
+  const healRoll = await requestDiceRoll('1d8')
+  const totalHealing = healRoll.value + 2
+  healHP(totalHealing, props.currentPlayer)
+  showMessage(`⚡ Restorative Shock heals ${totalHealing} HP!`, 'healing')
+  
+  const damageRoll = await requestDiceRoll('1d6')
+  dealDamage(damageRoll.value, props.opponentPlayer)
+  
+  showMessage(`⚡ Restorative Shock deals ${damageRoll.value} damage!`, 'damage')
+}
+
+// Bloody Sacrifice: Sacrifice as much HP as you want, then deal half that rounded down to your opponent as damage
+const bloodySacrifice = async () => {
+  // This requires a player choice dialog for HP sacrifice amount
+  // Cannot be implemented with current helper functions
+  showMessage(`💀 Bloody Sacrifice requires player choice dialog - not yet implemented!`, 'warning')
+}
+
+// Downdraft: Roll (2d20), gain the lowest roll as armour, minimum of 5 armour
+const downdraft = async () => {
+  const roll1 = await requestDiceRoll('1d20')
+  const roll2 = await requestDiceRoll('1d20')
+  
+  const lowestRoll = Math.min(roll1.value, roll2.value)
+  const armorToGain = Math.max(lowestRoll, 5)
+  if(roll1.value === roll2.value) {
+    armorToGain =  roll1.value
+  }
+  
+  gainArmor(armorToGain, props.currentPlayer)
+  showMessage(`💨 Downdraft gains ${armorToGain} armor!`, 'defense')
+}
+
+// Troubled Waters: Deal (3d6) - 3 damage
+const troubledWaters = async () => {
+  const roll1 = await requestDiceRoll('1d6')
+  const roll2 = await requestDiceRoll('1d6')
+  const roll3 = await requestDiceRoll('1d6')
+  const damage = Math.max(0, roll1.value + roll2.value + roll3.value - 3)
+
+  if (damage > 0) {
+    dealDamage(damage, props.opponentPlayer)
+    showMessage(`🌊 Troubled Waters deals ${damage} damage!`, 'damage')
+  } else {
+    showMessage(`🌊 Troubled Waters deals no damage!`, 'info')
+  }
+}
+
+// Merciful Strike: Deal (1d10) + 5 damage, your opponent then gains half your dice roll rounded down as armour
+const mercifulStrike = async () => {
+  const roll = await requestDiceRoll('1d10')
+  const damage = roll.value + 5
+  const armorForOpponent = Math.floor(roll.value / 2)
+  
+  dealDamage(damage, props.opponentPlayer)
+  gainArmor(armorForOpponent, props.opponentPlayer)
+  
+  showMessage(`⚔️ Merciful Strike deals ${damage} damage and gives ${armorForOpponent} armor!`, 'damage')
+}
+
+// Washed Ashore: Return any spent fire, death, or wind dice to your hand
+const washedAshore = async () => {
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
+  
+  // Find all spent fire (🔥), death (💀), or wind (💨) dice
+  const targetEmojis = ['🔥', '💀', '💨']
+  const spentTargetDice = currentPlayerResources.filter(dice => dice.used && targetEmojis.includes(dice.emoji))
+  
+  if (spentTargetDice.length === 0) {
+    showMessage('🌊 Washed Ashore found no spent fire, death, or wind dice to restore!', 'warning')
+    return
+  }
+  
+  // Restore ALL spent target dice at once (like gust but for multiple dice)
+  const updatedResources = currentPlayerResources.map(dice => {
+    if (dice.used && targetEmojis.includes(dice.emoji)) {
+      return { ...dice, used: false }
+    }
+    return dice
+  })
+  
+  // Update the player's resources
+  updateResources(props.currentPlayer, updatedResources)
+  
+  showMessage(`🌊 Washed Ashore restores ${spentTargetDice.length} spent dice!`, 'utility')
+}
+
+// Lucky Ritual: Take 7 damage, gain 7 armour, deal 7 damage
+const luckyRitual = async () => {
+  dealDamage(7, props.currentPlayer)
+  gainArmor(7, props.currentPlayer)
+  dealDamage(7, props.opponentPlayer)
+  
+  showMessage(`🎲 Lucky Ritual: 7 damage taken, 7 armor gained, 7 damage dealt!`, 'hybrid')
+}
+
+// High Stakes: Roll (3d6) heal any 3 or higher rolls, take damage on any 2 or less rolls
+const highStakes = async () => {
+  const roll1 = await requestDiceRoll('1d6')
+  const roll2 = await requestDiceRoll('1d6')
+  const roll3 = await requestDiceRoll('1d6')
+  
+  const rolls = [roll1.value, roll2.value, roll3.value]
+  let totalHealing = 0
+  let totalDamage = 0
+  
+  rolls.forEach(roll => {
+    if (roll >= 3) {
+      totalHealing += roll
+    } else {
+      totalDamage += roll
+    }
+  })
+  
+  if (totalHealing > 0) {
+    healHP(totalHealing, props.currentPlayer)
+  }
+  if (totalDamage > 0) {
+    dealDamage(totalDamage, props.currentPlayer)
+  }
+  
+  showMessage(`🎰 High Stakes: ${totalHealing} healing, ${totalDamage} damage taken!`, 'utility')
 }
 
 

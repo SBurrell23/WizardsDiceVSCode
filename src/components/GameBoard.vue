@@ -895,7 +895,13 @@ const onUpdatePlayerStats = ({ player, updates }) => {
 
 const onUpdatePlayerResources = ({ player, updates }) => {
   if (playerResources.value[player]) {
-    Object.assign(playerResources.value[player], updates)
+    // If updates is an array, replace the entire resource array
+    if (Array.isArray(updates)) {
+      playerResources.value[player] = [...updates] // Force reactivity with spread
+    } else {
+      // Otherwise, do a partial update using Object.assign
+      Object.assign(playerResources.value[player], updates)
+    }
   }
 }
 

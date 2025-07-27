@@ -129,7 +129,7 @@
     {
       "name": "Second Chance",
       "cost": ["💧", "💖", "💨"],
-      "effect": "Roll (1d6) to be gained as HP and armour, you may choose to re-roll this dice once",
+      "effect": "Roll (1d6) to be gained as HP and armour, if you roll a 1 or 2 re-roll a (1d6) + 2 and use that value instead",
       "category": "hybrid"
     },
     {
@@ -142,6 +142,12 @@
       "name": "Odd Rod",
       "cost": ["💀", "💧", "🔥"],
       "effect": "Roll (1d8) as damage, if the roll was an odd number roll an additional (1d6) as damage",
+      "category": "damage"
+    },
+    {
+      "name":"Even Steven",
+      "cost": ["💨", "💨", "🔥"],
+      "effect": "Roll (1d6) + 4 as damage, if the roll was an even number gain a re-roll",
       "category": "damage"
     },
     {
@@ -158,8 +164,8 @@
     },
     {
       "name": "Downdraft",
-      "cost": ["💨", "💨", "💖"],
-      "effect": "Roll (2d20), gain the lowest roll as armour, minimum of 4 armour",
+      "cost": ["💨", "💨", "🌍"],
+      "effect": "Roll (2d20), gain the lowest roll as armour, minimum of 5 armour",
       "category": "defense"
     },
     {
@@ -177,7 +183,7 @@
     {
       "name": "Washed Ashore",
       "cost": ["💧", "💧", "💨"],
-      "effect": "Return any spent fire and death dice to your hand",
+      "effect": "Return any spent fire, death, or wind dice to your hand",
       "category": "utility"
     },
     {
