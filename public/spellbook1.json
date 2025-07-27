@@ -111,7 +111,7 @@
     {
       "name": "Aqua Mortis",
       "cost": ["💧", "💀"],
-      "effect": "Take (1d4) damage and deal (1d6) + 2 damage",
+      "effect": "Take (1d4) damage and deal (1d6) + 3 damage",
       "category": "damage"
     },
     {

@@ -1244,6 +1244,19 @@ onUnmounted(() => {
   // Call leaveGame to properly disconnect from the game
   //leaveGame()
 })
+
+// TESTING ONLY - Remove after testing
+// Global testing function for easy spell testing
+if (typeof window !== 'undefined') {
+  window.testSpell = (spellName) => {
+    if (spellEffectsRef.value) {
+      console.log(`Testing spell: ${spellName}`)
+      spellEffectsRef.value.testSpell(spellName)
+    } else {
+      console.error('SpellEffects not available')
+    }
+  }
+}
 </script>
 
 <style scoped>

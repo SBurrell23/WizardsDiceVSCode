@@ -429,6 +429,9 @@ const hotCoals = async () => {
   if (damageToDeal > 0) {
     dealDamage(damageToDeal, props.opponentPlayer)
     showMessage(`🔥 Hot Coals deals ${damageToDeal} damage!`, 'damage')
+  }else
+  {
+    showMessage(`🔥 Hot Coals has no armor to deal damage!`, 'warning')
   }
 }
 
@@ -444,15 +447,15 @@ const waterjet = async () => {
   showMessage(`💧 Waterjet deals 4 damage!`, 'damage')
 }
 
-// Aqua Mortis: Take (1d4) damage and deal (1d6) + 2 damage
+// Aqua Mortis: Take (1d4) damage and deal (1d6) + 3 damage
 const aquaMortis = async () => {
   const damageRoll = await requestDiceRoll('1d4')
   dealDamage(damageRoll.value, props.currentPlayer)
   showMessage(`💧 Aqua Mortis self-inflicts ${damageRoll.value} damage!`, 'damage')
 
   const attackRoll = await requestDiceRoll('1d6')
-  dealDamage(attackRoll.value + 2, props.opponentPlayer)
-  showMessage(`💧 Aqua Mortis deals ${attackRoll.value + 2} damage!`, 'damage')
+  dealDamage(attackRoll.value + 3, props.opponentPlayer)
+  showMessage(`💧 Aqua Mortis deals ${attackRoll.value + 3} damage!`, 'damage')
 }
 
 
@@ -498,7 +501,9 @@ defineExpose({
   handleDiceRollResult,
   handleElementDiceRerollResult,
   onSpellDiceDisplayFinished,
-  diceRollResult
+  diceRollResult,
+  // TESTING ONLY - Remove after testing
+  testSpell: (spellName) => executeSpell(spellName)
 })
 </script>
 
