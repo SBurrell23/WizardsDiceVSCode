@@ -709,29 +709,31 @@ const luckyRitual = async () => {
 // High Stakes: Roll (3d6) heal any 3 or higher rolls, take damage on any 2 or less rolls
 const highStakes = async () => {
   const roll1 = await requestDiceRoll('1d6')
+  if (roll1.value >= 3) {
+    healHP(roll1.value, props.currentPlayer)
+    showMessage(`🎰 High Stakes roll #1: Healed ${roll1.value} HP!`, 'healing')
+  } else {
+    dealDamage(roll1.value, props.currentPlayer)
+    showMessage(`🎰 High Stakes roll #1: Inflicted ${roll1.value} damage!`, 'damage')
+  }
+  
   const roll2 = await requestDiceRoll('1d6')
+  if (roll2.value >= 3) {
+    healHP(roll2.value, props.currentPlayer)
+    showMessage(`🎰 High Stakes roll #2: Healed ${roll2.value} HP!`, 'healing')
+  } else {
+    dealDamage(roll2.value, props.currentPlayer)
+    showMessage(`🎰 High Stakes roll #2: Inflicted ${roll2.value} damage!`, 'damage')
+  }
+  
   const roll3 = await requestDiceRoll('1d6')
-  
-  const rolls = [roll1.value, roll2.value, roll3.value]
-  let totalHealing = 0
-  let totalDamage = 0
-  
-  rolls.forEach(roll => {
-    if (roll >= 3) {
-      totalHealing += roll
-    } else {
-      totalDamage += roll
-    }
-  })
-  
-  if (totalHealing > 0) {
-    healHP(totalHealing, props.currentPlayer)
+  if (roll3.value >= 3) {
+    healHP(roll3.value, props.currentPlayer)
+    showMessage(`🎰 High Stakes roll #3: Healed ${roll3.value} HP!`, 'healing')
+  } else {
+    dealDamage(roll3.value, props.currentPlayer)
+    showMessage(`🎰 High Stakes roll #3: Inflicted ${roll3.value} damage!`, 'damage')
   }
-  if (totalDamage > 0) {
-    dealDamage(totalDamage, props.currentPlayer)
-  }
-  
-  showMessage(`🎰 High Stakes: ${totalHealing} healing, ${totalDamage} damage taken!`, 'utility')
 }
 
 
