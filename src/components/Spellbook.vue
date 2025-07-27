@@ -223,7 +223,16 @@ const endTurn = () => {
 // Load spellbook data
 const loadSpellbook = async () => {
   try {
-    const response = await fetch('./spellbook1.json')
+    // Add cache-busting parameter to prevent browser caching
+    const cacheBuster = new Date().getTime()
+    const response = await fetch(`./spellbook1.json?v=${cacheBuster}`, {
+      cache: 'no-cache',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    })
     const data = await response.json()
     spellbook.value = data
   } catch (error) {
