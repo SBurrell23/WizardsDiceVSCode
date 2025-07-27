@@ -891,12 +891,6 @@ const endTurn = () => {
 // Handle spell casting from spellbook
 const onCastSpells = async (spells) => {
   console.log('Casting spells:', spells)
-  
-  // Create notification message with spell names
-  const spellNames = spells.map(spell => spell.name).join(', ')
-  const castMessage = `${spellNames} was cast!`
-  
-  setStatusMessage(castMessage, 'info', 3000)
 
   // Mark used dice as consumed
   const playerKey = isHostTurn.value ? 'host' : 'guest'

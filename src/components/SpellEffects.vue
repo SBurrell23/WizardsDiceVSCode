@@ -42,6 +42,9 @@ const emit = defineEmits([
   'spellCastingEnded'
 ])
 
+// Configuration
+const DEFAULT_SPELL_CAST_DELAY = 2000 // Default delay for instant spells to show casting indicator
+
 // Reactive data for tracking effects
 const diceRollResult = ref(null)
 const pendingDiceRoll = ref(null) // Track current dice roll promise
@@ -215,6 +218,8 @@ const getMethodName = (spellName) => {
 // Ember: Deal 2 damage
 const ember = async () => {
   dealDamage(2, props.opponentPlayer)
+  showMessage(`🔥 Ember deals 2 damage!`, 'damage')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Splash: Roll (1d4), a 3 or 4 casts another random 1 cost spell
@@ -249,6 +254,9 @@ const splash = async () => {
 // Protect: Gain 2 armour
 const protect = async () => {
   gainArmor(2, props.currentPlayer)
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Gust: Re-activate an unspent non-wind die at random
@@ -278,11 +286,17 @@ const gust = async () => {
   updateResources(props.currentPlayer, updatedResources)
   
   showMessage(`💨 Gust reactivates a ${randomDie.emoji} die!`, 'utility')
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Heal: Heal 2 HP
 const heal = async () => {
   healHP(2, props.currentPlayer)
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Blood Magic: Deal (1d4) damage, take 2 damage
@@ -368,6 +382,9 @@ const wildGrowth = async () => {
     gainArmor(armorToGain, props.currentPlayer)
   }
   showMessage(`🌱 Wild Growth gains ${armorToGain} armor!`, 'utility')
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Unfair Duel: Roll (1d4), your opponent rolls (1d8), whoever rolls higher takes that amount as damage
@@ -459,6 +476,9 @@ const hotCoals = async () => {
   {
     showMessage(`🔥 Hot Coals has no armor to deal damage!`, 'warning')
   }
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Waterjet: Re-roll any unspent dice and deal 4 damage
@@ -549,6 +569,9 @@ const deadlySwamp = async () => {
   } else {
     showMessage(`🐊 Deadly Swamp has no effect - opponent has ${opponentArmor} armor!`, 'info')
   }
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Odd Rod: Roll (1d8) as damage, if the roll was an odd number roll an additional (1d6) as damage
@@ -695,6 +718,9 @@ const washedAshore = async () => {
   updateResources(props.currentPlayer, updatedResources)
   
   showMessage(`🌊 Washed Ashore restores ${spentTargetDice.length} spent dice!`, 'utility')
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Lucky Ritual: Take 7 damage, gain 7 armour, deal 7 damage
@@ -704,6 +730,9 @@ const luckyRitual = async () => {
   dealDamage(7, props.opponentPlayer)
   
   showMessage(`🎲 Lucky Ritual: 7 damage taken, 7 armor gained, 7 damage dealt!`, 'hybrid')
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // High Stakes: Roll (3d6) heal any 3 or higher rolls, take damage on any 2 or less rolls
@@ -831,6 +860,9 @@ const fireFlower = async () => {
   } else {
     showMessage(`🌸 Fire Flower has no armor to convert to damage!`, 'info')
   }
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Nullify: Gain (1d10) + 6 armour, if you gained 12 or more armour lose (1d6) HP
@@ -985,6 +1017,9 @@ const deathTaxes = async () => {
   if (currentPlayerHP <= 5) {
     gainArmor(7, props.opponentPlayer)
   }
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Mudslide: Roll (1d4, 1d6, 1d8, 1d10, 1d12, 1d20) and deal the highest 3 rolls as damage, max of 25 damage
