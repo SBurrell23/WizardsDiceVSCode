@@ -236,7 +236,7 @@
     },
     {
       "name": "Fertile Soil",
-      "cost": ["🌍", "💖", "💧", "💀"],
+      "cost": ["🌍", "💧", "💀", "💀"],
       "effect": "Sacrifice as much armor as you choose. Deal that as damage to your opponent and gain half that rounded down as HP",
       "category": "hybrid"
     },
