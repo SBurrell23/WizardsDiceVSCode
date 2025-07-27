@@ -299,15 +299,17 @@ const blaze = async () => {
   showMessage(`🔥 Blaze deals ${damageDealt} damage!`, 'damage')
 }
 
-//Re-roll 2 unspent dice up to 3 times each
+//Re-roll 4 dice
 const strongGusts = async () => {
   const rerollResult = await requestElementDiceReroll(
     dice => !dice.used,  // Filter: only unspent dice
-    2,                   // Max 2 dice total
-    'Select up to 2 unspent dice to reroll'
+    4,                   // Max 4 dice total
+    'Select up to 4 unspent dice to reroll'
   )
-  
-}// ============================================================================
+}
+
+
+// ============================================================================
 // MAIN SPELL EXECUTION METHOD
 // ============================================================================
 

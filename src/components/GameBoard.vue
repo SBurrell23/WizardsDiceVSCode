@@ -83,6 +83,12 @@
                 {{ isRolling ? 'Rolling...' : `Roll ${diceToRoll} Dice` }}
               </button>
             </div>
+            <!-- Stop Rerolling button for host -->
+            <div v-if="elementDiceReroll && isHostTurn && props.isHost" class="reroll-action">
+              <button @click="finishElementDiceReroll" class="stop-reroll-button">
+                Stop Rerolling ({{ elementDiceReroll.remainingRerolls }} left)
+              </button>
+            </div>
           </div>
           
           <div class="number-dice-box">
@@ -169,6 +175,12 @@
           <div v-if="!isHostTurn && !props.isHost && gamePhase === 'rolling'" class="roll-action">
             <button @click="startRolling" class="roll-button" :disabled="isRolling || !canRollDice">
               {{ isRolling ? 'Rolling...' : `Roll ${diceToRoll} Dice` }}
+            </button>
+          </div>
+          <!-- Stop Rerolling button for guest -->
+          <div v-if="elementDiceReroll && !isHostTurn && !props.isHost" class="reroll-action">
+            <button @click="finishElementDiceReroll" class="stop-reroll-button">
+              Stop Rerolling ({{ elementDiceReroll.remainingRerolls }} left)
             </button>
           </div>
         </div>
@@ -1088,9 +1100,6 @@ const rerollElementDie = (diceIndex) => {
   // Check if we're done with rerolls
   if (elementDiceReroll.value.remainingRerolls <= 0) {
     finishElementDiceReroll()
-  } else {
-    statusMessage.value = `${elementDiceReroll.value.remainingRerolls} rerolls remaining`
-    statusType.value = 'info'
   }
 }
 
@@ -1691,6 +1700,31 @@ onUnmounted(() => {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Reroll action styles */
+.reroll-action {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.stop-reroll-button {
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.stop-reroll-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255,68,68,0.4);
 }
 
 .status-message.success {

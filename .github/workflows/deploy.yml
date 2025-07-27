@@ -16,6 +16,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: startsWith(github.event.head_commit.message, 'DEPLOY')
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
@@ -30,6 +31,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    if: startsWith(github.event.head_commit.message, 'DEPLOY')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
