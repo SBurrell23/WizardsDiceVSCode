@@ -33,6 +33,7 @@ const emit = defineEmits([
   'showMessage',
   'recastSpell',
   'requestDiceRoll',
+  'requestElementDiceReroll',
   'spellCastingStarted',
   'spellCastingEnded'
 ])
@@ -40,6 +41,7 @@ const emit = defineEmits([
 // Reactive data for tracking effects
 const diceRollResult = ref(null)
 const pendingDiceRoll = ref(null) // Track current dice roll promise
+const pendingElementDiceReroll = ref(null) // Track current element dice reroll promise
 const isSpellCasting = ref(false) // Track if a spell is currently being cast
 
 // Helper function to update player stats
@@ -125,6 +127,22 @@ const requestDiceRoll = async (notation) => {
   })
 }
 
+// Helper function to request element dice reroll from GameBoard
+const requestElementDiceReroll = async (diceFilter, maxRerolls = 1, message = 'Select element dice to reroll') => {
+  console.log('SpellEffects requesting element dice reroll:', { diceFilter, maxRerolls, message })
+  return new Promise((resolve) => {
+    // Store the resolver for this element dice reroll
+    pendingElementDiceReroll.value = { resolve }
+    
+    // Request GameBoard to enter element dice selection mode
+    emit('requestElementDiceReroll', { 
+      diceFilter,     // Function or criteria to filter which element dice can be selected
+      maxRerolls,     // Maximum number of dice that can be rerolled
+      message         // Message to show the player
+    })
+  })
+}
+
 // Method to be called by GameBoard when dice roll completes
 const handleDiceRollResult = (result) => {
   if (pendingDiceRoll.value) {
@@ -140,6 +158,17 @@ const onSpellDiceDisplayFinished = () => {
     pendingDiceRoll.value = null
   } else {
     console.log('SpellEffects: no pending dice roll to resolve')
+  }
+}
+
+// Method to be called by GameBoard when dice reroll completes
+const handleElementDiceRerollResult = (rerolledDice) => {
+  if (pendingElementDiceReroll.value) {
+    console.log('SpellEffects: element dice reroll completed', rerolledDice)
+    pendingElementDiceReroll.value.resolve(rerolledDice)
+    pendingElementDiceReroll.value = null
+  } else {
+    console.log('SpellEffects: no pending element dice reroll to resolve')
   }
 }
 
@@ -270,7 +299,15 @@ const blaze = async () => {
   showMessage(`🔥 Blaze deals ${damageDealt} damage!`, 'damage')
 }
 
-// ============================================================================
+//Re-roll 2 unspent dice up to 3 times each
+const strongGusts = async () => {
+  const rerollResult = await requestElementDiceReroll(
+    dice => !dice.used,  // Filter: only unspent dice
+    2,                   // Max 2 dice total
+    'Select up to 2 unspent dice to reroll'
+  )
+  
+}// ============================================================================
 // MAIN SPELL EXECUTION METHOD
 // ============================================================================
 
@@ -310,6 +347,7 @@ const executeSpell = async (spellName) => {
 defineExpose({
   executeSpell,
   handleDiceRollResult,
+  handleElementDiceRerollResult,
   onSpellDiceDisplayFinished,
   diceRollResult
 })

@@ -59,7 +59,15 @@
                 </div>
                 <!-- Show actual dice results when not rolling -->
                 <div v-else-if="playerResources.host.length > 0" class="dice-results">
-                  <div v-for="resource in playerResources.host" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
+                  <div v-for="resource in playerResources.host" 
+                       :key="resource.diceIndex" 
+                       class="rolled-dice" 
+                       :class="{ 
+                         'used-dice': resource.used,
+                         'rerollable-dice': elementDiceReroll && elementDiceReroll.diceFilter(resource),
+                         'non-rerollable-dice': elementDiceReroll && !elementDiceReroll.diceFilter(resource)
+                       }"
+                       @click="elementDiceReroll && isHostTurn && props.isHost ? onElementDieRerollClick(resource.diceIndex) : null">
                     {{ resource.emoji }}
                     <div v-if="resource.used" class="dice-used-overlay">✕</div>
                   </div>
@@ -139,7 +147,15 @@
               </div>
               <!-- Show actual dice results when not rolling -->
               <div v-else-if="playerResources.guest.length > 0" class="dice-results">
-                <div v-for="resource in playerResources.guest" :key="resource.diceIndex" class="rolled-dice" :class="{ 'used-dice': resource.used }">
+                <div v-for="resource in playerResources.guest" 
+                     :key="resource.diceIndex" 
+                     class="rolled-dice" 
+                     :class="{ 
+                       'used-dice': resource.used,
+                       'rerollable-dice': elementDiceReroll && elementDiceReroll.diceFilter(resource),
+                       'non-rerollable-dice': elementDiceReroll && !elementDiceReroll.diceFilter(resource)
+                     }"
+                     @click="elementDiceReroll && !isHostTurn && !props.isHost ? onElementDieRerollClick(resource.diceIndex) : null">
                   {{ resource.emoji }}
                   <div v-if="resource.used" class="dice-used-overlay">✕</div>
                 </div>
@@ -232,6 +248,7 @@
       @updatePlayerResources="onUpdatePlayerResources"
       @showMessage="onShowSpellMessage"
       @requestDiceRoll="onRequestDiceRoll"
+      @requestElementDiceReroll="onRequestElementDiceReroll"
       @spellCastingStarted="onSpellCastingStarted"
       @spellCastingEnded="onSpellCastingEnded"
     />
@@ -360,6 +377,7 @@ const floatingIndicators = ref({
 
 // Spell dice rolling state
 const spellDiceRoll = ref(null) // { notation, spellName, isRolling }
+const elementDiceReroll = ref(null) // { diceFilter, maxRerolls, message, selectedDice, remainingRerolls }
 
 // Computed properties for player names
 const topPlayerName = computed(() => {
@@ -601,6 +619,20 @@ const handleGameMessage = (data) => {
       }
 
       console.log('Started spell dice rolling for remote player with result:', data.data.result)
+      break
+    case 'element_dice_reroll':
+      // Handle element dice reroll from other player
+      console.log('Received element_dice_reroll:', data.data)
+      const otherPlayerKey = isHostTurn.value ? 'guest' : 'host'
+      const updatedDice = [...playerResources.value[otherPlayerKey]]
+      updatedDice[data.data.diceIndex] = { 
+        ...updatedDice[data.data.diceIndex], 
+        value: data.data.newValue,
+        emoji: data.data.newEmoji,
+        element: data.data.newElement
+      }
+      playerResources.value[otherPlayerKey] = updatedDice
+      console.log(`Updated other player's die ${data.data.diceIndex} to ${data.data.newValue} (${data.data.newEmoji})`)
       break
     case 'turn_change':
       // Update turn state from other player
@@ -964,6 +996,125 @@ const onSpellDiceFinished = () => {
       spellEffectsRef.value.onSpellDiceDisplayFinished()
     }
   }, 2750)
+}
+
+// Handle element dice reroll request from SpellEffects
+const onRequestElementDiceReroll = ({ diceFilter, maxRerolls, message }) => {
+  console.log('Requesting element dice reroll:', { diceFilter, maxRerolls, message })
+  
+  // Set up element dice reroll state
+  elementDiceReroll.value = {
+    diceFilter,
+    maxRerolls,
+    message,
+    selectedDice: [],
+    remainingRerolls: maxRerolls
+  }
+  
+  // Show message to player
+  statusMessage.value = message
+  statusType.value = 'info'
+  
+  console.log('Element dice reroll mode activated')
+}
+
+// Handle element die click during reroll selection
+const onElementDieRerollClick = (diceIndex) => {
+  if (!elementDiceReroll.value) return
+  
+  const currentPlayerKey = isHostTurn.value ? 'host' : 'guest'
+  const dice = playerResources.value[currentPlayerKey][diceIndex]
+  
+  // Check if this die can be selected (passes filter)
+  const canSelect = elementDiceReroll.value.diceFilter(dice)
+  if (!canSelect) {
+    return
+  }
+  
+  // Check if we have total rerolls remaining
+  if (elementDiceReroll.value.remainingRerolls <= 0) {
+    statusMessage.value = 'No rerolls remaining'
+    statusType.value = 'warning'
+    return
+  }
+  
+  // Reroll the die
+  rerollElementDie(diceIndex)
+}
+
+// Reroll a specific element die
+const rerollElementDie = (diceIndex) => {
+  const currentPlayerKey = isHostTurn.value ? 'host' : 'guest'
+  const currentDice = [...playerResources.value[currentPlayerKey]]
+  
+  // Get the old die information before rerolling
+  const oldDie = currentDice[diceIndex]
+  const oldEmoji = oldDie.emoji
+  
+  // Element faces mapping (from ElementDice.vue)
+  const elementFaces = ['🔥', '💧', '🌍', '💨', '💖', '💀']
+  const elementNames = ['fire', 'water', 'earth', 'air', 'love', 'death']
+  
+  // Generate new roll for the die (0-5 for element dice)
+  const newRoll = Math.floor(Math.random() * 6)
+  const newEmoji = elementFaces[newRoll]
+  const newElement = elementNames[newRoll]
+  
+  // Update the die with new value, emoji, and element
+  currentDice[diceIndex] = { 
+    ...currentDice[diceIndex], 
+    value: newRoll,
+    emoji: newEmoji,
+    element: newElement
+  }
+  
+  // Update resources
+  playerResources.value[currentPlayerKey] = currentDice
+  
+  // Update reroll tracking
+  elementDiceReroll.value.remainingRerolls--
+  
+  // Send reroll to other player
+  sendGameMessage('element_dice_reroll', {
+    diceIndex,
+    newValue: newRoll,
+    newEmoji: newEmoji,
+    newElement: newElement
+  })
+  
+  // status message saying old emoji and new emoji
+  setStatusMessage(`Rerolled ${oldEmoji} to ${newEmoji}!`)
+
+  // Check if we're done with rerolls
+  if (elementDiceReroll.value.remainingRerolls <= 0) {
+    finishElementDiceReroll()
+  } else {
+    statusMessage.value = `${elementDiceReroll.value.remainingRerolls} rerolls remaining`
+    statusType.value = 'info'
+  }
+}
+
+// Finish element dice reroll and return to SpellEffects
+const finishElementDiceReroll = () => {
+  console.log('Element dice reroll finished')
+  
+  // Get the final dice state
+  const currentPlayerKey = isHostTurn.value ? 'host' : 'guest'
+  const finalDice = playerResources.value[currentPlayerKey]
+  
+  // Clear reroll state
+  const rerollResult = {
+    finalDice,
+    rerollsUsed: elementDiceReroll.value.maxRerolls - elementDiceReroll.value.remainingRerolls
+  }
+  
+  elementDiceReroll.value = null
+  statusMessage.value = ''
+  
+  // Return result to SpellEffects
+  if (spellEffectsRef.value) {
+    spellEffectsRef.value.handleElementDiceRerollResult(rerollResult)
+  }
 }
 
 const sendGameMessage = (messageType, data) => {
@@ -1472,6 +1623,26 @@ onUnmounted(() => {
   opacity: 0.5;
   background: rgba(255,0,0,0.1);
   border-color: rgba(255,0,0,0.3);
+}
+
+.rolled-dice.rerollable-dice {
+  cursor: pointer;
+  background: rgba(0,255,0,0.1);
+  border-color: rgba(0,255,0,0.5);
+  box-shadow: 0 0 10px rgba(0,255,0,0.3);
+}
+
+.rolled-dice.rerollable-dice:hover {
+  background: rgba(0,255,0,0.2);
+  border-color: rgba(0,255,0,0.7);
+  box-shadow: 0 0 15px rgba(0,255,0,0.5);
+  transform: scale(1.05);
+}
+
+.rolled-dice.non-rerollable-dice {
+  opacity: 0.6;
+  background: rgba(128,128,128,0.1);
+  border-color: rgba(128,128,128,0.3);
 }
 
 .dice-used-overlay {
