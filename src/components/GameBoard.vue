@@ -256,6 +256,7 @@
       :playerResources="playerResources"
       :currentPlayer="isHostTurn ? 'host' : 'guest'"
       :opponentPlayer="isHostTurn ? 'guest' : 'host'"
+      :showNumericModal="showNumericModal"
       @updatePlayerStats="onUpdatePlayerStats"
       @updatePlayerResources="onUpdatePlayerResources"
       @showMessage="onShowSpellMessage"
@@ -312,6 +313,18 @@
       </div>
     </div>
   </div>
+
+  <!-- Numeric Input Modal -->
+  <NumericInputModal
+    :is-visible="numericModal.isVisible"
+    :title="numericModal.title"
+    :message="numericModal.message"
+    :input-label="numericModal.inputLabel"
+    :min-value="numericModal.minValue"
+    :max-value="numericModal.maxValue"
+    :default-value="numericModal.defaultValue"
+    @confirm="onNumericModalConfirm"
+  />
 </template>
 
 <script setup>
@@ -320,6 +333,7 @@ import ElementDice from './ElementDice.vue'
 import NumberDice from './NumberDice.vue'
 import Spellbook from './Spellbook.vue'
 import SpellEffects from './SpellEffects.vue'
+import NumericInputModal from './NumericInputModal.vue'
 
 // Props passed from parent component
 const props = defineProps({
@@ -390,6 +404,18 @@ const floatingIndicators = ref({
 // Spell dice rolling state
 const spellDiceRoll = ref(null) // { notation, spellName, isRolling }
 const elementDiceReroll = ref(null) // { diceFilter, maxRerolls, message, selectedDice, remainingRerolls }
+
+// Numeric input modal state
+const numericModal = ref({
+  isVisible: false,
+  title: '',
+  message: '',
+  inputLabel: '',
+  minValue: undefined,
+  maxValue: undefined,
+  defaultValue: 0,
+  resolve: null
+})
 
 // Computed properties for player names
 const topPlayerName = computed(() => {
@@ -571,6 +597,30 @@ const resetGameState = () => {
   statusMessage.value = ''
   
   console.log('Game state reset for new game')
+}
+
+// Numeric modal helper functions
+const showNumericModal = (title, message, inputLabel, minValue, maxValue, defaultValue = 0) => {
+  return new Promise((resolve) => {
+    numericModal.value = {
+      isVisible: true,
+      title,
+      message,
+      inputLabel,
+      minValue,
+      maxValue,
+      defaultValue,
+      resolve
+    }
+  })
+}
+
+const onNumericModalConfirm = (value) => {
+  if (numericModal.value.resolve) {
+    numericModal.value.resolve(value)
+  }
+  numericModal.value.isVisible = false
+  numericModal.value.resolve = null
 }
 
 // Handle game-related messages

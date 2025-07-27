@@ -23,6 +23,10 @@ const props = defineProps({
   opponentPlayer: {
     type: String,
     required: true
+  },
+  showNumericModal: {
+    type: Function,
+    required: true
   }
 })
 
@@ -88,6 +92,20 @@ const dealDamage = (damage, player) => {
   const healthLost = currentHealth - newHealth
   
   return { armorLost, healthLost, totalDamage: armorLost + healthLost }
+}
+
+// Helper function to deal damage directly to HP (ignores armor)
+const dealDamageToHP = (damage, player) => {
+  const targetStats = props.playerStats[player]
+  const currentHealth = targetStats.health || 0
+  
+  const newHealth = Math.max(0, currentHealth - damage)
+  const healthLost = currentHealth - newHealth
+  
+  updateStats(player, { health: newHealth })
+  
+  // Return damage breakdown for messaging
+  return { healthLost, totalDamage: healthLost }
 }
 
 // Helper function to heal a player's health (respects max health)
@@ -579,11 +597,35 @@ const restorativeShock = async () => {
   showMessage(`⚡ Restorative Shock deals ${damageRoll.value} damage!`, 'damage')
 }
 
-// Bloody Sacrifice: Sacrifice as much HP as you want, then deal half that rounded down to your opponent as damage
+// Bloody Sacrifice: Sacrifice as much HP as you can without dying, then deal half that rounded down to your opponent as damage
 const bloodySacrifice = async () => {
-  // This requires a player choice dialog for HP sacrifice amount
-  // Cannot be implemented with current helper functions
-  showMessage(`💀 Bloody Sacrifice requires player choice dialog - not yet implemented!`, 'warning')
+  const currentHealth = props.playerStats[props.currentPlayer].health || 0
+  
+
+  // Show modal to get sacrifice amount (max is current health - 1, so player doesn't die)
+  const sacrificeAmount = await props.showNumericModal(
+    '🩸Bloody Sacrifice',
+    `Sacrifice HP (ignoring armour) and deal half that rounded down as damage to your opponent. You currently have ${currentHealth} HP.`,
+    'HP To Sacrifice',
+    0,                    // Min: 0 HP
+    currentHealth - 1,    // Max: current HP - 1 (can't sacrifice all HP)
+    0                     // Default: 0 HP
+  )
+  
+  // Apply self damage directly to HP (ignoring armor)
+  if (sacrificeAmount > 0) {
+    dealDamageToHP(sacrificeAmount, props.currentPlayer)
+  }
+  
+  // Calculate and deal damage to opponent (half sacrifice amount, rounded down)
+  const damageToOpponent = Math.floor(sacrificeAmount / 2)
+  
+  if (damageToOpponent > 0) {
+    dealDamage(damageToOpponent, props.opponentPlayer)
+    showMessage(`💀 Bloody Sacrifice: sacrificed ${sacrificeAmount} HP, dealt ${damageToOpponent} damage!`, 'damage')
+  } else {
+    showMessage(`💀 Bloody Sacrifice: sacrificed ${sacrificeAmount} HP, and dealt no damage!`, 'warning')
+  }
 }
 
 // Downdraft: Roll (2d20), gain the lowest roll as armour, minimum of 5 armour

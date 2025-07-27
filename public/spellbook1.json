@@ -159,7 +159,7 @@
     {
       "name": "Bloody Sacrifice",
       "cost": ["💀", "💀", "💖"],
-      "effect": "Sacrifice as much HP as you want, then deal half that rounded down to your opponent as damage",
+      "effect": "Sacrifice as much HP as you can without dying, then deal half that rounded down to your opponent as damage",
       "category": "damage"
     },
     {
