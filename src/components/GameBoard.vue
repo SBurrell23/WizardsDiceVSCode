@@ -3,7 +3,7 @@
     <!-- Left side - Game Board -->
     <div class="game-board">
       <!-- Player 1 Area (Top) -->
-      <div class="player-area top-player">
+      <div class="player-area top-player" :class="{ 'current-player': isHostTurn }">
         <div class="player-header">
           <h3 class="player-name">{{ topPlayerName }}</h3>
           <div class="player-stats">
@@ -99,7 +99,10 @@
             <div class="chevron-up" :class="{ 'active': isHostTurn }">▲</div>
             <div class="chevron-down" :class="{ 'active': !isHostTurn }">▼</div>
           </div>
-          <span class="turn-counter">Turn {{ currentTurn }}</span>
+          <div class="turn-counter">
+            <div class="turn-label">Turn</div>
+            <div class="turn-number">{{ currentTurn }}</div>
+          </div>
         </div>
         <div v-if="statusMessage" class="status-message" :class="statusType">
           {{ statusMessage }}
@@ -107,7 +110,7 @@
       </div>
 
     <!-- Player 2 Area (Bottom) -->
-    <div class="player-area bottom-player">
+    <div class="player-area bottom-player" :class="{ 'current-player': !isHostTurn }">
       <div class="dice-area">
         <div class="element-dice-box">
           <div class="dice-container">
@@ -916,6 +919,16 @@ onUnmounted(() => {
   border: 1px solid rgba(255,255,255,0.2);
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   min-height: 200px;
+  transition: all 0.3s ease;
+}
+
+.player-area.current-player {
+  border: 2px solid #fbbf24;
+  box-shadow: 
+    0 0 30px rgba(251, 191, 36, 0.5),
+    0 8px 32px rgba(0,0,0,0.1),
+    inset 0 0 25px rgba(251, 191, 36, 0.20);
+  background: rgba(255,255,255,0.1);
 }
 
 .top-player {
@@ -1090,8 +1103,8 @@ onUnmounted(() => {
 .game-center {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 2rem;
+  align-items: flex-start;
+  padding: 0.25rem 2rem 0.5rem 2rem;
   background: rgba(255,255,255,0.1);
   backdrop-filter: blur(10px);
   border-radius: 15px;
@@ -1110,17 +1123,37 @@ onUnmounted(() => {
 .turn-info {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px);
+  margin-top: 0.1rem;
 }
 
 .turn-counter {
-  font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.turn-label {
+  font-size: 0.875rem;
   font-weight: 600;
-  color: white;
-  background: rgba(255,255,255,0.2);
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.3);
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.1rem;
+}
+
+.turn-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  letter-spacing: 0.5px;
 }
 
 .turn-indicator {
