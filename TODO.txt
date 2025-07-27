@@ -1,4 +1,3 @@
-make floating hp/armour numbers stack if multiple come through
 
 add game over modal and allow host to run new game
 implement the rest of the spellbook!

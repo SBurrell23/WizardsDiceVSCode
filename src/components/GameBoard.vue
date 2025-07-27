@@ -104,8 +104,7 @@
             <div class="chevron-down" :class="{ 'active': !isHostTurn }">▼</div>
           </div>
           <div class="turn-counter">
-            <div class="turn-label">Turn</div>
-            <div class="turn-number">{{ currentTurn }}</div>
+            <div class="turn-display">Turn {{ currentTurn }}</div>
           </div>
         </div>
         <div v-if="statusMessage" class="status-message" :class="statusType">
@@ -986,20 +985,34 @@ onUnmounted(() => {
 .health-stat, .armor-stat {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: rgba(255,255,255,0.2);
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
-  font-weight: 600;
+  gap: 0.75rem;
+  padding: .3rem 1rem;
+  border-radius: 12px;
+  font-weight: 700;
   position: relative;
+  border: 2px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.health-stat {
+  background: rgba(220, 38, 127, 0.25);
+  border-color: rgba(220, 38, 127, 0.4);
+}
+
+.armor-stat {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.4);
 }
 
 .stat-icon {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
 }
 
 .stat-value {
-  font-size: 1.1rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
   color: white;
 }
 
@@ -1119,14 +1132,15 @@ onUnmounted(() => {
 .game-center {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 0.25rem 2rem 0.5rem 2rem;
+  align-items: center;
+  padding: 0.5rem 1rem;
   background: rgba(255,255,255,0.1);
   backdrop-filter: blur(10px);
-  border-radius: 15px;
-  margin: 1rem 0;
+  border-radius: 10px;
+  margin: 0.3rem 0;
   border: 1px solid rgba(255,255,255,0.2);
   flex-shrink: 0;
+  min-height: auto;
 }
 
 .game-title {
@@ -1139,34 +1153,25 @@ onUnmounted(() => {
 .turn-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.8rem;
   background: rgba(255, 255, 255, 0.15);
-  padding: 0.5rem 1rem;
-  border-radius: 15px;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(15px);
-  margin-top: 0.1rem;
+  margin-top: 0;
 }
 
 .turn-counter {
   display: flex;
-  flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-.turn-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 0.1rem;
-}
-
-.turn-number {
-  font-size: 1.5rem;
+.turn-display {
+  font-size: 1.3rem;
   font-weight: 700;
+  /* color: #ffffff; */
   color: #ffd700;
   text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
   letter-spacing: 0.5px;
@@ -1176,21 +1181,29 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.4rem;
+  color: #ffd700;
 }
 
 .chevron-up, .chevron-down {
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: bold;
   color: rgba(255,255,255,0.3);
   transition: all 0.3s ease;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1rem;
+  width: 1rem;
 }
 
 .chevron-up.active, .chevron-down.active {
   color: #ffd700;
   text-shadow: 0 0 10px rgba(255,215,0,0.5), 2px 2px 4px rgba(0,0,0,0.8);
-  transform: scale(1.2);
+  font-size: 1.25rem;
+  font-weight: 900;
 }
 
 .status-message {
@@ -1201,7 +1214,18 @@ onUnmounted(() => {
   text-align: center;
   background: rgba(0,0,0,0.6);
   border: 1px solid rgba(255,255,255,0.2);
-  font-size: 14px;
+  font-size: 1rem;
+  align-self: center;
+  animation: statusGlow 4s ease-out;
+}
+
+@keyframes statusGlow {
+  0% {
+    box-shadow: 0 0 20px rgba(255, 251, 30, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(187, 187, 27, 0);
+  }
 }
 
 .status-message.info {
