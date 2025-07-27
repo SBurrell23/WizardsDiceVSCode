@@ -1039,9 +1039,9 @@ const selfDestruct = async () => {
 const executeSpell = async (spellName) => {
   console.log(`Executing spell: ${spellName}`)
   
-  // Set spell casting state and notify parent
+  // Set spell casting state and notify parent with spell name
   isSpellCasting.value = true
-  emit('spellCastingStarted')
+  emit('spellCastingStarted', { spellName })
   
   try {
     // Convert spell name to method name (camelCase) Rushing Waters -> rushingWaters
@@ -1064,7 +1064,7 @@ const executeSpell = async (spellName) => {
   } finally {
     // Clear spell casting state and notify parent
     isSpellCasting.value = false
-    emit('spellCastingEnded')
+    emit('spellCastingEnded', { spellName })
   }
 }
 

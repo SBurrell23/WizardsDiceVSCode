@@ -6,6 +6,12 @@
       <div class="player-area top-player" :class="{ 'current-player': isHostTurn }">
         <div class="player-header">
           <h3 class="player-name">{{ topPlayerName }}</h3>
+          <!-- Spell casting indicator -->
+          <div v-if="currentlyCastingSpell && currentlyCastingSpell.playerName === topPlayerName" 
+               class="casting-spell-indicator">
+            <span class="casting-icon">✨</span>
+            <span class="casting-text">Casting: {{ currentlyCastingSpell.spellName }}</span>
+          </div>
           <div class="player-stats">
             <div class="health-stat">
               <span class="stat-icon">❤️</span>
@@ -205,6 +211,12 @@
       
       <div class="player-header">
         <h3 class="player-name">{{ bottomPlayerName }}</h3>
+        <!-- Spell casting indicator -->
+        <div v-if="currentlyCastingSpell && currentlyCastingSpell.playerName === bottomPlayerName" 
+             class="casting-spell-indicator">
+          <span class="casting-icon">✨</span>
+          <span class="casting-text">Casting: {{ currentlyCastingSpell.spellName }}</span>
+        </div>
         <div class="player-stats">
           <div class="health-stat">
             <span class="stat-icon">❤️</span>
@@ -394,6 +406,7 @@ const spellEffectsRef = ref(null)
 const isRolling = ref(false)
 const isOpponentRolling = ref(false)
 const isSpellCasting = ref(false)
+const currentlyCastingSpell = ref(null) // { spellName, playerName }
 
 // Floating indicator state - now supports multiple indicators per stat
 const floatingIndicators = ref({
@@ -770,6 +783,19 @@ const handleGameMessage = (data) => {
         emit('leave-game')
       }, 500)
       break
+    case 'spell_casting_started':
+      // Convert player role to appropriate display name for this client
+      const castingPlayerName = data.data.playerRole === 'host' ? topPlayerName.value : bottomPlayerName.value
+      currentlyCastingSpell.value = {
+        spellName: data.data.spellName,
+        playerName: castingPlayerName
+      }
+      console.log('Received spell casting started:', data.data.spellName, 'by', data.data.playerRole, 'displaying as', castingPlayerName)
+      break
+    case 'spell_casting_ended':
+      currentlyCastingSpell.value = null
+      console.log('Received spell casting ended')
+      break
     default:
       console.log('Unknown game message:', data)
   }
@@ -1001,14 +1027,34 @@ const onShowSpellMessage = ({ message, type }) => {
 }
 
 // Handle spell casting state changes
-const onSpellCastingStarted = () => {
+const onSpellCastingStarted = ({ spellName }) => {
   isSpellCasting.value = true
-  console.log('Spell casting started - turn ending disabled')
+  console.log('Spell casting started:', spellName)
+  
+  // Update local state
+  const currentPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
+  currentlyCastingSpell.value = {
+    spellName,
+    playerName: currentPlayerName
+  }
+  
+  // Send spell casting notification to other player with role instead of display name
+  const currentPlayerRole = isHostTurn.value ? 'host' : 'guest'
+  sendGameMessage('spell_casting_started', {
+    spellName,
+    playerRole: currentPlayerRole
+  })
 }
 
-const onSpellCastingEnded = () => {
+const onSpellCastingEnded = ({ spellName }) => {
   isSpellCasting.value = false
-  console.log('Spell casting ended - turn ending enabled')
+  currentlyCastingSpell.value = null
+  console.log('Spell casting ended:', spellName)
+  
+  // Send spell casting ended notification to other player
+  sendGameMessage('spell_casting_ended', {
+    spellName
+  })
 }
 
 // Handle dice roll request from SpellEffects
@@ -1404,6 +1450,49 @@ if (typeof window !== 'undefined') {
   color: white;
   margin: 0;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.casting-spell-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.9), rgba(75, 0, 130, 0.9));
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  margin: 0.5rem 0;
+  border: 2px solid rgba(255, 215, 0, 0.6);
+  box-shadow: 0 2px 8px rgba(138, 43, 226, 0.4);
+  animation: pulse-spell 2s ease-in-out infinite;
+}
+
+.casting-icon {
+  font-size: 1rem;
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+.casting-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+@keyframes pulse-spell {
+  0%, 100% { 
+    box-shadow: 0 2px 8px rgba(138, 43, 226, 0.4);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+  50% { 
+    box-shadow: 0 4px 16px rgba(138, 43, 226, 0.8);
+    border-color: rgba(255, 215, 0, 1);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(90deg); }
+  50% { transform: scale(1.2) rotate(180deg); }
+  75% { transform: scale(1.1) rotate(270deg); }
 }
 
 .player-stats {
@@ -2026,6 +2115,15 @@ if (typeof window !== 'undefined') {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
+  }
+  
+  .casting-spell-indicator {
+    padding: 0.3rem 0.6rem;
+    margin: 0.3rem 0;
+  }
+  
+  .casting-text {
+    font-size: 0.8rem;
   }
   
   .player-stats {
