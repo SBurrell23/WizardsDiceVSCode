@@ -10,21 +10,25 @@
             <div class="health-stat">
               <span class="stat-icon">❤️</span>
               <span class="stat-value">{{ playerStats.host.health }}</span>
-              <!-- Floating indicator for health changes -->
-              <div v-if="floatingIndicators.host.health" 
+              <!-- Floating indicators for health changes - now supports multiple -->
+              <div v-for="indicator in floatingIndicators.host.health" 
+                   :key="indicator.id"
                    class="floating-indicator" 
-                   :class="{ 'positive': floatingIndicators.host.health.isPositive, 'negative': !floatingIndicators.host.health.isPositive }">
-                {{ floatingIndicators.host.health.value }}
+                   :class="{ 'positive': indicator.isPositive, 'negative': !indicator.isPositive }"
+                   :style="{ animationDelay: indicator.delay + 'ms' }">
+                {{ indicator.value }}
               </div>
             </div>
             <div class="armor-stat">
               <span class="stat-icon">🛡️</span>
               <span class="stat-value">{{ playerStats.host.armor }}</span>
-              <!-- Floating indicator for armor changes -->
-              <div v-if="floatingIndicators.host.armor" 
+              <!-- Floating indicators for armor changes - now supports multiple -->
+              <div v-for="indicator in floatingIndicators.host.armor" 
+                   :key="indicator.id"
                    class="floating-indicator" 
-                   :class="{ 'positive': floatingIndicators.host.armor.isPositive, 'negative': !floatingIndicators.host.armor.isPositive }">
-                {{ floatingIndicators.host.armor.value }}
+                   :class="{ 'positive': indicator.isPositive, 'negative': !indicator.isPositive }"
+                   :style="{ animationDelay: indicator.delay + 'ms' }">
+                {{ indicator.value }}
               </div>
             </div>
           </div>
@@ -178,21 +182,25 @@
           <div class="health-stat">
             <span class="stat-icon">❤️</span>
             <span class="stat-value">{{ playerStats.guest.health }}</span>
-            <!-- Floating indicator for health changes -->
-            <div v-if="floatingIndicators.guest.health" 
+            <!-- Floating indicators for health changes - now supports multiple -->
+            <div v-for="indicator in floatingIndicators.guest.health" 
+                 :key="indicator.id"
                  class="floating-indicator" 
-                 :class="{ 'positive': floatingIndicators.guest.health.isPositive, 'negative': !floatingIndicators.guest.health.isPositive }">
-              {{ floatingIndicators.guest.health.value }}
+                 :class="{ 'positive': indicator.isPositive, 'negative': !indicator.isPositive }"
+                 :style="{ animationDelay: indicator.delay + 'ms' }">
+              {{ indicator.value }}
             </div>
           </div>
           <div class="armor-stat">
             <span class="stat-icon">🛡️</span>
             <span class="stat-value">{{ playerStats.guest.armor }}</span>
-            <!-- Floating indicator for armor changes -->
-            <div v-if="floatingIndicators.guest.armor" 
+            <!-- Floating indicators for armor changes - now supports multiple -->
+            <div v-for="indicator in floatingIndicators.guest.armor" 
+                 :key="indicator.id"
                  class="floating-indicator" 
-                 :class="{ 'positive': floatingIndicators.guest.armor.isPositive, 'negative': !floatingIndicators.guest.armor.isPositive }">
-              {{ floatingIndicators.guest.armor.value }}
+                 :class="{ 'positive': indicator.isPositive, 'negative': !indicator.isPositive }"
+                 :style="{ animationDelay: indicator.delay + 'ms' }">
+              {{ indicator.value }}
             </div>
           </div>
         </div>
@@ -292,10 +300,10 @@ const isRolling = ref(false)
 const isOpponentRolling = ref(false)
 const isSpellCasting = ref(false)
 
-// Floating indicator state
+// Floating indicator state - now supports multiple indicators per stat
 const floatingIndicators = ref({
-  host: { health: null, armor: null },
-  guest: { health: null, armor: null }
+  host: { health: [], armor: [] },
+  guest: { health: [], armor: [] }
 })
 
 // Spell dice rolling state
@@ -404,12 +412,16 @@ const handleGameMessage = (data) => {
     case 'floating_indicator':
       // Show floating indicator from other player's stat changes
       const { player, statType, indicatorData } = data.data
-      floatingIndicators.value[player][statType] = indicatorData
       
-      // Clear the indicator after animation
+      // Add to the array of indicators
+      floatingIndicators.value[player][statType].push(indicatorData)
+      
+      // Clear the specific indicator after animation
       setTimeout(() => {
-        if (floatingIndicators.value[player] && floatingIndicators.value[player][statType]) {
-          floatingIndicators.value[player][statType] = null
+        const indicatorArray = floatingIndicators.value[player][statType]
+        const index = indicatorArray.findIndex(ind => ind.id === indicatorData.id)
+        if (index > -1) {
+          indicatorArray.splice(index, 1)
         }
       }, 2000)
       break
@@ -660,13 +672,15 @@ const showFloatingIndicator = (player, statType, change) => {
   if (change === 0) return
   
   const indicatorData = {
+    id: Date.now() + Math.random(), // Unique ID for each indicator
     value: change > 0 ? `+${change}` : `${change}`,
     isPositive: change > 0,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    delay: 0 // No delay for immediate display
   }
   
-  // Show on current player's screen
-  floatingIndicators.value[player][statType] = indicatorData
+  // Add to the array of indicators on current player's screen
+  floatingIndicators.value[player][statType].push(indicatorData)
   
   // Send to opponent so they see it too
   sendGameMessage('floating_indicator', {
@@ -675,10 +689,12 @@ const showFloatingIndicator = (player, statType, change) => {
     indicatorData: indicatorData
   })
   
-  // Clear the indicator after animation
+  // Clear the specific indicator after animation
   setTimeout(() => {
-    if (floatingIndicators.value[player] && floatingIndicators.value[player][statType]) {
-      floatingIndicators.value[player][statType] = null
+    const indicatorArray = floatingIndicators.value[player][statType]
+    const index = indicatorArray.findIndex(ind => ind.id === indicatorData.id)
+    if (index > -1) {
+      indicatorArray.splice(index, 1)
     }
   }, 2000)
 }
