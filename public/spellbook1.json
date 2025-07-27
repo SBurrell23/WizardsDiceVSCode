@@ -21,7 +21,7 @@
     {
       "name": "Gust",
       "cost": ["💨"],
-      "effect": "Re-activate an unspent non-wind die at random",
+      "effect": "Re-activate a spent non-wind die at random",
       "category": "utility"
     },
     {
@@ -57,7 +57,7 @@
     {
       "name": "Strong Gusts",
       "cost": ["💨", "💨"],
-      "effect": "Re-roll any 4 dice",
+      "effect": "Re-roll any 4 unspent dice",
       "category": "utility"
     },
     {
