@@ -235,6 +235,53 @@
       @spellCastingStarted="onSpellCastingStarted"
       @spellCastingEnded="onSpellCastingEnded"
     />
+    
+    <!-- Game Over Modal -->
+    <div v-if="showGameOverModal" class="game-over-modal">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="game-over-header">
+          <h2 v-if="winner === 'draw'">🤝 DRAW!</h2>
+          <h2 v-else-if="winner === 'host' && props.isHost">🎉 YOU WIN!</h2>
+          <h2 v-else-if="winner === 'guest' && !props.isHost">🎉 YOU WIN!</h2>
+          <h2 v-else>💀 YOU LOSE!</h2>
+        </div>
+        
+        <div class="game-over-details">
+          <div class="final-stats">
+            <div class="stat-line">
+              <span class="player-label">{{ props.isHost ? 'You' : 'Enemy Wizard' }}:</span>
+              <span class="health-value">❤️ {{ playerStats.host.health }}</span>
+            </div>
+            <div class="stat-line">
+              <span class="player-label">{{ props.isHost ? 'Enemy Wizard' : 'You' }}:</span>
+              <span class="health-value">❤️ {{ playerStats.guest.health }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="game-over-actions">
+          <div v-if="isNewGameStarting" class="new-game-status">
+            <div class="spinner"></div>
+            <p>{{ props.isHost ? 'Starting new game...' : 'The host is deciding to start a new game...' }}</p>
+          </div>
+          <div v-else-if="props.isHost" class="host-actions">
+            <button @click="startNewGame" class="new-game-button">
+              🔄 Start New Game
+            </button>
+            <button @click="() => emit('leave-game')" class="leave-game-button">
+              🚪 Leave Game
+            </button>
+          </div>
+          <div v-else class="guest-actions">
+            <p class="waiting-message">Waiting for host to start a new game...</p>
+            <button @click="() => emit('leave-game')" class="leave-game-button">
+              🚪 Leave Game
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -283,6 +330,12 @@ const currentTurn = ref(6)
 const isHostTurn = ref(true) // Host always starts
 let statusMessageTimeoutId = null // Track the current timeout
 
+// Game over state
+const gameOver = ref(false)
+const winner = ref('')
+const showGameOverModal = ref(false)
+const isNewGameStarting = ref(false)
+
 // Game state
 const gamePhase = ref('rolling') // 'rolling', 'casting', 'waiting'
 const playerResources = ref({
@@ -290,8 +343,8 @@ const playerResources = ref({
   guest: []
 })
 const playerStats = ref({
-  host: { health: 25, armor: 0, maxHealth: 25 },
-  guest: { health: 25, armor: 0, maxHealth: 25 }
+  host: { health: 1, armor: 0, maxHealth: 25 },
+  guest: { health: 1, armor: 0, maxHealth: 25 }
 })
 const diceRefs = ref([])
 const spellEffectsRef = ref(null)
@@ -381,6 +434,101 @@ const displayStatusMessage = (message, type = 'info', duration = 3000, sendToOpp
 // Helper function to set status message with timeout and send to other player
 const setStatusMessage = (message, type, duration = 3000) => {
   displayStatusMessage(message, type, duration, true)
+}
+
+// Helper function to check for game over
+const checkGameOver = () => {
+  if (gameOver.value) return // Already game over
+  
+  const hostHealth = playerStats.value.host.health
+  const guestHealth = playerStats.value.guest.health
+  
+  if (hostHealth <= 0 || guestHealth <= 0) {
+    gameOver.value = true
+    
+    // Determine winner
+    if (hostHealth <= 0 && guestHealth <= 0) {
+      winner.value = 'draw'
+    } else if (hostHealth <= 0) {
+      winner.value = 'guest'
+    } else {
+      winner.value = 'host'
+    }
+    
+    // Show modal
+    showGameOverModal.value = true
+    
+    // Send game over message to opponent
+    sendGameMessage('game_over', {
+      winner: winner.value,
+      hostHealth: hostHealth,
+      guestHealth: guestHealth
+    })
+    
+    console.log('Game Over! Winner:', winner.value)
+  }
+}
+
+// Start new game (host only)
+const startNewGame = () => {
+  if (!props.isHost) return
+  
+  isNewGameStarting.value = true
+  
+  // Send new game message to guest
+  sendGameMessage('new_game_starting', {
+    message: 'Host is starting a new game...'
+  })
+  
+  // Reset game state after short delay
+  setTimeout(() => {
+    resetGameState()
+    isNewGameStarting.value = false
+    
+    // Send game state reset to guest
+    sendGameMessage('new_game_reset', {
+      playerStats: playerStats.value,
+      currentTurn: currentTurn.value,
+      isHostTurn: isHostTurn.value,
+      gamePhase: gamePhase.value
+    })
+  }, 1500)
+}
+
+// Reset all game state to initial values
+const resetGameState = () => {
+  // Reset player stats
+  playerStats.value = {
+    host: { health: 25, armor: 0, maxHealth: 25 },
+    guest: { health: 25, armor: 0, maxHealth: 25 }
+  }
+  
+  // Reset game state
+  currentTurn.value = 1
+  isHostTurn.value = true
+  gamePhase.value = 'rolling'
+  
+  // Clear resources
+  playerResources.value = {
+    host: [],
+    guest: []
+  }
+  
+  // Clear floating indicators
+  floatingIndicators.value = {
+    host: { health: [], armor: [] },
+    guest: { health: [], armor: [] }
+  }
+  
+  // Reset game over state
+  gameOver.value = false
+  winner.value = ''
+  showGameOverModal.value = false
+  
+  // Clear status message
+  statusMessage.value = ''
+  
+  console.log('Game state reset for new game')
 }
 
 // Handle game-related messages
@@ -475,6 +623,32 @@ const handleGameMessage = (data) => {
         })
       }
       break
+    case 'game_over':
+      // Handle game over message from other player
+      gameOver.value = true
+      winner.value = data.data.winner
+      showGameOverModal.value = true
+      console.log('Received game over, winner:', winner.value)
+      break
+    case 'new_game_starting':
+      // Show that host is starting new game
+      isNewGameStarting.value = true
+      break
+    case 'new_game_reset':
+      // Reset game state from host
+      playerStats.value = data.data.playerStats
+      currentTurn.value = data.data.currentTurn
+      isHostTurn.value = data.data.isHostTurn
+      gamePhase.value = data.data.gamePhase
+      playerResources.value = { host: [], guest: [] }
+      floatingIndicators.value = { host: { health: [], armor: [] }, guest: { health: [], armor: [] } }
+      gameOver.value = false
+      winner.value = ''
+      showGameOverModal.value = false
+      isNewGameStarting.value = false
+      statusMessage.value = ''
+      console.log('Game reset by host')
+      break
     case 'game_event':
       console.log('Game event received:', data)
       break
@@ -488,7 +662,7 @@ const handleGameMessage = (data) => {
       // Handle when the other player disconnects
       setTimeout(() => {
         emit('leave-game')
-      }, 3000)
+      }, 500)
       break
     default:
       console.log('Unknown game message:', data)
@@ -657,6 +831,9 @@ const onUpdatePlayerStats = ({ player, updates }) => {
       const change = updates.armor - oldStats.armor
       showFloatingIndicator(player, 'armor', change)
     }
+    
+    // Check for game over after stat updates
+    checkGameOver()
   }
 }
 
@@ -811,7 +988,7 @@ const leaveGame = () => {
   
   setTimeout(() => {
     emit('leave-game')
-  }, 1000)
+  }, 500)
 }
 
 // Initialize component
@@ -1365,6 +1542,164 @@ onUnmounted(() => {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-2px); }
   75% { transform: translateX(2px); }
+}
+
+/* Game Over Modal Styles */
+.game-over-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.modal-content {
+  position: relative;
+  background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideIn 0.5s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.game-over-header h2 {
+  font-size: 3rem;
+  margin: 0 0 2rem 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  color: white;
+}
+
+.game-over-details {
+  margin: 2rem 0;
+}
+
+.final-stats {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.75rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.player-label {
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.health-value {
+  color: white;
+  font-weight: 700;
+}
+
+.game-over-actions {
+  margin-top: 2rem;
+}
+
+.new-game-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 215, 0, 0.3);
+  border-top: 4px solid #ffd700;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.host-actions, .guest-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.new-game-button, .leave-game-button {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.new-game-button {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+}
+
+.new-game-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4);
+}
+
+.leave-game-button {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.leave-game-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+
+.waiting-message {
+  color: #a8c8ff;
+  font-size: 1.1rem;
+  margin: 1rem 0;
+  font-style: italic;
 }
 
 @media (max-width: 768px) {
