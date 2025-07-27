@@ -1,5 +1,5 @@
 <template>
-  <div class="number-dice-container">
+  <div class="number-dice-container" :class="{ 'compact': compact }">
 
     
     <div class="dice-grid">
@@ -53,6 +53,10 @@ const props = defineProps({
   forcedResult: {
     type: Number,
     default: null // If provided, use this as the final result instead of random
+  },
+  compact: {
+    type: Boolean,
+    default: false // If true, use compact styling for small containers
   }
 })
 
@@ -182,6 +186,11 @@ defineExpose({
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 1rem;
+}
+
+/* Compact mode for small containers (like spell dice) */
+.number-dice-container.compact .dice-grid {
+  margin-bottom: 0;
 }
 
 .number-die {

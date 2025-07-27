@@ -61,7 +61,8 @@
               <div v-else class="opponent-dice">
                 <!-- Show rolling animation if opponent is rolling and it's host area -->
                 <div v-if="isOpponentRolling && isHostTurn" class="rolling-dice-display">
-                  <div v-for="i in diceToRoll" :key="`rolling-top-${i}`" class="rolling-dice">
+                  <div v-for="i in diceToRoll" :key="`rolling-top-${i}`" class="rolling-dice"
+                       :style="{ '--dice-delay': ((i * 13) % 80) + 'ms' }">
                     🎲
                   </div>
                 </div>
@@ -108,6 +109,7 @@
                 :autoRoll="true"
                 :rollDelay="50"
                 :forcedResult="spellDiceRoll.result"
+                :compact="true"
                 @rolled="onSpellDiceRolled"
                 @rolling-finished="onSpellDiceFinished"
               />
@@ -155,7 +157,8 @@
             <div v-else class="opponent-dice">
               <!-- Show rolling animation if opponent is rolling and it's guest area -->
               <div v-if="isOpponentRolling && !isHostTurn" class="rolling-dice-display">
-                <div v-for="i in diceToRoll" :key="`rolling-bottom-${i}`" class="rolling-dice">
+                <div v-for="i in diceToRoll" :key="`rolling-bottom-${i}`" class="rolling-dice"
+                     :style="{ '--dice-delay': ((i * 13) % 80) + 'ms' }">
                   🎲
                 </div>
               </div>
@@ -202,6 +205,7 @@
               :autoRoll="true"
               :rollDelay="50"
               :forcedResult="spellDiceRoll.result"
+              :compact="true"
               @rolled="onSpellDiceRolled"
               @rolling-finished="onSpellDiceFinished"
             />
@@ -1640,6 +1644,10 @@ if (typeof window !== 'undefined') {
 
 .dice-container.small {
   min-height: 100px;
+  max-height: 100px;
+  padding: 0.5rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .dice-placeholder {
@@ -1748,12 +1756,13 @@ if (typeof window !== 'undefined') {
 
 .status-message {
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 500;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
   text-align: center;
-  background: rgba(0,0,0,0.6);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255,255,255,0.3);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   font-size: 1rem;
   align-self: center;
   animation: statusGlow 4s ease-out;
@@ -1761,10 +1770,10 @@ if (typeof window !== 'undefined') {
 
 @keyframes statusGlow {
   0% {
-    box-shadow: 0 0 20px rgba(255, 251, 30, 0.6);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
   }
   100% {
-    box-shadow: 0 0 0 rgba(187, 187, 27, 0);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   }
 }
 
@@ -1934,6 +1943,7 @@ if (typeof window !== 'undefined') {
   border-radius: 8px;
   backdrop-filter: blur(10px);
   animation: shake 0.1s infinite;
+  animation-delay: var(--dice-delay);
   box-shadow: 0 0 10px rgba(255,107,107,0.3);
 }
 
@@ -1947,9 +1957,10 @@ if (typeof window !== 'undefined') {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-3px) rotate(-1deg); }
+  50% { transform: translateY(-2px) rotate(0deg); }
+  75% { transform: translateX(2px) rotate(1deg); }
 }
 
 /* Game Over Modal Styles */

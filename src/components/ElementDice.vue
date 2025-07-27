@@ -1,5 +1,9 @@
 <template>
-  <div class="element-dice" :class="{ 'rolling': isRolling, 'ready-to-roll': canRoll }">
+  <div 
+    class="element-dice" 
+    :class="{ 'rolling': isRolling, 'ready-to-roll': canRoll }"
+    :style="{ '--dice-delay': diceAnimationDelay + 'ms' }"
+  >
     <div class="dice-face">
       {{ currentFace }}
     </div>
@@ -32,6 +36,12 @@ const elementNames = ['fire', 'water', 'earth', 'air', 'love', 'death']
 const currentFace = ref('🎲')
 const isRolling = ref(false)
 const rolledValue = ref(null)
+
+// Create a unique animation delay for each dice based on its index
+const diceAnimationDelay = computed(() => {
+  // Generate a pseudo-random delay between 0-80ms based on dice index
+  return (props.diceIndex * 13) % 80
+})
 
 // Computed
 const rolledElement = computed(() => {
@@ -111,6 +121,7 @@ defineExpose({
 
 .element-dice.rolling {
   animation: shake 0.1s infinite;
+  animation-delay: var(--dice-delay);
   border-color: #ff6b6b;
 }
 
@@ -120,8 +131,9 @@ defineExpose({
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-3px) rotate(-1deg); }
+  50% { transform: translateY(-2px) rotate(0deg); }
+  75% { transform: translateX(2px) rotate(1deg); }
 }
 </style>
