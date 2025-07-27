@@ -57,7 +57,7 @@
     {
       "name": "Strong Gusts",
       "cost": ["💨", "💨"],
-      "effect": "Re-roll any 4 unspent dice",
+      "effect": "Re-roll any 5 unspent dice",
       "category": "utility"
     },
     {

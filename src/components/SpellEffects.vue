@@ -333,12 +333,12 @@ const blaze = async () => {
   showMessage(`🔥 Blaze deals ${damageDealt} damage!`, 'damage')
 }
 
-//Re-roll any 4 dice
+//Re-roll any 5 dice
 const strongGusts = async () => {
   const rerollResult = await requestElementDiceReroll(
     dice => !dice.used,  // Filter: only unspent dice
-    4,                   // Max 4 dice total
-    'Select up to 4 unspent dice to reroll'
+    5,                   // Max 5 dice total
+    'Select up to 5 unspent dice to reroll'
   )
 }
 
@@ -387,10 +387,10 @@ const unfairDuel = async () => {
   const opponentRoll = await requestDiceRoll('1d8')
   
   if (playerRoll.value > opponentRoll.value) {
-    dealDamage(playerRoll.value, props.opponentPlayer)
+    dealDamage(playerRoll.value, props.currentPlayer)
     showMessage(`💀 Unfair Duel: Player wins! Opponent takes ${playerRoll.value} damage!`, 'damage')
   } else if (opponentRoll.value > playerRoll.value) {
-    dealDamage(opponentRoll.value, props.currentPlayer)
+    dealDamage(opponentRoll.value, props.opponentPlayer)
     showMessage(`💀 Unfair Duel: Opponent wins! Player takes ${opponentRoll.value} damage!`, 'damage')
   }else{
     showMessage(`💀 Unfair Duel: It's a tie! No damage dealt.`, 'info')
