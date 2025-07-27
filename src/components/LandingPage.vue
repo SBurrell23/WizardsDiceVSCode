@@ -5,7 +5,7 @@
       <!-- Game Title -->
       <div class="game-title">
         <h1>🎲 Wizards Dice 🧙‍♂️</h1>
-        <p class="subtitle">Cast your dice and weave your magic in this multiplayer adventure!</p>
+        <p class="subtitle">Cast your dice... then cast your spells!</p>
       </div>
 
       <!-- Main Menu -->
@@ -19,20 +19,42 @@
             <div class="button-icon">🏰</div>
             <div class="button-text">
               <h3>Create Room</h3>
-              <p>Start a new game and invite friends</p>
+              <p>Start a new game and invite a friend</p>
             </div>
           </button>
+        </div>
 
-          <button 
-            class="menu-button join-button"
-            @click="showJoinModal = true"
-          >
-            <div class="button-icon">⚔️</div>
-            <div class="button-text">
-              <h3>Join Room</h3>
-              <p>Enter a room code to join a game</p>
-            </div>
-          </button>
+        <!-- Join Room Section -->
+        <div class="join-section">
+          <div class="join-input-group">
+            <input
+              v-model="joinRoomCode"
+              type="text"
+              placeholder="Enter room code..."
+              class="room-code-input"
+              @keyup.enter="joinRoom"
+              maxlength="6"
+            />
+            <button 
+              @click="joinRoom" 
+              class="join-button"
+              :disabled="!joinRoomCode"
+            >
+              ⚔️ Join Room
+            </button>
+          </div>
+        </div>
+
+        <!-- Player Name Input -->
+        <div class="name-section">
+          <h3>Wizard Name</h3>
+          <input
+            v-model="playerName"
+            type="text"
+            placeholder="Enter your wizard name..."
+            class="player-name-input"
+            maxlength="20"
+          />
         </div>
       </div>
 
@@ -45,15 +67,15 @@
             <button @click="copyRoomCode" class="copy-button">📋 Copy</button>
           </div>
           <p class="waiting-text">
-            <span v-if="connectedPlayers.length === 0">Waiting for 1 player to join...</span>
+            <span v-if="connectedPlayers.length === 0">Waiting for a player to join...</span>
             <span v-else-if="connectedPlayers.length === 1">Ready to start! 🎲</span>
           </p>
           <div class="connected-players">
             <h4>Players ({{ connectedPlayers.length + 1 }}/2):</h4>
             <ul>
-              <li>👑 You (Host)</li>
+              <li>👑 {{ playerName || 'You' }} (Host)</li>
               <li v-for="player in connectedPlayers" :key="player.id">
-                🧙‍♂️ {{ player.name || player.id }}
+                🧙‍♂️ {{ player.name || 'Enemy Wizard' }}
               </li>
             </ul>
           </div>
@@ -79,10 +101,10 @@
           <div class="connected-players">
             <h4>Players ({{ connectedPlayers.length + 1 }}/2):</h4>
             <ul>
-              <li>👑 Host</li>
+              <li>👑 {{ hostName || 'Enemy Wizard' }} (Host)</li>
               <li>🧙‍♂️ {{ playerName || 'You' }} (You)</li>
               <li v-for="player in connectedPlayers" :key="player.id">
-                <span v-if="player.id !== peer?.id">🧙‍♂️ {{ player.name || player.id }}</span>
+                <span v-if="player.id !== peer?.id">🧙‍♂️ {{ player.name || 'Enemy Wizard' }}</span>
               </li>
             </ul>
           </div>
@@ -90,37 +112,6 @@
           <button @click="leaveRoom" class="leave-room-button">
             🚪 Leave Room
           </button>
-        </div>
-      </div>
-
-      <!-- Join Room Modal -->
-      <div v-if="showJoinModal" class="modal-overlay" @click="closeJoinModal">
-        <div class="modal" @click.stop>
-          <h3>Join a Game Room</h3>
-          <div class="input-group">
-            <input
-              v-model="joinRoomCode"
-              type="text"
-              placeholder="Enter room code..."
-              class="room-input"
-              @keyup.enter="joinRoom"
-              maxlength="6"
-            />
-            <input
-              v-model="playerName"
-              type="text"
-              placeholder="Your name (optional)"
-              class="name-input"
-            />
-          </div>
-          <div class="modal-buttons">
-            <button @click="joinRoom" class="join-confirm-button" :disabled="!joinRoomCode">
-              Join Game
-            </button>
-            <button @click="closeJoinModal" class="cancel-button">
-              Cancel
-            </button>
-          </div>
         </div>
       </div>
 
@@ -136,8 +127,8 @@
       :peer-instance="peer"
       :room-code="roomCode"
       :is-host="isHost"
-      :host-name="'Wizard #1'"
-      :guest-name="playerName || 'Wizard #2'"
+      :host-name="isHost ? (playerName || 'Host') : (hostName || 'Enemy Wizard')"
+      :guest-name="isHost ? (connectedPlayers[0]?.name || 'Enemy Wizard') : (playerName || 'Guest')"
       :connection="hostConnection"
       @leave-game="leaveRoom"
     />
@@ -151,10 +142,10 @@ import GameBoard from './GameBoard.vue'
 
 // Reactive data
 const isCreatingRoom = ref(false)
-const showJoinModal = ref(false)
 const roomCode = ref('')
 const joinRoomCode = ref('')
 const playerName = ref('')
+const hostName = ref('') // Store the host's name when joining a room
 const connectedPlayers = ref([])
 const statusMessage = ref('')
 const statusType = ref('info') // 'info', 'success', 'error'
@@ -221,9 +212,15 @@ const createRoom = async () => {
       conn.on('open', () => {
         const playerData = {
           id: conn.peer,
-          name: conn.metadata?.name || conn.peer
+          name: conn.metadata?.name || 'Enemy Wizard'
         }
         connectedPlayers.value.push(playerData)
+        
+        // Send host info and updated player list to the joining player
+        conn.send({ 
+          type: 'host_info', 
+          hostName: playerName.value 
+        })
         
         // Send updated player list to all connected players
         broadcastPlayerList()
@@ -260,9 +257,6 @@ const createRoom = async () => {
 const joinRoom = async () => {
   if (!joinRoomCode.value) return
 
-  // Close modal immediately when attempting to join
-  showJoinModal.value = false
-  
   setStatusMessage('Joining room...', 'info', 0) // No timeout for joining message
 
   try {
@@ -282,11 +276,15 @@ const joinRoom = async () => {
         currentView.value = 'joined'
         roomCode.value = joinRoomCode.value.toUpperCase()
         isHost.value = false // Set as guest when joining a room
+        // Clear the join room code input after successful join
+        joinRoomCode.value = ''
       })
 
       conn.on('data', (data) => {
         // Handle messages from host
-        if (data.type === 'player_list') {
+        if (data.type === 'host_info') {
+          hostName.value = data.hostName
+        } else if (data.type === 'player_list') {
           connectedPlayers.value = data.players
         } else if (data.type === 'start_game') {
           setStatusMessage('Game is starting!', 'success', 1000)
@@ -345,13 +343,6 @@ const copyRoomCode = async () => {
   }
 }
 
-// Close join modal
-const closeJoinModal = () => {
-  showJoinModal.value = false
-  joinRoomCode.value = ''
-  playerName.value = ''
-}
-
 // Broadcast start game message to all connected players
 const startGame = () => {
   connections.forEach(conn => {
@@ -404,6 +395,8 @@ const leaveRoom = () => {
   // Reset all state
   currentView.value = 'menu'
   roomCode.value = ''
+  joinRoomCode.value = ''
+  hostName.value = ''
   connectedPlayers.value = []
   hostConnection.value = null
   connections = []
@@ -465,6 +458,92 @@ onUnmounted(() => {
   margin-bottom: 2rem;
 }
 
+.name-section {
+  margin-bottom: 0rem;
+  margin-top: 4rem;
+}
+
+.name-section h3 {
+  color: rgb(244, 244, 244);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.player-name-input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: rgba(255,255,255,0.9);
+  color: #333;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.player-name-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.join-section {
+  margin-bottom: 1rem;
+}
+
+.join-section h3 {
+  color: white;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.join-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.room-code-input {
+  flex: 1;
+  padding: 1rem;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: rgba(255,255,255,0.9);
+  color: #333;
+  transition: border-color 0.3s ease;
+}
+
+.room-code-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.join-button {
+  background: white;
+  color: #333;
+  border: none;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.join-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.join-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .menu-button {
   display: flex;
   align-items: center;
@@ -518,7 +597,7 @@ onUnmounted(() => {
   background: rgba(255,255,255,0.9);
   border-radius: 15px;
   padding: 1.5rem;
-  margin-top: 1rem;
+  margin-top: 0rem;
 }
 
 .room-code-display h3 {
@@ -587,7 +666,7 @@ onUnmounted(() => {
 }
 
 .start-game-button {
-  background: linear-gradient(135deg, #47a261 0%, #2ebb39 100%);
+  background: #20a037;
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -595,12 +674,13 @@ onUnmounted(() => {
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
   margin-right: 1rem;
 }
 
 .start-game-button:hover {
   transform: translateY(-2px);
+  background: #1c8c30;
 }
 
 .leave-room-button {
@@ -628,95 +708,6 @@ onUnmounted(() => {
   flex-wrap: wrap;
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-}
-
-.modal h3 {
-  color: #333;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.room-input,
-.name-input {
-  padding: 1rem;
-  border: 2px solid #e1e5e9;
-  border-radius: 10px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-}
-
-.room-input:focus,
-.name-input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 1rem;
-}
-
-.join-confirm-button,
-.cancel-button {
-  flex: 1;
-  padding: 1rem;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.join-confirm-button {
-  background: #667eea;
-  color: white;
-}
-
-.join-confirm-button:hover:not(:disabled) {
-  background: #5a6fd8;
-}
-
-.join-confirm-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.cancel-button {
-  background: #e1e5e9;
-  color: #666;
-}
-
-.cancel-button:hover {
-  background: #d1d5d9;
-}
-
 .status-message {
   margin-top: 1rem;
   padding: 1rem;
@@ -725,30 +716,27 @@ onUnmounted(() => {
 }
 
 .status-message.info {
-  background: rgba(102,126,234,0.1);
-  color: #667eea;
-  border: 1px solid rgba(102,126,234,0.3);
+  background: rgba(102,126,234,0.6);
+  color: white;
+  border: 1px solid rgba(102,126,234,1);
 }
 
 .status-message.success {
-  background: rgba(46,160,67,0.1);
-  color: #2ea043;
-  border: 1px solid rgba(46,160,67,0.3);
+  background: rgba(46,160,67,0.6);
+  color: white;
+  border: 1px solid rgba(46,160,67,1);
 }
 
 .status-message.error {
-  background: rgba(248,81,73,0.1);
-  color: #f85149;
-  border: 1px solid rgba(248,81,73,0.3);
+  background: rgba(248,81,73,0.6);
+  color: white;
+  border: 1px solid rgba(248,81,73,1);
 }
 
 @media (min-width: 768px) {
-  .button-group {
-    flex-direction: row;
-  }
-  
-  .modal-buttons {
-    flex-direction: row;
+  .join-input-group {
+    max-width: 400px;
+    margin: 0 auto;
   }
 }
 </style>
