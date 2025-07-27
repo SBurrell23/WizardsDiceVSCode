@@ -5,12 +5,14 @@
       <!-- Player 1 Area (Top) -->
       <div class="player-area top-player" :class="{ 'current-player': isHostTurn }">
         <div class="player-header">
-          <h3 class="player-name">{{ topPlayerName }}</h3>
+          <div class="player-name-box">
+            <h3 class="player-name">{{ topPlayerName }}</h3>
+          </div>
           <!-- Spell casting indicator -->
           <div v-if="currentlyCastingSpell && currentlyCastingSpell.playerName === topPlayerName" 
                class="casting-spell-indicator">
             <span class="casting-icon">✨</span>
-            <span class="casting-text">Casting: {{ currentlyCastingSpell.spellName }}</span>
+            <span class="casting-text">Casting <span class="spell-name">{{ currentlyCastingSpell.spellName }}</span></span>
           </div>
           <div class="player-stats">
             <div class="health-stat">
@@ -210,12 +212,14 @@
       </div>
       
       <div class="player-header">
-        <h3 class="player-name">{{ bottomPlayerName }}</h3>
+        <div class="player-name-box">
+          <h3 class="player-name">{{ bottomPlayerName }}</h3>
+        </div>
         <!-- Spell casting indicator -->
         <div v-if="currentlyCastingSpell && currentlyCastingSpell.playerName === bottomPlayerName" 
              class="casting-spell-indicator">
           <span class="casting-icon">✨</span>
-          <span class="casting-text">Casting: {{ currentlyCastingSpell.spellName }}</span>
+          <span class="casting-text">Casting <span class="spell-name">{{ currentlyCastingSpell.spellName }}</span></span>
         </div>
         <div class="player-stats">
           <div class="health-stat">
@@ -1444,6 +1448,17 @@ if (typeof window !== 'undefined') {
   margin-right: .5rem;
 }
 
+.player-name-box {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
 .player-name {
   font-size: 1.5rem;
   font-weight: 600;
@@ -1456,35 +1471,45 @@ if (typeof window !== 'undefined') {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, rgba(138, 43, 226, 0.9), rgba(75, 0, 130, 0.9));
+  background: rgba(138, 43, 226, 0.25);
   padding: 0.4rem 0.8rem;
   border-radius: 12px;
   margin: 0.5rem 0;
-  border: 2px solid rgba(255, 215, 0, 0.6);
-  box-shadow: 0 2px 8px rgba(138, 43, 226, 0.4);
+  border: 2px solid rgba(138, 43, 226, 0.4);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   animation: pulse-spell 2s ease-in-out infinite;
 }
 
 .casting-icon {
-  font-size: 1rem;
+  font-size: 1.1rem;
   animation: sparkle 1.5s ease-in-out infinite;
 }
 
 .casting-text {
-  font-size: 0.9rem;
+  font-size: .9rem;
+  margin-left: .2rem;
   font-weight: 600;
-  color: white;
+  color: #c084fc;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.spell-name {
+  font-size: 1.1rem;
+  margin-left: .4rem;
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(192, 132, 252, 0.4);
 }
 
 @keyframes pulse-spell {
   0%, 100% { 
-    box-shadow: 0 2px 8px rgba(138, 43, 226, 0.4);
-    border-color: rgba(255, 215, 0, 0.6);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border-color: rgba(138, 43, 226, 0.4);
   }
   50% { 
-    box-shadow: 0 4px 16px rgba(138, 43, 226, 0.8);
-    border-color: rgba(255, 215, 0, 1);
+    box-shadow: 0 6px 20px rgba(138, 43, 226, 0.4);
+    border-color: rgba(138, 43, 226, 0.6);
   }
 }
 
