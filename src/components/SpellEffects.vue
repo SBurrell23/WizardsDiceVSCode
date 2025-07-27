@@ -736,6 +736,301 @@ const highStakes = async () => {
   }
 }
 
+// ============================================================================
+// 4-COST SPELLS
+// ============================================================================
+
+// Thick Armour: Take (1d6) damage, if this did not reduce your HP deal (1d12) + 6 damage
+const thickArmour = async () => {
+  const damageRoll = await requestDiceRoll('1d6')
+  const damage = damageRoll.value
+
+  // Apply damage and check if HP was reduced
+  const damageResult = dealDamage(damage, props.currentPlayer)
+  
+  if (damageResult.healthLost === 0) {
+    // HP was not reduced (armor absorbed all damage)
+    const attackRoll = await requestDiceRoll('1d12')
+    const attackDamage = attackRoll.value + 6
+    dealDamage(attackDamage, props.opponentPlayer)
+    showMessage(`🛡️ Thick Armour: Dealt ${attackDamage} damage!`, 'damage')
+  } else {
+    showMessage(`🛡️ Thick Armour: HP was reduced, no attack triggered!`, 'info')
+  }
+}
+
+// Rejuvinating Waters: Heal for (3d8)
+const rejuvinatingWaters = async () => {
+  const roll1 = await requestDiceRoll('1d8')
+  const roll2 = await requestDiceRoll('1d8')
+  const roll3 = await requestDiceRoll('1d8')
+  const totalHealing = roll1.value + roll2.value + roll3.value
+  
+  healHP(totalHealing, props.currentPlayer)
+  showMessage(`💧 Rejuvinating Waters heals ${totalHealing} HP!`, 'healing')
+}
+
+// Fiery Passion: Deal (1d12) damage. If your HP is still lower then your opponent's re-activate both fires
+const fieryPassion = async () => {
+  // Deal damage first
+  const damageRoll = await requestDiceRoll('1d12')
+  dealDamage(damageRoll.value, props.opponentPlayer)
+  showMessage(`🔥 Fiery Passion deals ${damageRoll.value} damage!`, 'damage')
+  
+  // Check HP comparison after damage
+  const currentPlayerHP = props.playerStats[props.currentPlayer].health || 0
+  const opponentHP = props.playerStats[props.opponentPlayer].health || 0
+  
+  if (currentPlayerHP < opponentHP) {
+    // Find all spent fire dice (🔥) and reactivate exactly 2 of them
+    const currentPlayerResources = props.playerResources[props.currentPlayer]
+    const spentFireDice = currentPlayerResources.filter(dice => dice.used && dice.emoji === '🔥')
+    
+    if (spentFireDice.length >= 2) {
+      // Reactivate exactly 2 fire dice
+      let reactivatedCount = 0
+      const updatedResources = currentPlayerResources.map(dice => {
+        if (dice.used && dice.emoji === '🔥' && reactivatedCount < 2) {
+          reactivatedCount++
+          return { ...dice, used: false }
+        }
+        return dice
+      })
+      
+      updateResources(props.currentPlayer, updatedResources)
+      showMessage(`🔥 Fiery Passion reactivates 2 🔥 dice!`, 'utility')
+    } else {
+      showMessage(`🔥 Fiery Passion found insufficient spent fire dice to reactivate!`, 'info')
+    }
+  } else {
+    showMessage(`🔥 Fiery Passion: HP not lower than opponent's, no dice reactivated!`, 'info')
+  }
+}
+
+// Deadlier Curse: Roll (2d6), deal as damage to you and 2x that to your opponent
+const deadlierCurse = async () => {
+  const roll1 = await requestDiceRoll('1d6')
+  const roll2 = await requestDiceRoll('1d6')
+  const totalRoll = roll1.value + roll2.value
+  const opponentDamage = totalRoll * 2
+  
+  dealDamage(totalRoll, props.currentPlayer)
+  dealDamage(opponentDamage, props.opponentPlayer)
+  
+  showMessage(`💀 Deadlier Curse: Takes ${totalRoll} damage & inflicts ${opponentDamage} damage!`, 'damage')
+}
+
+// Fire Flower: Deal your opponents armour as direct damage to their HP, max of 13 damage
+const fireFlower = async () => {
+  const opponentArmor = props.playerStats[props.opponentPlayer].armor || 0
+  const damageToDealt = Math.min(opponentArmor, 13)
+  
+  if (damageToDealt > 0) {
+    dealDamageToHP(damageToDealt, props.opponentPlayer)
+    showMessage(`🌸 Fire Flower deals ${damageToDealt} direct HP damage!`, 'damage')
+  } else {
+    showMessage(`🌸 Fire Flower has no armor to convert to damage!`, 'info')
+  }
+}
+
+// Nullify: Gain (1d10) + 6 armour, if you gained 12 or more armour lose (1d6) HP
+const nullify = async () => {
+  const armorRoll = await requestDiceRoll('1d10')
+  const armorGained = armorRoll.value + 6
+  
+  gainArmor(armorGained, props.currentPlayer)
+  
+  if (armorGained >= 12) {
+    const hpLossRoll = await requestDiceRoll('1d6')
+    dealDamageToHP(hpLossRoll.value, props.currentPlayer)
+    showMessage(`🛡️ Nullify: ${armorGained} armor gained, ${hpLossRoll.value} HP lost!`, 'hybrid')
+  } else {
+    showMessage(`🛡️ Nullify gains ${armorGained} armor!`, 'defense')
+  }
+}
+
+// Fertile Soil: Sacrifice as much armor as you choose. Deal that as damage to your opponent and gain half that rounded down as HP
+const fertileSoil = async () => {
+  const currentArmor = props.playerStats[props.currentPlayer].armor || 0
+  
+  if (currentArmor === 0) {
+    showMessage(`🌱 Fertile Soil has no armor to sacrifice!`, 'warning')
+    return
+  }
+  
+  // Show modal to get sacrifice amount
+  const sacrificeAmount = await props.showNumericModal(
+    '🌱 Fertile Soil',
+    `Sacrifice armor to deal as damage and gain half that rounded down as HP. You currently have ${currentArmor} armor.`,
+    'Armor To Sacrifice',
+    0,                    // Min: 0 armor
+    currentArmor,         // Max: current armor
+    0                     // Default: 0 armor
+  )
+  
+  if (sacrificeAmount > 0) {
+    // Remove armor from player
+    updateStats(props.currentPlayer, { armor: Math.max(0, currentArmor - sacrificeAmount) })
+    
+    // Deal damage to opponent
+    dealDamage(sacrificeAmount, props.opponentPlayer)
+    
+    // Heal player for half (rounded down)
+    const healingAmount = Math.floor(sacrificeAmount / 2)
+    if (healingAmount > 0) {
+      healHP(healingAmount, props.currentPlayer)
+    }
+    
+    showMessage(`🌱 Fertile Soil: ${sacrificeAmount} armor sacrificed, ${healingAmount} HP gained!`, 'hybrid')
+  } else {
+    showMessage(`🌱 Fertile Soil: No armor sacrificed!`, 'info')
+  }
+}
+
+// Even The Odds: Roll (3d10), deal 2 damage for each even roll and 5 for each odd roll
+const evenTheOdds = async () => {
+  const roll1 = await requestDiceRoll('1d10')
+  if (roll1.value % 2 === 0) {
+    dealDamage(2, props.opponentPlayer)
+    showMessage(`⚖️ Even The Odds dealt 2 damage!`, 'damage')
+  } else {
+    dealDamage(5, props.opponentPlayer)
+    showMessage(`⚖️ Even The Odds dealt 5 damage!`, 'damage')
+  }
+  
+  const roll2 = await requestDiceRoll('1d10')
+  if (roll2.value % 2 === 0) {
+    dealDamage(2, props.opponentPlayer)
+    showMessage(`⚖️ Even The Odds dealt 2 damage!`, 'damage')
+  } else {
+    dealDamage(5, props.opponentPlayer)
+    showMessage(`⚖️ Even The Odds dealt 5 damage!`, 'damage')
+  }
+  
+  const roll3 = await requestDiceRoll('1d10')
+  if (roll3.value % 2 === 0) {
+    dealDamage(2, props.opponentPlayer)
+    showMessage(`⚖️ Even The Odds dealt 2 damage!`, 'damage')
+  } else {
+    dealDamage(5, props.opponentPlayer)
+    showMessage(`⚖️ Even The Odds dealt 5 damage!`, 'damage')
+  }
+}
+
+// ============================================================================
+// 5-COST SPELLS
+// ============================================================================
+
+// Chain-Lightning: Deal (1d4) damage, if roll was not a 4 deal (1d6) damage, if roll was not a 6 deal (1d10) damage
+const chainLightning = async () => {
+  const d4Roll = await requestDiceRoll('1d4')
+  dealDamage(d4Roll.value, props.opponentPlayer)
+  showMessage(`⚡ Chain-Lightning deals ${d4Roll.value} damage!`, 'damage')
+  
+  if (d4Roll.value !== 4) {
+    const d6Roll = await requestDiceRoll('1d6')
+    dealDamage(d6Roll.value, props.opponentPlayer)
+    showMessage(`⚡ Chain-Lightning chains for ${d6Roll.value} more damage!`, 'damage')
+    
+    if (d6Roll.value !== 6) {
+      const d10Roll = await requestDiceRoll('1d10')
+      dealDamage(d10Roll.value, props.opponentPlayer)
+      showMessage(`⚡ Chain-Lightning chains again for ${d10Roll.value} more damage!`, 'damage')
+    }
+  }
+}
+
+// Revive: Roll (3d6) 5s or higher are gained as HP, rolls 4 or lower are gained as armour
+const revive = async () => {
+  const roll1 = await requestDiceRoll('1d6')
+  if (roll1.value >= 5) {
+    healHP(roll1.value, props.currentPlayer)
+    showMessage(`🔄 Revive gives ${roll1.value} HP!`, 'healing')
+  } else {
+    gainArmor(roll1.value, props.currentPlayer)
+    showMessage(`🔄 Revive gives ${roll1.value} armor!`, 'defense')
+  }
+  
+  const roll2 = await requestDiceRoll('1d6')
+  if (roll2.value >= 5) {
+    healHP(roll2.value, props.currentPlayer)
+    showMessage(`🔄 Revive gives ${roll2.value} HP!`, 'healing')
+  } else {
+    gainArmor(roll2.value, props.currentPlayer)
+    showMessage(`🔄 Revive gives ${roll2.value} armor!`, 'defense')
+  }
+  
+  const roll3 = await requestDiceRoll('1d6')
+  if (roll3.value >= 5) {
+    healHP(roll3.value, props.currentPlayer)
+    showMessage(`🔄 Revive gives ${roll3.value} HP!`, 'healing')
+  } else {
+    gainArmor(roll3.value, props.currentPlayer)
+    showMessage(`🔄 Revive gives ${roll3.value} armor!`, 'defense')
+  }
+}
+
+// Death & Taxes: Swap you and your opponents HP, if your opponent now has 5 HP or less they gain 7 armour
+const deathTaxes = async () => {
+  const currentPlayerHP = props.playerStats[props.currentPlayer].health || 0
+  const opponentHP = props.playerStats[props.opponentPlayer].health || 0
+  
+  // Swap HP values
+  updateStats(props.currentPlayer, { health: opponentHP })
+  updateStats(props.opponentPlayer, { health: currentPlayerHP })
+  
+  showMessage(`💀 Death & Taxes swaps HP!`, 'utility')
+  
+  // Check if opponent now has 5 HP or less
+  if (currentPlayerHP <= 5) {
+    gainArmor(7, props.opponentPlayer)
+  }
+}
+
+// Mudslide: Roll (1d4, 1d6, 1d8, 1d10, 1d12, 1d20) and deal the highest 3 rolls as damage, max of 25 damage
+const mudslide = async () => {
+  const roll1 = await requestDiceRoll('1d4')
+  const roll2 = await requestDiceRoll('1d6')
+  const roll3 = await requestDiceRoll('1d8')
+  const roll4 = await requestDiceRoll('1d10')
+  const roll5 = await requestDiceRoll('1d12')
+  const roll6 = await requestDiceRoll('1d20')
+  
+  const allRolls = [roll1.value, roll2.value, roll3.value, roll4.value, roll5.value, roll6.value]
+  
+  // Sort rolls in descending order and take the highest 3
+  const highest3 = allRolls.sort((a, b) => b - a).slice(0, 3)
+  const totalDamage = Math.min(highest3.reduce((sum, roll) => sum + roll, 0), 25)
+  
+  dealDamage(totalDamage, props.opponentPlayer)
+  showMessage(`🌊 Mudslide: Highest 3 rolls (${highest3.join(', ')}) = ${totalDamage} damage!`, 'damage')
+}
+
+// Self Destruct: First take (1d20) damage then deal (3d10) damage to your opponent
+const selfDestruct = async () => {
+  const selfDamageRoll = await requestDiceRoll('1d20')
+  const selfDamageResult = dealDamage(selfDamageRoll.value, props.currentPlayer)
+  
+  showMessage(`💥 Self Destruct: Inflicts ${selfDamageRoll.value} self-damage!`, 'damage')
+  
+  // Check if the caster is still alive after self-damage
+  const currentPlayerHP = props.playerStats[props.currentPlayer].health || 0
+  
+  if (currentPlayerHP > 0) {
+    // Caster survived, deal damage to opponent
+    const opponentRoll1 = await requestDiceRoll('1d10')
+    const opponentRoll2 = await requestDiceRoll('1d10')
+    const opponentRoll3 = await requestDiceRoll('1d10')
+    const totalOpponentDamage = opponentRoll1.value + opponentRoll2.value + opponentRoll3.value
+    
+    dealDamage(totalOpponentDamage, props.opponentPlayer)
+    showMessage(`💥 Self Destruct: Deals ${totalOpponentDamage} damage!`, 'damage')
+  } else {
+    // Caster died from self-damage, no damage to opponent
+    showMessage(`💥 Self Destruct: Caster died from self-damage! No damage dealt to opponent!`, 'warning')
+  }
+}
+
 
 // ============================================================================
 // MAIN SPELL EXECUTION METHOD
