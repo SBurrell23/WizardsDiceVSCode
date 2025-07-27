@@ -200,29 +200,26 @@ const splash = async () => {
   const roll = await requestDiceRoll('1d4')
   
   if (roll.value > 2) {
-    const randomSpell = ['Ember', 'Protect', 'Gust', 'Heal', 'Blood Magic'][Math.floor(Math.random() * 5)]
-    showMessage(`💦 Splash casts ${randomSpell}!`, 'info')
-    switch (randomSpell) {
-      case 'Ember':
-        await ember()
-        break
-      case 'Protect':
-        await protect()
-        break
-      case 'Gust':
-        await gust()
-        break
-      case 'Heal':
-        await heal()
-        break
-      case 'Blood Magic':
-        await bloodMagic()
-        break
-      default:
-        console.warn(`Spell "${randomSpell}" not implemented yet`)
+    // List of 1-cost spells
+    const oneCostSpells = ['Ember', 'Protect', 'Gust', 'Heal', 'Blood Magic']
+    
+    // Pick a random spell
+    const randomSpell = oneCostSpells[Math.floor(Math.random() * oneCostSpells.length)]
+    
+    // Convert to method name and execute
+    const methodName = getMethodName(randomSpell)
+    
+    try {
+      if (typeof eval(methodName) === 'function') {
+        showMessage(`💦 Splash casts ${randomSpell}!`, 'utility')
+        await eval(methodName)()
+      } else {
+        showMessage(`💦 Splash tried to cast ${randomSpell} but it's not implemented!`, 'warning')
+      }
+    } catch (error) {
+      showMessage(`💦 Splash failed to cast ${randomSpell}!`, 'warning')
     }
-  }
-  else {
+  } else {
     showMessage(`💦 Splash missed!`, 'info')
   }
 }
@@ -299,13 +296,163 @@ const blaze = async () => {
   showMessage(`🔥 Blaze deals ${damageDealt} damage!`, 'damage')
 }
 
-//Re-roll 4 dice
+//Re-roll any 4 dice
 const strongGusts = async () => {
   const rerollResult = await requestElementDiceReroll(
     dice => !dice.used,  // Filter: only unspent dice
     4,                   // Max 4 dice total
     'Select up to 4 unspent dice to reroll'
   )
+}
+
+// Wavepool: Cast any two cost spell at random
+const wavepool = async () => {
+  // List of 2-cost spells (excluding Wavepool to avoid infinite loops)
+  const twoCostSpells = [
+    'Blaze', 'Wild Growth', 'Strong Gusts', 'Unfair Duel', 'Fated Hearts',
+    'Refreshing Sips', 'Smog', 'Hotheaded', 'Risky Business', 'Hot Coals',
+    'Waterjet', 'Aqua Mortis'
+  ]
+  
+  // Pick a random spell
+  const randomSpell = twoCostSpells[Math.floor(Math.random() * twoCostSpells.length)]
+  
+  // Convert to method name and execute
+  const methodName = getMethodName(randomSpell)
+  
+  try {
+    if (typeof eval(methodName) === 'function') {
+      showMessage(`💧 Wavepool casts ${randomSpell}!`, 'utility')
+      await eval(methodName)()
+    } else {
+      showMessage(`💧 Wavepool tried to cast ${randomSpell} but it's not implemented!`, 'warning')
+    }
+  } catch (error) {
+    showMessage(`💧 Wavepool failed to cast ${randomSpell}!`, 'warning')
+  }
+}
+
+// Wild Growth: Gain 2 armour for each previously spent dice, max of 8
+const wildGrowth = async () => {
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
+  const spentDiceCount = currentPlayerResources.filter(dice => dice.used).length
+  const armorToGain = Math.min(spentDiceCount * 2, 8)
+  
+  if (armorToGain > 0) {
+    gainArmor(armorToGain, props.currentPlayer)
+  }
+  showMessage(`🌱 Wild Growth gains ${armorToGain} armor!`, 'utility')
+}
+
+// Unfair Duel: Roll (1d4), your opponent rolls (1d8), whoever rolls higher takes that amount as damage
+const unfairDuel = async () => {
+  const playerRoll = await requestDiceRoll('1d4')
+  const opponentRoll = await requestDiceRoll('1d8')
+  
+  if (playerRoll.value > opponentRoll.value) {
+    dealDamage(playerRoll.value, props.opponentPlayer)
+    showMessage(`💀 Unfair Duel self-inflicts ${playerRoll.value} damage!`, 'damage')
+  } else if (opponentRoll.value > playerRoll.value) {
+    dealDamage(opponentRoll.value, props.currentPlayer)
+    showMessage(`💀 Unfair Duel causes ${opponentRoll.value} damage!`, 'damage')
+  }else{
+    showMessage(`It's a tie! No damage dealt.`, 'info')
+  }
+}
+
+// Fated Hearts: Heal (1d6) + 2
+const fatedHearts = async () => {
+  const healRoll = await requestDiceRoll('1d6')
+  const totalHealing = healRoll.value + 2
+  healHP(totalHealing, props.currentPlayer)
+  showMessage(`❤️ Fated Hearts heals ${totalHealing} HP!`, 'healing')
+}
+
+// Refreshing Sips: Gain (1d4) HP for each unspent dice in your hand, max of 10 HP
+const refreshingSips = async () => {
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
+  const unspentDiceCount = currentPlayerResources.filter(dice => !dice.used).length
+  const healRoll = await requestDiceRoll('1d4')
+  const totalHealing = Math.min(healRoll.value * unspentDiceCount, 10)
+  
+  healHP(totalHealing, props.currentPlayer)
+  showMessage(`💧 Refreshing Sips heals ${totalHealing} HP!`, 'healing')
+}
+
+// Smog: Gain 3 armour and deal (1d4) damage
+const smog = async () => {
+  gainArmor(3, props.currentPlayer)
+  const damageRoll = await requestDiceRoll('1d4')
+  dealDamage(damageRoll.value, props.opponentPlayer)
+  showMessage(`💨 Smog gains 3 armor and deals ${damageRoll.value} damage!`, 'utility')
+}
+
+// Hotheaded: Roll (1d10), a 1 or 10 is taken as damage to you, anything else is damage to your opponent
+const hotheaded = async () => {
+  const roll = await requestDiceRoll('1d10')
+  
+  if (roll.value === 1 || roll.value === 10) {
+    dealDamage(roll.value, props.currentPlayer)
+    showMessage(`🔥 Hotheaded self-inflicts ${roll.value} damage! Ouch!`, 'damage')
+  } else {
+    dealDamage(roll.value, props.opponentPlayer)
+    showMessage(`🔥 Hotheaded deals ${roll.value} damage to the opponent!`, 'damage')
+  }
+}
+
+// Risky Business: Take (1d8) damage, get as many re-rolls as the amount of damage you did NOT take
+const riskyBusiness = async () => {
+  const damageRoll = await requestDiceRoll('1d8')
+  const actualDamage = damageRoll.value
+  
+  // Apply damage to self
+  dealDamage(actualDamage, props.currentPlayer)
+  
+  // Calculate rerolls: damage NOT taken = 8 (max possible) - actual roll
+  const rerollsToGain = 8 - actualDamage
+  
+  if (rerollsToGain > 0) {
+    // Allow rerolling any unspent dice, up to the number of rerolls gained
+    await requestElementDiceReroll(
+      dice => !dice.used,  // Filter: only unspent dice
+      rerollsToGain,       // Max rerolls based on damage not taken
+      `Select up to ${rerollsToGain} unspent dice to reroll`
+    )
+  }
+}
+
+// Hot Coals: Deal your current armour as damage, max of 8
+const hotCoals = async () => {
+  const currentArmor = props.playerStats[props.currentPlayer].armor || 0
+  const damageToDeal = Math.min(currentArmor, 8)
+  
+  if (damageToDeal > 0) {
+    dealDamage(damageToDeal, props.opponentPlayer)
+    showMessage(`🔥 Hot Coals deals ${damageToDeal} damage!`, 'damage')
+  }
+}
+
+// Waterjet: Re-roll any unspent dice and deal 4 damage
+const waterjet = async () => {
+  const rerollResult = await requestElementDiceReroll(
+    dice => !dice.used,  // Filter: only unspent dice
+    1,                   // Max all dice
+    'Select unspent dice to reroll'
+  )
+  
+  dealDamage(4, props.opponentPlayer)
+  showMessage(`💧 Waterjet deals 4 damage!`, 'damage')
+}
+
+// Aqua Mortis: Take (1d4) damage and deal (1d6) + 2 damage
+const aquaMortis = async () => {
+  const damageRoll = await requestDiceRoll('1d4')
+  dealDamage(damageRoll.value, props.currentPlayer)
+  showMessage(`💧 Aqua Mortis self-inflicts ${damageRoll.value} damage!`, 'damage')
+
+  const attackRoll = await requestDiceRoll('1d6')
+  dealDamage(attackRoll.value + 2, props.opponentPlayer)
+  showMessage(`💧 Aqua Mortis deals ${attackRoll.value + 2} damage!`, 'damage')
 }
 
 

@@ -57,7 +57,7 @@
     {
       "name": "Strong Gusts",
       "cost": ["💨", "💨"],
-      "effect": "Re-roll 4 dice",
+      "effect": "Re-roll any 4 dice",
       "category": "utility"
     },
     {
@@ -93,7 +93,7 @@
     {
       "name": "Risky Business",
       "cost": ["💀", "💨"],
-      "effect": "Re-roll both these dice, if either are a death or wind take 4 damage",
+      "effect": "Take (1d8) damage, get as many re-rolls as the amount of damage you did NOT take",
       "category": "utility"
     },
     {
@@ -105,13 +105,13 @@
     {
       "name": "Waterjet",
       "cost": ["💧", "💨"],
-      "effect": "Re-roll an unspent dice and deal 5 damage",
+      "effect": "Re-roll any unspent dice and deal 4 damage",
       "category": "hybrid"
     },
     {
       "name": "Aqua Mortis",
       "cost": ["💧", "💀"],
-      "effect": "Roll (1d6) + 2 to deal as damage, you may choose to lose 2 hp and re-roll your d6 dice",
+      "effect": "Take (1d4) damage and deal (1d6) + 2 damage",
       "category": "damage"
     },
     {
