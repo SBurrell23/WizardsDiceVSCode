@@ -343,8 +343,8 @@ const playerResources = ref({
   guest: []
 })
 const playerStats = ref({
-  host: { health: 1, armor: 0, maxHealth: 25 },
-  guest: { health: 1, armor: 0, maxHealth: 25 }
+  host: { health: 25, armor: 0, maxHealth: 25 },
+  guest: { health: 25, armor: 0, maxHealth: 25 }
 })
 const diceRefs = ref([])
 const spellEffectsRef = ref(null)
@@ -1089,25 +1089,27 @@ onUnmounted(() => {
 <style scoped>
 .game-container {
   display: flex;
-  height: calc(100vh - 1rem);
-  margin: 0.5rem 0;
-  width: 100%;
+  height: 100vh;
+  margin: 0;
+  width: 100vw;
   font-family: 'Inter', sans-serif;
   color: white;
 }
 
 .game-board {
-  flex: 0 0 60%;
-  height: 100%;
+  flex: 0 0 50%;
+  width: 50vw;
+  height: 100vh;
   background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
   display: flex;
   flex-direction: column;
   padding: 20px;
-  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .spellbook-container {
-  flex: 0 0 40%;
+  flex: 0 0 50%;
+  width: 50vw;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(5px);
 }
@@ -1117,6 +1119,7 @@ onUnmounted(() => {
   display: flex;
   padding: 1rem;
   margin: 0.5rem 0;
+  padding-top: .5rem;
   background: rgba(255,255,255,0.1);
   backdrop-filter: blur(10px);
   border-radius: 20px;
@@ -1138,6 +1141,7 @@ onUnmounted(() => {
 .top-player {
   flex-direction: column;
   justify-content: flex-start;
+  
 }
 
 .bottom-player {
@@ -1151,10 +1155,18 @@ onUnmounted(() => {
   align-items: center;
   margin-bottom: 1rem;
 }
+.top-player .player-header {
+  margin-top: 0;
+  margin-top: .75rem;
+  margin-left: .5rem;
+  margin-right: .5rem;
+}
 
 .bottom-player .player-header {
   margin-bottom: 0;
-  margin-top: 1rem;
+  margin-top: .75rem;
+  margin-left: .5rem;
+  margin-right: .5rem;
 }
 
 .player-name {
@@ -1241,20 +1253,21 @@ onUnmounted(() => {
 
 .dice-area {
   display: flex;
-  gap: 2rem;
+  gap: 3rem;
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 0 1rem;
+  padding:3rem
 }
 
 .element-dice-box {
   flex: 2;
   background: rgba(255,255,255,0.2);
   border-radius: 15px;
-  padding: 1rem;
+  padding: 1rem 1rem;
   text-align: center;
   border: 2px solid rgba(255,255,255,0.3);
+  min-height: 130px;
 }
 
 .number-dice-box {
@@ -1717,17 +1730,23 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .game-container {
     flex-direction: column;
+    height: 100vh;
+    width: 100vw;
   }
   
   .game-board {
-    width: 100%;
-    padding: 10px;
+    width: 100vw;
+    height: auto;
+    flex: 1;
+    padding: 0;
   }
   
   .spellbook-container {
-    width: 100%;
+    width: 100vw;
+    height: 400px;
+    flex: 0 0 400px;
   }
-  
+
   .player-header {
     flex-direction: column;
     gap: 1rem;

@@ -1,8 +1,6 @@
 <template>
   <div class="number-dice-container">
-    <div class="dice-info">
-      <span class="dice-notation">d{{ sides }}</span>
-    </div>
+
     
     <div class="dice-grid">
       <div 

@@ -413,11 +413,9 @@ onUnmounted(() => {
 <style scoped>
 .landing-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
   font-family: 'Inter', sans-serif;
 }
 
@@ -443,7 +441,7 @@ onUnmounted(() => {
 }
 
 .menu-section {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 2rem;
