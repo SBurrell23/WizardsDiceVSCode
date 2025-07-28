@@ -2158,6 +2158,12 @@ if (typeof window !== 'undefined') {
     font-size: 1.8rem;
   }
   
+  .rolling-dice {
+    width: 45px;
+    height: 45px;
+    font-size: 1.8rem;
+  }
+  
   .dice-container {
     padding: 0.5rem;
     max-height: calc(100% - 40px);
@@ -2198,6 +2204,12 @@ if (typeof window !== 'undefined') {
     font-size: 1.8rem;
   }
   
+  .rolling-dice {
+    width: 45px;
+    height: 45px;
+    font-size: 1.8rem;
+  }
+  
   .dice-container {
     padding: 0.5rem;
     max-height: calc(100% - 40px);
@@ -2230,6 +2242,12 @@ if (typeof window !== 'undefined') {
   }
   
   .rolled-dice {
+    width: 35px;
+    height: 35px;
+    font-size: 1.4rem;
+  }
+  
+  .rolling-dice {
     width: 35px;
     height: 35px;
     font-size: 1.4rem;
@@ -2321,6 +2339,12 @@ if (typeof window !== 'undefined') {
   }
   
   .rolled-dice {
+    width: 45px;
+    height: 45px;
+    font-size: 1.8rem;
+  }
+  
+  .rolling-dice {
     width: 45px;
     height: 45px;
     font-size: 1.8rem;
@@ -2470,6 +2494,12 @@ if (typeof window !== 'undefined') {
     font-size: 1.5rem;
   }
   
+  .rolling-dice {
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+  }
+  
   .dice-placeholder {
     font-size: 1.8rem;
   }
@@ -2572,6 +2602,12 @@ if (typeof window !== 'undefined') {
     font-size: 1.2rem;
   }
   
+  .rolling-dice {
+    width: 25px;
+    height: 25px;
+    font-size: 1.2rem;
+  }
+  
   .dice-placeholder {
     font-size: 1.5rem;
   }
@@ -2653,6 +2689,12 @@ if (typeof window !== 'undefined') {
   }
   
   .rolled-dice {
+    width: 40px;
+    height: 40px;
+    font-size: 1.6rem;
+  }
+  
+  .rolling-dice {
     width: 40px;
     height: 40px;
     font-size: 1.6rem;
@@ -2845,6 +2887,12 @@ if (typeof window !== 'undefined') {
     font-size: 1.5rem;
   }
   
+  .rolling-dice {
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+  }
+  
   .dice-placeholder {
     font-size: 1.8rem;
   }
@@ -2942,6 +2990,12 @@ if (typeof window !== 'undefined') {
   }
   
   .rolled-dice {
+    width: 30px;
+    height: 30px;
+    font-size: 1.2rem;
+  }
+  
+  .rolling-dice {
     width: 30px;
     height: 30px;
     font-size: 1.2rem;

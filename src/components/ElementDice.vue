@@ -137,43 +137,7 @@ defineExpose({
   75% { transform: translateX(2px) rotate(1deg); }
 }
 
-/* Responsive design for ElementDice */
-@media (max-width: 800px) {
-  .element-dice {
-    width: 45px;
-    height: 45px;
-    margin: 0.15rem;
-  }
-  
-  .dice-face {
-    font-size: 1.8rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .element-dice {
-    width: 35px;
-    height: 35px;
-    margin: 0.1rem;
-  }
-  
-  .dice-face {
-    font-size: 1.4rem;
-  }
-}
-
-@media (min-height: 800px) and (max-width: 500px) {
-  .element-dice {
-    width: 40px;
-    height: 40px;
-    margin: 0.1rem;
-  }
-  
-  .dice-face {
-    font-size: 1.6rem;
-  }
-}
-
+/* Responsive design for ElementDice - matching GameBoard rolled-dice sizing */
 @media (max-height: 800px) {
   .element-dice {
     width: 45px;
@@ -210,7 +174,7 @@ defineExpose({
   }
 }
 
-@media (max-height: 600px) {
+@media (max-height: 500px) {
   .element-dice {
     width: 25px;
     height: 25px;
@@ -219,6 +183,31 @@ defineExpose({
   
   .dice-face {
     font-size: 1.2rem;
+  }
+}
+
+/* Width-based breakpoints for consistency */
+@media (max-width: 800px) {
+  .element-dice {
+    width: 45px;
+    height: 45px;
+    margin: 0.15rem;
+  }
+  
+  .dice-face {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .element-dice {
+    width: 35px;
+    height: 35px;
+    margin: 0.1rem;
+  }
+  
+  .dice-face {
+    font-size: 1.4rem;
   }
 }
 </style>

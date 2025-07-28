@@ -21,6 +21,18 @@
         <!-- Divider -->
         <span class="filter-divider">/</span>
         
+        <!-- Search input -->
+        <input 
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search spells..."
+          class="search-input"
+          @input="onSearchInput"
+        />
+        
+        <!-- Divider -->
+        <span class="filter-divider">/</span>
+        
         <!-- Cost filters -->
         <button 
           v-for="cost in costTypes" 
@@ -110,6 +122,7 @@ const emit = defineEmits(['cast-spells', 'end-turn', 'close'])
 const spellbook = ref({ spells: [] })
 const selectedCastability = ref('all') // 'all' or 'castable'
 const selectedCosts = ref([]) // Array of selected cost filters: '1', '2', '3', '4+'
+const searchQuery = ref('') // Search input string
 
 // Element dice types for filtering
 const castabilityTypes = computed(() => {
@@ -133,13 +146,22 @@ const availableDiceCount = computed(() => {
 const filteredSpells = computed(() => {
   let spells = spellbook.value.spells
 
-  // First filter by castability
+  // First filter by search query if provided
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    spells = spells.filter(spell => 
+      spell.name.toLowerCase().includes(query) || 
+      spell.effect.toLowerCase().includes(query)
+    )
+  }
+
+  // Then filter by castability
   if (selectedCastability.value === 'castable') {
     spells = spells.filter(spell => canCastSpell(spell))
   }
 
-  // Then filter by cost if any cost filters are selected
-  if (selectedCosts.value.length > 0) {
+  // Then filter by cost if any cost filters are selected (only if no search query)
+  if (selectedCosts.value.length > 0 && !searchQuery.value.trim()) {
     spells = spells.filter(spell => {
       return selectedCosts.value.some(costFilter => {
         if (costFilter === '1') return spell.cost.length === 1
@@ -196,6 +218,15 @@ const toggleCost = (cost) => {
   } else {
     // Add if not selected
     selectedCosts.value.push(cost)
+  }
+}
+
+// Handle search input changes
+const onSearchInput = () => {
+  if (searchQuery.value.trim()) {
+    // When searching, set castability to 'all' and clear cost filters
+    selectedCastability.value = 'all'
+    selectedCosts.value = []
   }
 }
 
@@ -339,6 +370,31 @@ onMounted(() => {
 
 .cost-filter {
   min-width: 45px;
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 400;
+  min-width: 130px;
+  flex-grow: 1;
+  max-width: 180px;
+  transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.search-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(102, 126, 234, 0.6);
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
 }
 
 .spells-grid {
