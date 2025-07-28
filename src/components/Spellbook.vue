@@ -21,18 +21,6 @@
         <!-- Divider -->
         <span class="filter-divider">/</span>
         
-        <!-- Search input -->
-        <input 
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search spells..."
-          class="search-input"
-          @input="onSearchInput"
-        />
-        
-        <!-- Divider -->
-        <span class="filter-divider">/</span>
-        
         <!-- Cost filters -->
         <button 
           v-for="cost in costTypes" 
@@ -43,6 +31,18 @@
         >
           {{ cost }}
         </button>
+        
+        <!-- Divider -->
+        <span class="filter-divider">/</span>
+        
+        <!-- Search input -->
+        <input 
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search spells..."
+          class="search-input"
+          @input="onSearchInput"
+        />
       </div>
       
       <div class="spells-grid">
@@ -361,6 +361,10 @@ onMounted(() => {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+.filter-button:focus {
+  outline: none;
+}
+
 .filter-button.active {
   background: rgba(34, 197, 94, 0.2);
   border-color: rgba(34, 197, 94, 0.6);
@@ -378,11 +382,10 @@ onMounted(() => {
   color: white;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 400;
-  min-width: 130px;
-  flex-grow: 1;
-  max-width: 180px;
+  flex: 1;
+  min-width: 0;
   transition: all 0.3s ease;
 }
 

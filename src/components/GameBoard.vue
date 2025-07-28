@@ -1775,7 +1775,7 @@ if (typeof window !== 'undefined') {
   font-weight: 500;
   backdrop-filter: blur(15px);
   text-align: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border: 2px solid rgba(255,255,255,0.3);
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   font-size: 1rem;
