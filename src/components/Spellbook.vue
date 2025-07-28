@@ -340,7 +340,7 @@ onMounted(() => {
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0s ease-in;
   min-width: 140px;
   outline: none;
 }
