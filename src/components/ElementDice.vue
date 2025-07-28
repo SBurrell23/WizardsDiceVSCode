@@ -136,4 +136,89 @@ defineExpose({
   50% { transform: translateY(-2px) rotate(0deg); }
   75% { transform: translateX(2px) rotate(1deg); }
 }
+
+/* Responsive design for ElementDice */
+@media (max-width: 800px) {
+  .element-dice {
+    width: 45px;
+    height: 45px;
+    margin: 0.15rem;
+  }
+  
+  .dice-face {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .element-dice {
+    width: 35px;
+    height: 35px;
+    margin: 0.1rem;
+  }
+  
+  .dice-face {
+    font-size: 1.4rem;
+  }
+}
+
+@media (min-height: 800px) and (max-width: 500px) {
+  .element-dice {
+    width: 40px;
+    height: 40px;
+    margin: 0.1rem;
+  }
+  
+  .dice-face {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-height: 800px) {
+  .element-dice {
+    width: 45px;
+    height: 45px;
+    margin: 0.15rem;
+  }
+  
+  .dice-face {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-height: 700px) {
+  .element-dice {
+    width: 35px;
+    height: 35px;
+    margin: 0.1rem;
+  }
+  
+  .dice-face {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .element-dice {
+    width: 35px;
+    height: 35px;
+    margin: 0.1rem;
+  }
+  
+  .dice-face {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .element-dice {
+    width: 25px;
+    height: 25px;
+    margin: 0.05rem;
+  }
+  
+  .dice-face {
+    font-size: 1.2rem;
+  }
+}
 </style>

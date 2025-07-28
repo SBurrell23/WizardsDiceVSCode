@@ -1382,6 +1382,7 @@ if (typeof window !== 'undefined') {
   flex-direction: column;
   padding: 20px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .spellbook-container {
@@ -1389,6 +1390,7 @@ if (typeof window !== 'undefined') {
   width: 50vw;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(5px);
+  overflow-y: auto;
 }
 
 .player-area {
@@ -1402,8 +1404,10 @@ if (typeof window !== 'undefined') {
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.2);
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  min-height: 200px;
+  min-height: 0;
+  max-height: calc((100vh - 120px) / 2 - 1rem);
   transition: all 0.3s ease;
+  overflow: hidden;
 }
 
 .player-area.current-player {
@@ -1594,11 +1598,13 @@ if (typeof window !== 'undefined') {
 
 .dice-area {
   display: flex;
-  gap: 3rem;
+  gap: 1.75rem;
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding:3rem
+  padding: 1rem;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .element-dice-box {
@@ -1608,7 +1614,10 @@ if (typeof window !== 'undefined') {
   padding: 1rem 1rem;
   text-align: center;
   border: 2px solid rgba(255,255,255,0.3);
-  min-height: 130px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .number-dice-box {
@@ -1619,6 +1628,10 @@ if (typeof window !== 'undefined') {
   text-align: center;
   border: 2px solid rgba(255,255,255,0.3);
   max-width: 150px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .element-dice-box h4, .number-dice-box h4 {
@@ -1631,8 +1644,8 @@ if (typeof window !== 'undefined') {
 }
 
 .dice-container {
-  min-height: 80px;
-  max-height: 275px;
+  min-height: 0;
+  flex: 1;
   padding: .75rem;
   display: flex;
   align-items: center;
@@ -1640,11 +1653,12 @@ if (typeof window !== 'undefined') {
   background: rgba(0,0,0,0.2);
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.2);
+  overflow: hidden;
 }
 
 .dice-container.small {
-  min-height: 100px;
-  max-height: 100px;
+  min-height: 0;
+  flex: 1;
   padding: 0.5rem;
   align-items: center;
   justify-content: center;
@@ -1688,7 +1702,8 @@ if (typeof window !== 'undefined') {
   margin: 0.3rem 0;
   border: 1px solid rgba(255,255,255,0.2);
   flex-shrink: 0;
-  min-height: auto;
+  min-height: 40px;
+  max-height: 60px;
 }
 
 .game-title {
@@ -1703,7 +1718,7 @@ if (typeof window !== 'undefined') {
   align-items: center;
   gap: 0.8rem;
   background: rgba(255, 255, 255, 0.15);
-  padding: 0.35rem 0.7rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(15px);
@@ -1861,6 +1876,8 @@ if (typeof window !== 'undefined') {
 .roll-action {
   margin-top: 15px;
   text-align: center;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .roll-button {
@@ -2121,58 +2138,825 @@ if (typeof window !== 'undefined') {
   font-style: italic;
 }
 
+/* Width-based responsive design for narrow screens */
+@media (max-width: 800px) {
+  .dice-grid {
+    gap: 3px;
+    max-height: calc(100% - 60px);
+    overflow-y: auto;
+  }
+  
+  .opponent-dice {
+    gap: 4px;
+    max-height: calc(100% - 20px);
+    overflow-y: auto;
+  }
+  
+  .rolled-dice {
+    width: 45px;
+    height: 45px;
+    font-size: 1.8rem;
+  }
+  
+  .dice-container {
+    padding: 0.5rem;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+  }
+  
+  .roll-action {
+    margin-top: 8px;
+    position: sticky;
+    bottom: 0;
+    background: rgba(45, 27, 105, 0.9);
+    padding: 0.5rem;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .element-dice-box {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .dice-grid {
+    gap: 3px;
+    max-height: calc(100% - 60px);
+    overflow-y: auto;
+  }
+  
+  .opponent-dice {
+    gap: 4px;
+    max-height: calc(100% - 20px);
+    overflow-y: auto;
+  }
+  
+  .rolled-dice {
+    width: 45px;
+    height: 45px;
+    font-size: 1.8rem;
+  }
+  
+  .dice-container {
+    padding: 0.5rem;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+  }
+  
+  .roll-action {
+    margin-top: 8px;
+    position: sticky;
+    bottom: 0;
+    background: rgba(45, 27, 105, 0.9);
+    padding: 0.5rem;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .element-dice-box {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .dice-grid {
+    gap: 2px;
+    max-height: calc(100% - 50px);
+  }
+  
+  .opponent-dice {
+    gap: 3px;
+  }
+  
+  .rolled-dice {
+    width: 35px;
+    height: 35px;
+    font-size: 1.4rem;
+  }
+  
+  .dice-container {
+    padding: 0.25rem;
+  }
+  
+  .roll-action {
+    margin-top: 5px;
+    padding: 0.25rem;
+  }
+  
+  .roll-button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Tall and narrow screens - prioritize button visibility */
+@media (min-height: 800px) and (max-width: 500px) {
+  .dice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    gap: 4px;
+    max-height: calc(100% - 80px);
+    overflow-y: auto;
+    padding: 0.25rem;
+  }
+  
+  .opponent-dice {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    gap: 4px;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+    padding: 0.25rem;
+  }
+  
+  .rolled-dice {
+    width: 40px;
+    height: 40px;
+    font-size: 1.6rem;
+  }
+  
+  .roll-action {
+    position: sticky;
+    bottom: 0;
+    background: rgba(45, 27, 105, 0.95);
+    border: 1px solid rgba(255,255,255,0.2);
+    margin-top: 10px;
+    z-index: 100;
+  }
+}
+
+/* Height-based responsive design for short screens */
+@media (max-height: 800px) {
+  .game-board {
+    padding: 0.5rem;
+  }
+  
+  .player-area {
+    max-height: calc((100vh - 80px) / 2 - 0.5rem);
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+  }
+  
+  .player-header {
+    margin: 0.25rem;
+    flex-shrink: 0;
+  }
+  
+  .player-name {
+    font-size: 1.2rem;
+  }
+  
+  .dice-area {
+    padding: 0.5rem;
+    gap: 1rem;
+  }
+  
+  .element-dice-box, .number-dice-box {
+    padding: 0.5rem;
+  }
+  
+  .dice-container {
+    padding: 0.5rem;
+  }
+  
+  .rolled-dice {
+    width: 45px;
+    height: 45px;
+    font-size: 1.8rem;
+  }
+  
+  .game-center {
+    padding: 0.25rem 0.5rem;
+    margin: 0.1rem 0;
+    min-height: 35px;
+    max-height: 50px;
+  }
+  
+  .turn-display {
+    font-size: 1.2rem;
+  }
+  
+  .status-message {
+    font-size: 0.9rem;
+  }
+  
+  .turn-info {
+    flex-shrink: 0;
+    max-height: 45px;
+    overflow: hidden;
+    padding: 0.15rem 0.4rem;
+  }
+}
+
+@media (max-height: 700px) {
+  .game-board {
+    padding: 0.5rem;
+  }
+  
+  .player-area {
+    max-height: calc((100vh - 80px) / 2 - 0.5rem);
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+  }
+  
+  .player-header {
+    margin: 0.25rem;
+    flex-shrink: 0;
+  }
+  
+  .player-name {
+    font-size: 1.2rem;
+  }
+  
+  .dice-area {
+    padding: 0.5rem;
+    gap: 1rem;
+  }
+  
+  .element-dice-box, .number-dice-box {
+    padding: 0.5rem;
+  }
+  
+  .dice-container {
+    padding: 0.5rem;
+  }
+  
+  .rolled-dice {
+    width: 45px;
+    height: 45px;
+    font-size: 1.8rem;
+  }
+  
+  .game-center {
+    padding: 0.25rem 0.5rem;
+    margin: 0.1rem 0;
+    min-height: 35px;
+    max-height: 50px;
+  }
+}
+
+@media (max-height: 700px) {
+  .game-board {
+    padding: 0.25rem;
+  }
+  
+  .player-area {
+    max-height: calc((100vh - 60px) / 2 - 0.2rem);
+    padding: 0.25rem;
+    margin: 0.1rem 0;
+  }
+  
+  .player-header {
+    margin: 0.1rem;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  
+  .player-name-box {
+    padding: 0.2rem 0.5rem;
+  }
+  
+  .player-name {
+    font-size: 1rem;
+  }
+  
+  .casting-spell-indicator {
+    padding: 0.2rem 0.5rem;
+  }
+  
+  .casting-text {
+    font-size: 0.7rem;
+  }
+  
+  .spell-name {
+    font-size: 0.8rem;
+  }
+  
+  .player-stats {
+    gap: 0.8rem;
+    flex-shrink: 0;
+  }
+  
+  .health-stat, .armor-stat {
+    padding: 0.2rem 0.5rem;
+    gap: 0.4rem;
+  }
+  
+  .stat-icon {
+    font-size: 1rem;
+  }
+  
+  .stat-value {
+    font-size: 1.1rem;
+  }
+  
+  .dice-area {
+    padding: 0.25rem;
+    gap: 0.5rem;
+  }
+  
+  .element-dice-box, .number-dice-box {
+    padding: 0.25rem;
+  }
+  
+  .dice-container {
+    padding: 0.25rem;
+  }
+  
+  .rolled-dice {
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+  }
+  
+  .dice-placeholder {
+    font-size: 1.8rem;
+  }
+  
+  .dice-placeholder.small {
+    font-size: 1.2rem;
+  }
+  
+  .game-center {
+    padding: 0.2rem 0.5rem;
+    margin: 0.05rem 0;
+    min-height: 30px;
+    max-height: 40px;
+  }
+  
+  .turn-display {
+    font-size: 1rem;
+  }
+  
+  .status-message {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .turn-info {
+    flex-shrink: 0;
+    max-height: 36px;
+    overflow: hidden;
+    padding: 0.1rem 0.3rem;
+  }
+  
+  .roll-button, .stop-reroll-button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-height: 500px) {
+  .game-board {
+    padding: 0.1rem;
+  }
+  
+  .player-area {
+    max-height: calc((100vh - 40px) / 2 - 0.1rem);
+    padding: 0.1rem;
+    margin: 0.05rem 0;
+  }
+  
+  .player-header {
+    margin: 0.05rem;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+  
+  .player-name {
+    font-size: 0.9rem;
+  }
+  
+  .casting-text {
+    font-size: 0.6rem;
+  }
+  
+  .spell-name {
+    font-size: 0.7rem;
+  }
+  
+  .player-stats {
+    gap: 0.5rem;
+  }
+  
+  .health-stat, .armor-stat {
+    padding: 0.1rem 0.3rem;
+    gap: 0.2rem;
+  }
+  
+  .stat-icon {
+    font-size: 0.9rem;
+  }
+  
+  .stat-value {
+    font-size: 1rem;
+  }
+  
+  .dice-area {
+    padding: 0.1rem;
+    gap: 0.25rem;
+  }
+  
+  .element-dice-box, .number-dice-box {
+    padding: 0.1rem;
+  }
+  
+  .dice-container {
+    padding: 0.1rem;
+  }
+  
+  .rolled-dice {
+    width: 25px;
+    height: 25px;
+    font-size: 1.2rem;
+  }
+  
+  .dice-placeholder {
+    font-size: 1.5rem;
+  }
+  
+  .dice-placeholder.small {
+    font-size: 1rem;
+  }
+  
+  .game-center {
+    padding: 0.1rem 0.3rem;
+    margin: 0.02rem 0;
+    min-height: 25px;
+    max-height: 30px;
+  }
+  
+  .turn-display {
+    font-size: 0.9rem;
+  }
+  
+  .status-message {
+    padding: 0.1rem 0.3rem;
+    font-size: 0.7rem;
+  }
+  
+  .turn-info {
+    flex-shrink: 0;
+    max-height: 26px;
+    overflow: hidden;
+    padding: 0.05rem 0.2rem;
+    gap: 0.2rem;
+  }
+  
+  .roll-button, .stop-reroll-button {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .game-board {
+    padding: 0.25rem;
+  }
+  
+  .player-area {
+    max-height: calc((100vh - 70px) / 2 - 0.3rem);
+    padding: 0.3rem;
+    margin: 0.15rem 0;
+  }
+  
+  .player-header {
+    margin: 0.15rem;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+  
+  .player-name {
+    font-size: 1.1rem;
+  }
+  
+  .casting-text {
+    font-size: 0.65rem;
+  }
+  
+  .spell-name {
+    font-size: 0.75rem;
+  }
+  
+  .dice-area {
+    padding: 0.3rem;
+    gap: 0.4rem;
+  }
+  
+  .element-dice-box, .number-dice-box {
+    padding: 0.3rem;
+  }
+  
+  .dice-container {
+    padding: 0.3rem;
+  }
+  
+  .rolled-dice {
+    width: 40px;
+    height: 40px;
+    font-size: 1.6rem;
+  }
+  
+  .game-center {
+    padding: 0.15rem 0.4rem;
+    margin: 0.08rem 0;
+    min-height: 28px;
+    max-height: 35px;
+  }
+  
+  .turn-display {
+    font-size: 1.05rem;
+  }
+  
+  .status-message {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+  }
+  
+  .turn-info {
+    flex-shrink: 0;
+    max-height: 32px;
+    overflow: hidden;
+    padding: 0.08rem 0.3rem;
+    gap: 0.3rem;
+  }
+  
+  .roll-button, .stop-reroll-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Combination: Short height AND narrow width */
+@media (max-height: 600px) and (max-width: 768px) {
+  .game-container {
+    flex-direction: column;
+  }
+  
+  .game-board {
+    height: 65vh;
+    flex: 0 0 65vh;
+  }
+  
+  .spellbook-container {
+    height: 35vh;
+    flex: 0 0 35vh;
+  }
+  
+  .player-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  .dice-area {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .element-dice-box {
+    flex: 2;
+  }
+  
+  .number-dice-box {
+    flex: 1;
+    max-width: none;
+    min-width: 60px;
+  }
+}
+
 @media (max-width: 768px) {
   .game-container {
     flex-direction: column;
     height: 100vh;
     width: 100vw;
+    overflow: hidden;
   }
   
   .game-board {
     width: 100vw;
-    height: auto;
-    flex: 1;
-    padding: 0;
+    height: 60vh;
+    flex: 0 0 60vh;
+    padding: 0.5rem;
+    overflow-y: auto;
   }
   
   .spellbook-container {
     width: 100vw;
-    height: 400px;
-    flex: 0 0 400px;
+    height: 40vh;
+    flex: 0 0 40vh;
+    overflow-y: auto;
+  }
+
+  .player-area {
+    min-height: 120px;
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    flex: 0 0 auto;
   }
 
   .player-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.25rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .player-name-box {
+    padding: 0.2rem 0.5rem;
+    flex-shrink: 0;
+  }
+  
+  .player-name {
+    font-size: 1.1rem;
   }
   
   .casting-spell-indicator {
-    padding: 0.3rem 0.6rem;
-    margin: 0.3rem 0;
+    padding: 0.2rem 0.5rem;
+    margin: 0;
+    flex: 1;
+    min-width: 200px;
   }
   
   .casting-text {
+    font-size: 0.7rem;
+  }
+  
+  .spell-name {
     font-size: 0.8rem;
   }
   
   .player-stats {
     justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .health-stat, .armor-stat {
+    padding: 0.2rem 0.5rem;
+    gap: 0.4rem;
+  }
+  
+  .stat-icon {
+    font-size: 1rem;
+  }
+  
+  .stat-value {
+    font-size: 1.1rem;
+  }
+  
+  .dice-area {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    justify-content: space-between;
+  }
+  
+  .element-dice-box {
+    flex: 2;
+    min-height: 80px;
+    padding: 0.5rem;
+  }
+  
+  .number-dice-box {
+    flex: 1;
+    max-width: none;
+    min-width: 80px;
+    padding: 0.5rem;
+  }
+  
+  .dice-container {
+    min-height: 60px;
+    max-height: 80px;
+    padding: 0.25rem;
+  }
+  
+  .dice-container.small {
+    min-height: 60px;
+    max-height: 60px;
+  }
+  
+  .rolled-dice {
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+  }
+  
+  .dice-placeholder {
+    font-size: 1.8rem;
+  }
+  
+  .dice-placeholder.small {
+    font-size: 1.2rem;
+  }
+  
+  .game-center {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    margin: 0.1rem 0;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  
+  .turn-info {
+    padding: 0.1rem 0.3rem;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    max-height: 34px;
+    overflow: hidden;
+  }
+  
+  .turn-display {
+    font-size: 1rem;
+  }
+  
+  .chevron-up, .chevron-down {
+    font-size: 0.8rem;
+  }
+  
+  .chevron-up.active, .chevron-down.active {
+    font-size: 1rem;
+  }
+  
+  .status-message {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    flex: 1;
+    margin-left: 0.5rem;
+  }
+  
+  .roll-button, .stop-reroll-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Additional breakpoint for very small screens */
+@media (max-width: 480px) {
+  .game-board {
+    height: 65vh;
+    flex: 0 0 65vh;
+    padding: 0.25rem;
+  }
+  
+  .spellbook-container {
+    height: 35vh;
+    flex: 0 0 35vh;
+  }
+  
+  .player-area {
+    min-height: 100px;
+    padding: 0.25rem;
+  }
+  
+  .player-header {
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+  
+  .casting-spell-indicator {
+    min-width: auto;
+    width: 100%;
   }
   
   .dice-area {
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.25rem;
+    padding: 0.25rem;
   }
   
-  .number-dice-box {
-    max-width: none;
+  .element-dice-box, .number-dice-box {
+    min-height: 60px;
+    padding: 0.25rem;
+  }
+  
+  .dice-container {
+    min-height: 50px;
+    max-height: 60px;
+  }
+  
+  .rolled-dice {
+    width: 30px;
+    height: 30px;
+    font-size: 1.2rem;
   }
   
   .game-center {
     flex-direction: column;
-    gap: 1rem;
-    text-align: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+  }
+  
+  .status-message {
+    margin-left: 0;
+    margin-top: 0.25rem;
+    font-size: 0.7rem;
   }
 }
 </style>
