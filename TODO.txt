@@ -1,4 +1,1 @@
-fix re-roll for 2 cost winds
-re-rolling dice shows on other player screen wrong
-sequenetial dice rolling broken
 sounds!

@@ -725,16 +725,16 @@ const handleGameMessage = (data) => {
     case 'element_dice_reroll':
       // Handle element dice reroll from other player
       console.log('Received element_dice_reroll:', data.data)
-      const otherPlayerKey = isHostTurn.value ? 'guest' : 'host'
-      const updatedDice = [...playerResources.value[otherPlayerKey]]
+      const rerollingPlayerKey = data.data.rerollingPlayer
+      const updatedDice = [...playerResources.value[rerollingPlayerKey]]
       updatedDice[data.data.diceIndex] = { 
         ...updatedDice[data.data.diceIndex], 
         value: data.data.newValue,
         emoji: data.data.newEmoji,
         element: data.data.newElement
       }
-      playerResources.value[otherPlayerKey] = updatedDice
-      console.log(`Updated other player's die ${data.data.diceIndex} to ${data.data.newValue} (${data.data.newEmoji})`)
+      playerResources.value[rerollingPlayerKey] = updatedDice
+      console.log(`Updated ${rerollingPlayerKey} player's die ${data.data.diceIndex} to ${data.data.newValue} (${data.data.newEmoji})`)
       break
     case 'turn_change':
       // Update turn state from other player
@@ -1196,7 +1196,7 @@ const onSpellDiceFinished = () => {
       // Small delay to ensure clean transition
       setTimeout(() => {
         processDiceRoll(nextRoll.notation)
-      }, 100)
+      }, 223)
     }
   }, 2750)
 }
@@ -1282,7 +1282,8 @@ const rerollElementDie = (diceIndex) => {
     diceIndex,
     newValue: newRoll,
     newEmoji: newEmoji,
-    newElement: newElement
+    newElement: newElement,
+    rerollingPlayer: currentPlayerKey // Add which player is rerolling
   })
   
   // status message saying old emoji and new emoji
