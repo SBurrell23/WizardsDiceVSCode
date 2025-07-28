@@ -102,9 +102,9 @@
           
           <div class="number-dice-box">
             <div class="dice-container small">
-              <!-- Show NumberDice when spell dice rolling is active AND it's the HOST's turn -->
+              <!-- Show NumberDice when spell dice rolling is active for HOST player -->
               <NumberDice 
-                v-if="spellDiceRoll && spellDiceRoll.isRolling && isHostTurn"
+                v-if="spellDiceRoll && spellDiceRoll.isRolling && spellDiceRoll.castingPlayer === 'host'"
                 :diceNotation="spellDiceRoll.notation"
                 :autoRoll="true"
                 :rollDelay="50"
@@ -198,9 +198,9 @@
         
         <div class="number-dice-box">
           <div class="dice-container small">
-            <!-- Show NumberDice when spell dice rolling is active AND it's the GUEST's turn -->
+            <!-- Show NumberDice when spell dice rolling is active for GUEST player -->
             <NumberDice 
-              v-if="spellDiceRoll && spellDiceRoll.isRolling && !isHostTurn"
+              v-if="spellDiceRoll && spellDiceRoll.isRolling && spellDiceRoll.castingPlayer === 'guest'"
               :diceNotation="spellDiceRoll.notation"
               :autoRoll="true"
               :rollDelay="50"
@@ -392,6 +392,9 @@ const statusType = ref('info')
 const currentTurn = ref(1)
 const isHostTurn = ref(true) // Host always starts
 let statusMessageTimeoutId = null // Track the current timeout
+let spellDiceTimeoutId = null // Track spell dice clear timeout
+const diceRollQueue = ref([]) // Queue for sequential dice rolls
+const isProcessingDiceRoll = ref(false) // Flag to prevent concurrent dice rolls
 
 // Game over state
 const gameOver = ref(false)
@@ -691,17 +694,33 @@ const handleGameMessage = (data) => {
       console.log('Updated dice state - spells being cast by other player')
       break
     case 'spell_dice_start':
-      // Show spell dice rolling for other player
-      console.log('Received spell_dice_start:', data.data.notation, 'result:', data.data.result)
+      // Show spell dice rolling for the casting player
+      console.log('Received spell_dice_start:', data.data.notation, 'result:', data.data.result, 'casting player:', data.data.castingPlayer)
       
-      // Clear any previous dice display and start new roll immediately
-      spellDiceRoll.value = {
-        notation: data.data.notation,
-        isRolling: true,
-        result: data.data.result // Pre-determined result from casting player
+      // Always clear any existing timeout and state first
+      if (spellDiceTimeoutId) {
+        clearTimeout(spellDiceTimeoutId)
+        spellDiceTimeoutId = null
       }
+      
+      // Force clear any existing dice state
+      spellDiceRoll.value = null
+      
+      // Small delay to ensure clean state reset, then start new roll
+      setTimeout(() => {
+        // Mark as processing
+        isProcessingDiceRoll.value = true
+        
+        // Start new roll with casting player information
+        spellDiceRoll.value = {
+          notation: data.data.notation,
+          isRolling: true,
+          result: data.data.result, // Pre-determined result from casting player
+          castingPlayer: data.data.castingPlayer
+        }
 
-      console.log('Started spell dice rolling for remote player with result:', data.data.result)
+        console.log('Started spell dice rolling for casting player:', data.data.castingPlayer, 'with result:', data.data.result)
+      }, 50)
       break
     case 'element_dice_reroll':
       // Handle element dice reroll from other player
@@ -1063,53 +1082,121 @@ const onSpellCastingEnded = ({ spellName }) => {
 const onRequestDiceRoll = ({ notation }) => {
   console.log('Requesting dice roll:', notation)
   
+  // If already processing a dice roll, queue this one
+  if (isProcessingDiceRoll.value) {
+    console.log('Dice roll in progress, queuing:', notation)
+    diceRollQueue.value.push({ notation })
+    return
+  }
+  
+  // Start processing this dice roll
+  processDiceRoll(notation)
+}
+
+// Process a single dice roll
+const processDiceRoll = (notation) => {
+  isProcessingDiceRoll.value = true
+  console.log('Processing dice roll:', notation)
+  
+  // Clear any existing timeout and dice state first
+  if (spellDiceTimeoutId) {
+    clearTimeout(spellDiceTimeoutId)
+    spellDiceTimeoutId = null
+  }
+  
+  // Force clear any existing dice state
+  spellDiceRoll.value = null
+  
   // Generate the dice result for both players to use
   const [count, sides] = notation.split('d').map(Number)
   const result = Math.floor(Math.random() * sides) + 1
   console.log('Generated dice result for synchronization:', result)
   
-  // Clear any previous dice display and start new roll
-  spellDiceRoll.value = {
-    notation,
-    isRolling: true,
-    result // Pre-determined result
-  }
+  // Determine casting player
+  const castingPlayer = isHostTurn.value ? 'host' : 'guest'
   
-  // Send spell dice start to other player with the pre-determined result
-  sendGameMessage('spell_dice_start', {
-    notation,
-    result
-  })
+  // Small delay to ensure clean state, then start new roll
+  setTimeout(() => {
+    // Set new dice display state
+    spellDiceRoll.value = {
+      notation,
+      isRolling: true,
+      result, // Pre-determined result
+      castingPlayer // Who is casting this spell
+    }
+    
+    // Send spell dice start to other player with the pre-determined result
+    sendGameMessage('spell_dice_start', {
+      notation,
+      result,
+      castingPlayer
+    })
 
-  
-  console.log('Sent spell_dice_start with synchronized result:', result)
+    console.log('Sent spell_dice_start with synchronized result:', result, 'for player:', castingPlayer)
+  }, 50)
 }
 
 // Handle spell dice roll completion
 const onSpellDiceRolled = (result) => {
   console.log('Spell dice rolled with result:', result)
-  // Pass result back to SpellEffects (only on casting player)
-  if (spellEffectsRef.value) {
+  
+  // Determine if this player is the casting player
+  const isCastingPlayer = spellDiceRoll.value && 
+    ((spellDiceRoll.value.castingPlayer === 'host' && isHostTurn.value) ||
+     (spellDiceRoll.value.castingPlayer === 'guest' && !isHostTurn.value))
+  
+  // Only pass result to SpellEffects if this is the casting player
+  if (isCastingPlayer && spellEffectsRef.value) {
     // Use the synchronized result if available, otherwise use the rolled result
     const finalResult = spellDiceRoll.value.result !== undefined ? 
       { ...result, value: spellDiceRoll.value.result } : result
-    console.log('Passing result to SpellEffects:', finalResult)
+    console.log('Passing result to SpellEffects (casting player):', finalResult)
     spellEffectsRef.value.handleDiceRollResult(finalResult)
+  } else {
+    console.log('Skipping result processing (not casting player)')
   }
 }
 
 const onSpellDiceFinished = () => {
   console.log('Spell dice finished rolling')
   
-  // Add a 5-second delay for the casting player to process the dice result and continue
-  setTimeout(() => {
+  // Clear any existing timeout before setting a new one
+  if (spellDiceTimeoutId) {
+    clearTimeout(spellDiceTimeoutId)
+    spellDiceTimeoutId = null
+  }
+  
+  // Determine if this player is the casting player
+  const isCastingPlayer = spellDiceRoll.value && 
+    ((spellDiceRoll.value.castingPlayer === 'host' && isHostTurn.value) ||
+     (spellDiceRoll.value.castingPlayer === 'guest' && !isHostTurn.value))
+  
+  console.log('Is casting player:', isCastingPlayer, 'casting player:', spellDiceRoll.value?.castingPlayer, 'current turn host:', isHostTurn.value)
+  
+  // Add a delay for the dice display to be visible, then clear
+  spellDiceTimeoutId = setTimeout(() => {
     console.log('Clearing spell dice display and continuing...')
+    
     // Clear the spell dice rolling state
     spellDiceRoll.value = null
+    spellDiceTimeoutId = null
 
-    // Notify SpellEffects that the display is finished and next action can start
-    if (spellEffectsRef.value) {
+    // Only notify SpellEffects and process queue if this is the casting player
+    if (isCastingPlayer && spellEffectsRef.value) {
       spellEffectsRef.value.onSpellDiceDisplayFinished()
+    }
+    
+    // Mark dice roll processing as complete
+    isProcessingDiceRoll.value = false
+    
+    // Process next dice roll in queue if any (only for casting player)
+    if (isCastingPlayer && diceRollQueue.value.length > 0) {
+      const nextRoll = diceRollQueue.value.shift()
+      console.log('Processing queued dice roll:', nextRoll.notation)
+      // Small delay to ensure clean transition
+      setTimeout(() => {
+        processDiceRoll(nextRoll.notation)
+      }, 100)
     }
   }, 2750)
 }

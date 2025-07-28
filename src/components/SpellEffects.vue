@@ -528,7 +528,6 @@ const neverendingVines = async () => {
       keepRolling = false
     }else{
       showMessage(`🌿 Total vines so far... ${rollCount}`, 'utility')
-      await new Promise(resolve => setTimeout(resolve, 25))
     }
   }
   
