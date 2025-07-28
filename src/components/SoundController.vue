@@ -2,11 +2,11 @@
   <div class="sound-controller">
     <!-- Volume Control Icon -->
     <div class="volume-icon" @click="toggleVolumePanel" :class="{ 'muted': isMuted }">
-      <span v-if="isMuted">🔇</span>
-      <span v-else-if="volume === 0">🔇</span>
-      <span v-else-if="volume < 0.3">🔈</span>
-      <span v-else-if="volume < 0.7">🔉</span>
-      <span v-else>🔊</span>
+      <span v-if="isMuted" class="volume-emoji">🔇</span>
+      <span v-else-if="volume === 0" class="volume-emoji">🔇</span>
+      <span v-else-if="volume < 0.3" class="volume-emoji">🔈</span>
+      <span v-else-if="volume < 0.7" class="volume-emoji">🔉</span>
+      <span v-else class="volume-emoji">🔊</span>
     </div>
 
     <!-- Volume Control Panel -->
@@ -383,42 +383,51 @@ defineExpose(soundController)
 <style scoped>
 .sound-controller {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  top: 12px;
+  right: 20px;
   z-index: 1000;
 }
 
 .volume-icon {
   width: 50px;
   height: 50px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.6);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 1.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   user-select: none;
+  opacity: 0.7;
 }
 
 .volume-icon:hover {
-  background: rgba(0, 0, 0, 0.9);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
   transform: scale(1.05);
+  opacity: 1;
 }
 
 .volume-icon.muted {
+  background: rgba(200, 0, 0, 0.6);
+  border-color: rgba(255, 100, 100, 0.3);
+  opacity: 0.8;
+}
+
+.volume-icon.muted:hover {
   background: rgba(200, 0, 0, 0.8);
   border-color: rgba(255, 100, 100, 0.5);
+  opacity: 1;
 }
 
 .volume-panel {
   position: absolute;
-  bottom: 60px;
-  left: 0;
+  top: 60px;
+  right: 0;
   background: rgba(0, 0, 0, 0.9);
   border-radius: 15px;
   padding: 20px;
@@ -426,13 +435,13 @@ defineExpose(soundController)
   border: 2px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(15px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
+  animation: slideDown 0.3s ease;
 }
 
-@keyframes slideUp {
+@keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
@@ -531,8 +540,8 @@ defineExpose(soundController)
 /* Responsive adjustments */
 @media (max-height: 600px) {
   .sound-controller {
-    bottom: 10px;
-    left: 10px;
+    top: 10px;
+    right: 10px;
   }
   
   .volume-icon {
@@ -542,7 +551,7 @@ defineExpose(soundController)
   }
   
   .volume-panel {
-    bottom: 50px;
+    top: 50px;
     padding: 15px;
     min-width: 220px;
   }
@@ -550,8 +559,8 @@ defineExpose(soundController)
 
 @media (max-width: 400px) {
   .sound-controller {
-    bottom: 15px;
-    left: 15px;
+    top: 15px;
+    right: 15px;
   }
   
   .volume-panel {
