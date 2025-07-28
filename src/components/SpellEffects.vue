@@ -951,17 +951,17 @@ const evenTheOdds = async () => {
 const chainLightning = async () => {
   const d4Roll = await requestDiceRoll('1d4')
   dealDamage(d4Roll.value, props.opponentPlayer)
-  showMessage(`⚡ Chain-Lightning deals ${d4Roll.value} damage!`, 'damage')
+  showMessage(`⚡ Chain Lightning deals ${d4Roll.value} damage!`, 'damage')
   
   if (d4Roll.value !== 4) {
     const d6Roll = await requestDiceRoll('1d6')
     dealDamage(d6Roll.value, props.opponentPlayer)
-    showMessage(`⚡ Chain-Lightning chains for ${d6Roll.value} more damage!`, 'damage')
+    showMessage(`⚡ Chain Lightning chains for ${d6Roll.value} more damage!`, 'damage')
     
     if (d6Roll.value !== 6) {
       const d10Roll = await requestDiceRoll('1d10')
       dealDamage(d10Roll.value, props.opponentPlayer)
-      showMessage(`⚡ Chain-Lightning chains again for ${d10Roll.value} more damage!`, 'damage')
+      showMessage(`⚡ Chain Lightning chains again for ${d10Roll.value} more damage!`, 'damage')
     }
   }
 }

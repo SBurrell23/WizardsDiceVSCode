@@ -247,7 +247,7 @@
       "category": "damage"
     },
     {
-      "name": "Chain-Lightning",
+      "name": "Chain Lightning",
       "cost": ["🔥", "🔥", "💀", "💨", "💧"],
       "effect": "Deal (1d4) damage, if roll was not a 4 deal (1d6) damage, if roll was not a 6 deal (1d10) damage",
       "category": "damage"
