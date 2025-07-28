@@ -652,6 +652,9 @@ const handleGameMessage = (data) => {
   switch (data.type) {
     case 'dice_rolling_start':
       // Show rolling animation for other player
+      if (window.soundController) {
+        window.soundController.playSound('diceRoll')
+      }
       isOpponentRolling.value = true
       console.log('Other player started rolling dice')
       break
@@ -738,6 +741,9 @@ const handleGameMessage = (data) => {
       break
     case 'turn_change':
       // Update turn state from other player
+      if (window.soundController) {
+        window.soundController.playSound('turnChange')
+      }
       currentTurn.value = data.data.turn
       isHostTurn.value = data.data.isHostTurn
       gamePhase.value = 'rolling'
@@ -856,6 +862,11 @@ const startRolling = () => {
   
   isRolling.value = true
   
+  // Play dice roll sound
+  if (window.soundController) {
+    window.soundController.playSound('diceRoll')
+  }
+  
   // Reset current player's resources for this turn
   const playerKey = isHostTurn.value ? 'host' : 'guest'
   playerResources.value[playerKey] = []
@@ -868,18 +879,22 @@ const startRolling = () => {
   })
   
   // Auto-roll all dice for now (can be made manual later)
-  setTimeout(() => {
-    for (let i = 0; i < diceToRoll.value; i++) {
-      if (diceRefs.value[i]) {
-        setTimeout(() => {
-          diceRefs.value[i].roll()
-        }, i * 200) // Stagger the rolls
-      }
+  for (let i = 0; i < diceToRoll.value; i++) {
+    if (diceRefs.value[i]) {
+      setTimeout(() => {
+        diceRefs.value[i].roll()
+      }, i * 200) // Stagger the rolls
     }
-  }, 500)
+  }
+
 }
 
 const endTurn = () => {
+  // Play turn change sound
+  if (window.soundController) {
+    window.soundController.playSound('turnChangeOver')
+  }
+  
   // Mark all unused dice as used before ending turn
   const playerKey = isHostTurn.value ? 'host' : 'guest'
   if (playerResources.value[playerKey]) {
@@ -914,6 +929,11 @@ const endTurn = () => {
 // Handle spell casting from spellbook
 const onCastSpells = async (spells) => {
   console.log('Casting spells:', spells)
+
+  // Play spell cast sound
+  if (window.soundController) {
+    window.soundController.playSound('spellCast')
+  }
 
   // Mark used dice as consumed
   const playerKey = isHostTurn.value ? 'host' : 'guest'
@@ -1005,6 +1025,19 @@ const onUpdatePlayerResources = ({ player, updates }) => {
 // Show floating indicator for stat changes
 const showFloatingIndicator = (player, statType, change) => {
   if (change === 0) return
+  
+  // Play appropriate sound based on stat change
+  if (window.soundController) {
+    if (statType === 'health') {
+      if (change > 0) {
+        window.soundController.playSound('heal')
+      } else {
+        window.soundController.playSound('damageHit')
+      }
+    } else if (statType === 'armor' && change > 0) {
+      window.soundController.playSound('armorGain')
+    }
+  }
   
   const indicatorData = {
     id: Date.now() + Math.random(), // Unique ID for each indicator
@@ -1357,6 +1390,7 @@ const leaveGame = () => {
 
 // Initialize component
 onMounted(() => {
+
   // Set up peer event listeners for game events
   if (props.isHost && props.peerInstance) {
     // For host: listen to messages from all connected peers

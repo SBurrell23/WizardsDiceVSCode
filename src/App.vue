@@ -1,9 +1,11 @@
 <script setup>
 import LandingPage from './components/LandingPage.vue'
+import SoundController from './components/SoundController.vue'
 </script>
 
 <template>
   <LandingPage />
+  <SoundController />
 </template>
 
 <style>
