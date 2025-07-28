@@ -105,7 +105,7 @@
     {
       "name": "Waterjet",
       "cost": ["💧", "💨"],
-      "effect": "Re-roll any unspent dice and deal 4 damage",
+      "effect": "Get 2 un-spent dice re-rolls and deal 4 damage",
       "category": "hybrid"
     },
     {
@@ -171,7 +171,7 @@
     {
       "name": "Troubled Waters",
       "cost": ["💧", "🔥", "🔥"],
-      "effect": "Deal (3d6) - 3 damage",
+      "effect": "Deal (1d6) + (1d12)  damage",
       "category": "damage"
     },
     {
@@ -183,7 +183,7 @@
     {
       "name": "Washed Ashore",
       "cost": ["💧", "💧", "💨"],
-      "effect": "Return any spent fire, death, or wind dice to your hand",
+      "effect": "Re-activate 4 random non-water dice",
       "category": "utility"
     },
     {

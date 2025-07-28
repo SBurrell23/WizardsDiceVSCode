@@ -1,3 +1,5 @@
-implement the rest of the spellbook!
-
+fix re-roll for 2 cost winds
+sequenetial dice rolling broken
+re-rolling dice shows on other player screen wrong
+make washed ashore better
 sounds!

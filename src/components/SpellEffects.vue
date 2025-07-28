@@ -388,10 +388,10 @@ const unfairDuel = async () => {
   
   if (playerRoll.value > opponentRoll.value) {
     dealDamage(playerRoll.value, props.currentPlayer)
-    showMessage(`💀 Unfair Duel: Player wins! Opponent takes ${playerRoll.value} damage!`, 'damage')
+    showMessage(`💀 Unfair Duel: Roller wins! Opponent takes ${playerRoll.value} damage!`, 'damage')
   } else if (opponentRoll.value > playerRoll.value) {
     dealDamage(opponentRoll.value, props.opponentPlayer)
-    showMessage(`💀 Unfair Duel: Opponent wins! Player takes ${opponentRoll.value} damage!`, 'damage')
+    showMessage(`💀 Unfair Duel: Opponent wins! Roller takes ${opponentRoll.value} damage!`, 'damage')
   }else{
     showMessage(`💀 Unfair Duel: It's a tie! No damage dealt.`, 'info')
   }
@@ -475,11 +475,11 @@ const hotCoals = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Waterjet: Re-roll any unspent dice and deal 4 damage
+// Waterjet: Get 2 un-spent dice re-rolls and deal 4 damage
 const waterjet = async () => {
   const rerollResult = await requestElementDiceReroll(
     dice => !dice.used,  // Filter: only unspent dice
-    1,                   // Max all dice
+    2,                   // Max 2 dice
     'Select unspent dice to reroll'
   )
   
@@ -660,19 +660,16 @@ const downdraft = async () => {
   showMessage(`💨 Downdraft gains ${armorToGain} armor!`, 'defense')
 }
 
-// Troubled Waters: Deal (3d6) - 3 damage
+// Troubled Waters: Deal (1d6) + (1d12)  damage
 const troubledWaters = async () => {
   const roll1 = await requestDiceRoll('1d6')
-  const roll2 = await requestDiceRoll('1d6')
-  const roll3 = await requestDiceRoll('1d6')
-  const damage = Math.max(0, roll1.value + roll2.value + roll3.value - 3)
+  const roll2 = await requestDiceRoll('1d12')
 
-  if (damage > 0) {
-    dealDamage(damage, props.opponentPlayer)
-    showMessage(`🌊 Troubled Waters deals ${damage} damage!`, 'damage')
-  } else {
-    showMessage(`🌊 Troubled Waters deals no damage!`, 'info')
-  }
+  const damage = Math.max(0, roll1.value + roll2.value)
+
+  dealDamage(damage, props.opponentPlayer)
+  showMessage(`🌊 Troubled Waters deals ${damage} damage!`, 'damage')
+
 }
 
 // Merciful Strike: Deal (1d10) + 5 damage, your opponent then gains half your dice roll rounded down as armour
@@ -687,22 +684,35 @@ const mercifulStrike = async () => {
   showMessage(`⚔️ Merciful Strike deals ${damage} damage and gives ${armorForOpponent} armor!`, 'damage')
 }
 
-// Washed Ashore: Return any spent fire, death, or wind dice to your hand
+// Washed Ashore: Re-activate 4 random non-water dice
 const washedAshore = async () => {
   const currentPlayerResources = props.playerResources[props.currentPlayer]
   
-  // Find all spent fire (🔥), death (💀), or wind (💨) dice
-  const targetEmojis = ['🔥', '💀', '💨']
-  const spentTargetDice = currentPlayerResources.filter(dice => dice.used && targetEmojis.includes(dice.emoji))
+  // Find all used non-water dice (water emoji is 💧)
+  const usedNonWaterDice = currentPlayerResources.filter(dice => dice.used && dice.emoji !== '💧')
   
-  if (spentTargetDice.length === 0) {
-    showMessage('🌊 Washed Ashore found no spent fire, death, or wind dice to restore!', 'warning')
+  if (usedNonWaterDice.length === 0) {
+    showMessage('🌊 Washed Ashore found no spent non-water dice to reactivate!', 'warning')
     return
   }
   
-  // Restore ALL spent target dice at once (like gust but for multiple dice)
+  // Determine how many dice to reactivate (max 4, but limited by available dice)
+  const diceToReactivate = Math.min(4, usedNonWaterDice.length)
+  
+  // Randomly select dice to reactivate
+  const shuffledDice = [...usedNonWaterDice].sort(() => Math.random() - 0.5)
+  const selectedDice = shuffledDice.slice(0, diceToReactivate)
+  
+  // Update resources to mark selected dice as unused
   const updatedResources = currentPlayerResources.map(dice => {
-    if (dice.used && targetEmojis.includes(dice.emoji)) {
+    // Check if this die is one of the selected dice to reactivate
+    const isSelected = selectedDice.some(selected => 
+      selected.diceIndex === dice.diceIndex && 
+      selected.emoji === dice.emoji && 
+      dice.used
+    )
+    
+    if (isSelected) {
       return { ...dice, used: false }
     }
     return dice
@@ -711,7 +721,9 @@ const washedAshore = async () => {
   // Update the player's resources
   updateResources(props.currentPlayer, updatedResources)
   
-  showMessage(`🌊 Washed Ashore restores ${spentTargetDice.length} spent dice!`, 'utility')
+  // Show message with the reactivated dice
+  const diceEmojis = selectedDice.map(dice => dice.emoji).join(' ')
+  showMessage(`🌊 Washed Ashore reactivates ${diceToReactivate} dice: ${diceEmojis}!`, 'utility')
   
   // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
