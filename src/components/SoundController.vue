@@ -383,21 +383,21 @@ defineExpose(soundController)
 <style scoped>
 .sound-controller {
   position: fixed;
-  top: 12px;
-  right: 20px;
+  top: 23px;
+  right: 23px;
   z-index: 1000;
 }
 
 .volume-icon {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   background: rgba(0, 0, 0, 0.6);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   border: 2px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
@@ -428,7 +428,7 @@ defineExpose(soundController)
   position: absolute;
   top: 60px;
   right: 0;
-  background: rgba(0, 0, 0, 0.9);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border-radius: 15px;
   padding: 20px;
   min-width: 250px;

@@ -1390,6 +1390,16 @@ const leaveGame = () => {
 
 // Initialize component
 onMounted(() => {
+  // Initialize game logging
+  setTimeout(() => {
+    if (window.logbook) {
+      const playerNames = [props.hostPlayerName, props.guestPlayerName].filter(Boolean)
+      if (playerNames.length > 0) {
+        window.logbook.logGameStart(playerNames)
+        window.logbook.logTurnStart(currentPlayerName.value)
+      }
+    }
+  }, 100)
 
   // Set up peer event listeners for game events
   if (props.isHost && props.peerInstance) {

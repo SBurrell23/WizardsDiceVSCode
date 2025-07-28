@@ -1,10 +1,26 @@
 <template>
   <div class="spellbook">
     <div class="spellbook-header">
-      <h2>Spellbook</h2>
+      <div class="spellbook-tabs">
+        <button 
+          @click="activeTab = 'spells'"
+          :class="{ active: activeTab === 'spells' }"
+          class="tab-button"
+        >
+          Spellbook
+        </button>
+        <button 
+          @click="activeTab = 'log'"
+          :class="{ active: activeTab === 'log' }"
+          class="tab-button"
+        >
+          Game Log
+        </button>
+      </div>
     </div>
     
-    <div class="spellbook-content">
+    <!-- Spells Tab Content -->
+    <div v-if="activeTab === 'spells'" class="spellbook-content">
       <div class="spell-filters">
         <!-- Castability filters -->
         <button 
@@ -84,11 +100,17 @@
         </div>
       </div>
     </div>
+    
+    <!-- Game Log Tab Content -->
+    <div v-if="activeTab === 'log'" class="log-content">
+      <Logbook ref="logbookRef" />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import Logbook from './Logbook.vue'
 
 // Props
 const props = defineProps({
@@ -119,6 +141,9 @@ const props = defineProps({
 const emit = defineEmits(['cast-spells', 'end-turn', 'close'])
 
 // Reactive data
+// Component state
+const activeTab = ref('spells')
+const logbookRef = ref(null)
 const spellbook = ref({ spells: [] })
 const selectedCastability = ref('all') // 'all' or 'castable'
 const selectedCosts = ref([]) // Array of selected cost filters: '1', '2', '3', '4+'
@@ -291,11 +316,83 @@ onMounted(() => {
 
 .spellbook-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 1rem 2rem;
   background: rgba(255, 255, 255, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.spellbook-tabs {
+  display: flex;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.tab-button {
+  padding: 14px 28px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  outline: none;
+}
+
+.tab-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.tab-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%);
+  color: white;
+  box-shadow: 0 2px 12px rgba(79, 70, 229, 0.3);
+  border: 1px solid rgba(79, 70, 229, 0.4);
+}
+
+/* Responsive tab styling */
+@media (max-width: 900px) {
+  .tab-button {
+    padding: 12px 20px;
+    font-size: 1.1rem;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 600px) {
+  .spellbook-tabs {
+    padding: 3px;
+  }
+  
+  .tab-button {
+    padding: 10px 16px;
+    font-size: 1rem;
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 400px) {
+  .spellbook-tabs {
+    padding: 2px;
+  }
+  
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    min-width: 80px;
+  }
 }
 
 .spellbook-header h2 {
@@ -321,6 +418,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   padding: 1rem 2rem;
+  overflow: hidden;
+}
+
+.log-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
   overflow: hidden;
 }
 
