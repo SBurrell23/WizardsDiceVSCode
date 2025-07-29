@@ -508,8 +508,9 @@ const explosion = async () => {
   showMessage(`💥 Explosion self-inflicts 3 damage!`, 'damage')
   
   const d4Roll = await requestDiceRoll('1d4')
-  const d6Roll1 = await requestDiceRoll('2d6')
-  const totalDamage = d4Roll.value + d6Roll1.value
+  const d6Roll1 = await requestDiceRoll('1d6')
+  const d6Roll2 = await requestDiceRoll('1d6')
+  const totalDamage = d4Roll.value + d6Roll1.value + d6Roll2.value
   
   dealDamage(totalDamage, props.opponentPlayer)
   showMessage(`💥 Explosion deals ${totalDamage} damage!`, 'damage')
