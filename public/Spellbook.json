@@ -45,28 +45,10 @@
       "category": "damage"
     },
     {
-      "name": "Fireballs",
-      "cost": ["🔥", "🔥"],
-      "effect": "Deal (2d4) + 1 damage",
-      "category": "damage"
-    },
-    {
       "name": "Bigger Splash",
       "cost": ["💧", "💧"],
       "effect": "Cast any two cost spell at random",
       "category": "utility"
-    },
-    {
-      "name": "Wavepool",
-      "cost": ["💧", "💧"],
-      "effect": "Remove (2d4) + 1 only from your opponents armour",
-      "category": "utility"
-    },
-    {
-      "name": "Wild Growth",
-      "cost": ["🌍", "🌍"],
-      "effect": "Gain 2 armour for each previously spent dice, max of 8",
-      "category": "defense"
     },
     {
       "name": "Rock Armour",
@@ -81,28 +63,46 @@
       "category": "utility"
     },
     {
-      "name": "Dust Devil",
-      "cost": ["💨", "💨"],
-      "effect": "Call a number 1 through 4, roll (1d4), if the number matches deal 9 damage",
-      "category": "utility"
-    },
-    {
       "name": "Unfair Duel",
       "cost": ["💀", "💀"],
       "effect": "Roll (1d4), your opponent rolls (1d8), whoever rolls higher takes that amount as damage",
       "category": "damage"
     },
     {
-      "name": "Shrunken Heads",
-      "cost": ["💀", "💀"],
-      "effect": "Take 4 damage and return these dice to your hand, you may re-roll them",
-      "category": "utility"
-    },
-    {
       "name": "Fated Hearts",
       "cost": ["💖", "💖"],
       "effect": "Heal (1d6) + 2",
       "category": "healing"
+    },
+    {
+      "name": "Fireballs",
+      "cost": ["🔥", "🔥"],
+      "effect": "Deal 2 damage for every unspent non-fire dice in your hand, max of 8 damage",
+      "category": "damage"
+    },
+    {
+      "name": "Wavepool",
+      "cost": ["💧", "💧"],
+      "effect": "Remove (2d4) + 1 only from your opponents armour",
+      "category": "utility"
+    },
+    {
+      "name": "Wild Growth",
+      "cost": ["🌍", "🌍"],
+      "effect": "Gain 2 armour for each previously spent dice, max of 8",
+      "category": "defense"
+    },
+    {
+      "name": "Dust Devil",
+      "cost": ["💨", "💨"],
+      "effect": "Call a number 1 through 4 and roll (1d4), if the number matches deal 9 damage",
+      "category": "utility"
+    },
+    {
+      "name": "Shrunken Heads",
+      "cost": ["💀", "💀"],
+      "effect": "Take 4 damage and return these dice to your hand, you may re-roll them",
+      "category": "utility"
     },
     {
       "name": "The Lovers",
@@ -478,7 +478,7 @@
     },
     {
       "name": "Eternal Bond",
-      "cost": ["🔥", "💖", "💖", "💀", "🌍"],
+      "cost": ["💖", "💖", "🌍", "🌍", "🌍"],
       "effect": "Gain your current HP as armour, max of 16 armour",
       "category": "defense"
     },

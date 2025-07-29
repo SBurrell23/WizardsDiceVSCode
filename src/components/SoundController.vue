@@ -12,7 +12,7 @@
     <!-- Volume Control Panel -->
     <div v-if="showVolumePanel" class="volume-panel">
       <div class="volume-controls">
-        <div class="volume-label">Master Volume</div>
+        <div class="volume-label">Game Effects</div>
         <div class="volume-slider-container">
           <input 
             type="range" 
@@ -55,8 +55,6 @@
           <button @click="bgMusicMuteToggle" class="volume-btn">
             {{ isBgMusicMuted ? 'Unmute' : 'Mute' }}
           </button>
-          <button @click="setBgMusicVolume(0.25)" class="volume-btn">25%</button>
-          <button @click="setBgMusicVolume(0.5)" class="volume-btn">50%</button>
         </div>
       </div>
     </div>

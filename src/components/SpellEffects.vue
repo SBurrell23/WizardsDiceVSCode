@@ -538,14 +538,25 @@ const aquaMortis = async () => {
   showMessage(`💧 Aqua Mortis deals ${attackRoll.value + 3} damage!`, 'damage')
 }
 
-// Fireballs: Deal (2d4) + 1 damage
+// Fireballs: Deal 2 damage for every unspent non-fire dice in your hand, max of 8 damage
 const fireballs = async () => {
-  const roll1 = await requestDiceRoll('1d4')
-  const roll2 = await requestDiceRoll('1d4')
-  const totalDamage = roll1.value + roll2.value + 1
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
   
-  dealDamage(totalDamage, props.opponentPlayer)
-  showMessage(`🔥 Fireballs deals ${totalDamage} damage!`, 'damage')
+  // Find all unspent non-fire dice (fire emoji is 🔥)
+  const unspentNonFireDice = currentPlayerResources.filter(dice => !dice.used && dice.emoji !== '🔥')
+  
+  // Calculate damage: 2 damage per unspent non-fire die, max 8
+  const totalDamage = Math.min(unspentNonFireDice.length * 2, 8)
+  
+  if (totalDamage > 0) {
+    dealDamage(totalDamage, props.opponentPlayer)
+    showMessage(`🔥 Fireballs deals ${totalDamage} damage (from ${unspentNonFireDice.length} unspent non-fire dice)!`, 'damage')
+  } else {
+    showMessage(`🔥 Fireballs missed!`, 'warning')
+  }
+  
+  // Add a brief delay so the casting indicator is visible
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Wavepool: Remove (2d4) + 1 only from your opponents armour

@@ -652,7 +652,7 @@ onUnmounted(() => {
 }
 
 .start-game-button {
-  background: #20a037;
+   background: linear-gradient(135deg, #3cbf47 0%, #45bb3d 100%);
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -666,7 +666,7 @@ onUnmounted(() => {
 
 .start-game-button:hover {
   transform: translateY(-2px);
-  background: #1c8c30;
+  background: linear-gradient(135deg, #42b64b 0%, #338d2c 100%);
 }
 
 .leave-room-button {
