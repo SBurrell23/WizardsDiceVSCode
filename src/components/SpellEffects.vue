@@ -337,14 +337,14 @@ const blaze = async () => {
 const strongGusts = async () => {
   const rerollResult = await requestElementDiceReroll(
     dice => !dice.used,  // Filter: only unspent dice
-    5,                   // Max 5 dice total
-    'Select up to 5 unspent dice to reroll'
+    6,                   // Max 6 dice total
+    'Select up to 6 unspent dice to reroll'
   )
 }
 
-// Wavepool: Cast any two cost spell at random
-const wavepool = async () => {
-  // List of 2-cost spells (excluding Wavepool to avoid infinite loops)
+// Bigger Splash: Cast any two cost spell at random
+const biggerSplash = async () => {
+  // List of 2-cost spells (excluding Bigger Splash to avoid infinite loops)
   const twoCostSpells = [
     'Blaze', 'Wild Growth', 'Strong Gusts', 'Unfair Duel', 'Fated Hearts',
     'Refreshing Sips', 'Smog', 'Hotheaded', 'Risky Business', 'Hot Coals',
@@ -359,10 +359,10 @@ const wavepool = async () => {
   const spellFunction = spellMap[methodName]
   
   if (typeof spellFunction === 'function') {
-    showMessage(`💧 Wavepool casts ${randomSpell}!`, 'utility')
+    showMessage(`💧 Bigger Splash casts ${randomSpell}!`, 'utility')
     await spellFunction()
   } else {
-    showMessage(`💧 Wavepool tried to cast ${randomSpell} but it's not implemented!`, 'warning')
+    showMessage(`💧 Bigger Splash tried to cast ${randomSpell} but it's not implemented!`, 'warning')
   }
 }
 
@@ -475,11 +475,11 @@ const hotCoals = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Waterjet: Get 2 un-spent dice re-rolls and deal 4 damage
+// Waterjet: Get 3 un-spent dice re-rolls and deal 4 damage
 const waterjet = async () => {
   const rerollResult = await requestElementDiceReroll(
     dice => !dice.used,  // Filter: only unspent dice
-    2,                   // Max 2 dice
+    3,                   // Max 3 dice
     'Select unspent dice to reroll'
   )
   
@@ -1087,7 +1087,7 @@ const spellMap = {
   bloodMagic,
   blaze,
   strongGusts,
-  wavepool,
+  biggerSplash,
   wildGrowth,
   unfairDuel,
   fatedHearts,

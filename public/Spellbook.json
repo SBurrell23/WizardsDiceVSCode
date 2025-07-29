@@ -1,5 +1,5 @@
 {
-  "spells": [
+  "1-cost": [
     {
       "name": "Ember",
       "cost": ["🔥"],
@@ -35,7 +35,9 @@
       "cost": ["💀"],
       "effect": "Deal (1d4) damage, take 2 damage",
       "category": "damage"
-    },
+    }
+  ],
+  "2-cost": [
     {
       "name": "Blaze",
       "cost": ["🔥", "🔥"],
@@ -43,9 +45,21 @@
       "category": "damage"
     },
     {
-      "name": "Wavepool",
+      "name": "Fireballs",
+      "cost": ["🔥", "🔥"],
+      "effect": "Deal (2d4) + 1 damage",
+      "category": "damage"
+    },
+    {
+      "name": "Bigger Splash",
       "cost": ["💧", "💧"],
       "effect": "Cast any two cost spell at random",
+      "category": "utility"
+    },
+    {
+      "name": "Wavepool",
+      "cost": ["💧", "💧"],
+      "effect": "Remove (2d4) + 1 from your opponents armour",
       "category": "utility"
     },
     {
@@ -55,9 +69,21 @@
       "category": "defense"
     },
     {
+      "name": "Rock Armour",
+      "cost": ["🌍", "🌍"],
+      "effect": "Gain (1d4) + 4 armour",
+      "category": "defense"
+    },
+    {
       "name": "Strong Gusts",
       "cost": ["💨", "💨"],
-      "effect": "Re-roll any 5 unspent dice",
+      "effect": "Re-roll any 6 unspent dice",
+      "category": "utility"
+    },
+    {
+      "name": "Dust Devil",
+      "cost": ["💨", "💨"],
+      "effect": "Call a number 1 through 4, roll (1d4), if the number matches deal 9 damage",
       "category": "utility"
     },
     {
@@ -67,9 +93,21 @@
       "category": "damage"
     },
     {
+      "name": "Shrunken Heads",
+      "cost": ["💀", "💀"],
+      "effect": "Take 4 damage, return these dice to your hand and re-roll them",
+      "category": "utility"
+    },
+    {
       "name": "Fated Hearts",
       "cost": ["💖", "💖"],
       "effect": "Heal (1d6) + 2",
+      "category": "healing"
+    },
+    {
+      "name": "The Lovers",
+      "cost": ["💖", "💖"],
+      "effect": "If your HP is 18 or higher heal to full",
       "category": "healing"
     },
     {
@@ -105,7 +143,7 @@
     {
       "name": "Waterjet",
       "cost": ["💧", "💨"],
-      "effect": "Get 2 un-spent dice re-rolls and deal 4 damage",
+      "effect": "Get 3 re-rolls and deal 4 damage",
       "category": "hybrid"
     },
     {
@@ -114,6 +152,38 @@
       "effect": "Take (1d4) damage and deal (1d6) + 3 damage",
       "category": "damage"
     },
+    {
+      "name": "Self-Care",
+      "cost": ["🌍", "💖"],
+      "effect": "Gain (1d4) as armour and (1d6) as HP",
+      "category": "hybrid"
+    },
+    {
+      "name": "Quid-Pro-Quo",
+      "cost": ["💀", "💨"],
+      "effect": "Change 1 of your unspent dice to any element",
+      "category": "utility"
+    },
+    {
+      "name": "Burning Love",
+      "cost": ["🔥", "💖"],
+      "effect": "Deal 3 damage and heal 4 HP",
+      "category": "hybrid"
+    },
+    {
+      "name": "Even Sacrifice",
+      "cost": ["💀", "💖"],
+      "effect": "Deal 2 damage, if your opponents HP is now even re-activate 1 non-death dice at random",
+      "category": "hybrid"
+    },
+    {
+      "name": "Scald",
+      "cost": ["🔥", "💧"],
+      "effect": "Deal either (1d8) damage directly to HP or (1d12) damage only to armour",
+      "category": "damage"
+    }
+  ],
+  "3-cost": [
     {
       "name": "Explosion",
       "cost": ["🔥", "🔥", "🔥"],
@@ -145,7 +215,7 @@
       "category": "damage"
     },
     {
-      "name":"Even Steven",
+      "name": "Even Steven",
       "cost": ["💨", "💨", "🔥"],
       "effect": "Roll (1d6) + 4 as damage, if the roll was an even number gain a re-roll",
       "category": "damage"
@@ -199,6 +269,86 @@
       "category": "utility"
     },
     {
+      "name": "Deadly Curse",
+      "cost": ["💀", "💀", "💀"],
+      "effect": "Roll (1d8), deal as damage to you and 2x that to your opponent",
+      "category": "damage"
+    },
+    {
+      "name": "Healing Burst",
+      "cost": ["💖", "💖", "💖"],
+      "effect": "Heal (1d6) + 7 HP",
+      "category": "healing"
+    },
+    {
+      "name": "Scorching Wind",
+      "cost": ["🔥", "🔥", "💨"],
+      "effect": "Roll (3d12), deal the highest roll as damage",
+      "category": "damage"
+    },
+    {
+      "name": "Back From The Dead",
+      "cost": ["💧", "💀", "💀"],
+      "effect": "Re-activate 3 non-death dice at random",
+      "category": "utility"
+    },
+    {
+      "name": "Balancing Act",
+      "cost": ["🌍", "💧", "💖"],
+      "effect": "If your HP is evenly divisible by your armour gain 5 for both",
+      "category": "hybrid"
+    },
+    {
+      "name": "Updraft",
+      "cost": ["💀", "💨", "💨"],
+      "effect": "Take (1d6) damage, if damage was 3 or less deal (1d8) + 2 damage, else deal (1d12) + 3 damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Blood For Steel",
+      "cost": ["🌍", "💖", "💀"],
+      "effect": "Lose (1d6) HP, Gain 9 armour",
+      "category": "hybrid"
+    },
+    {
+      "name": "Steel Hearted",
+      "cost": ["🌍", "💖", "💖"],
+      "effect": "Gain HP equal to that of you or your opponents armour, max of 12 HP",
+      "category": "healing"
+    },
+    {
+      "name": "Undertow",
+      "cost": ["💧", "💧", "💀"],
+      "effect": "Take 2 damage, then deal (2d6) damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Hot Steel",
+      "cost": ["🌍", "🔥", "🔥"],
+      "effect": "Gain (1d4) + 1 armour and deal double that as damage to your opponent",
+      "category": "hybrid"
+    },
+    {
+      "name": "Bay Of Leaves",
+      "cost": ["🌍", "💨", "💖"],
+      "effect": "Gain 3 armour and HP, gain 3 additional armour for each unspent water",
+      "category": "hybrid"
+    },
+    {
+      "name": "Firenado",
+      "cost": ["🔥", "💨", "💧"],
+      "effect": "Set your opponents armour to (1d4)",
+      "category": "utility"
+    },
+    {
+      "name": "Final Breath",
+      "cost": ["💀", "💨", "💖"],
+      "effect": "Call a number 1 through 15 then roll (1d20), if your number was lower deal that as damage, if higher take that number as damage",
+      "category": "utility"
+    }
+  ],
+  "4-cost": [
+    {
       "name": "Thick Armour",
       "cost": ["🌍", "💖", "💧", "💀"],
       "effect": "Take (1d6) damage, if this did not reduce your HP deal (1d12) + 6 damage",
@@ -247,6 +397,56 @@
       "category": "damage"
     },
     {
+      "name": "Shield Bash",
+      "cost": ["🌍", "🌍", "💨", "🔥"],
+      "effect": "Deal your current armour + 3 as damage",
+      "category": "damage"
+    },
+    {
+      "name": "Undercurrent",
+      "cost": ["💖", "💨", "💧", "💧"],
+      "effect": "Heal (1d10) and deal (1d12) damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Total Coverage",
+      "cost": ["🌍", "💖", "🔥", "💧"],
+      "effect": "Gain (1d6) + 1 armour, heal (1d6) + 1 HP, and deal (1d6) + 1 damage",
+      "category": "hybrid"
+    },
+    {
+      "name": "Earthen Rage",
+      "cost": ["🌍", "🔥", "🔥", "🔥"],
+      "effect": "Deal (2d8) damage directly to HP",
+      "category": "damage"
+    },
+    {
+      "name": "Monster Splash",
+      "cost": ["💧", "💧", "💧", "🔥"],
+      "effect": "Play any 4 cost spell at random",
+      "category": "utility"
+    },
+    {
+      "name": "Elemental Panic",
+      "cost": ["🌍", "💨", "🔥", "💧"],
+      "effect": "Roll (1d10) + 5 and choose one: 1. deal as damage, 2. gain as armour, 3. heal as HP",
+      "category": "hybrid"
+    },
+    {
+      "name": "Lay On Hands",
+      "cost": ["💖", "💖", "💀", "🌍"],
+      "effect": "Roll (3d20) and heal the highest roll",
+      "category": "healing"
+    },
+    {
+      "name": "Soul Siphon",
+      "cost": ["💨", "💨", "💀", "💀"],
+      "effect": "Roll (4d6), 1s or 2s are dealt as damage to you, 3 or higher is dealt as damage to your opponent",
+      "category": "damage"
+    }
+  ],
+  "5-cost": [
+    {
       "name": "Chain Lightning",
       "cost": ["🔥", "🔥", "💀", "💨", "💧"],
       "effect": "Deal (1d4) damage, if roll was not a 4 deal (1d6) damage, if roll was not a 6 deal (1d10) damage",
@@ -274,6 +474,30 @@
       "name": "Self Destruct",
       "cost": ["💨", "💨", "🔥", "💖", "💖"],
       "effect": "First take (1d20) damage then deal (3d10) damage to your opponent",
+      "category": "damage"
+    },
+    {
+      "name": "Eternal Bond",
+      "cost": ["🔥", "💖", "💖", "💀", "🌍"],
+      "effect": "Gain your current HP as armour, max of 16 armour",
+      "category": "defense"
+    },
+    {
+      "name": "Tsunami",
+      "cost": ["💧", "💧", "💨", "💀", "🌍"],
+      "effect": "Set your opponents armour to 0 and deal (1d12) damage",
+      "category": "damage"
+    },
+    {
+      "name": "Wildfire",
+      "cost": ["🔥", "🔥", "🔥", "💨", "🌍"],
+      "effect": "Deal (7d4) damage to your opponent",
+      "category": "damage"
+    },
+    {
+      "name": "Drawing Dead",
+      "cost": ["💀", "💀", "💀", "💀", "💖"],
+      "effect": "Roll (4d20), the lowest roll is dealt as damage to you and the highest as damage to your opponent",
       "category": "damage"
     }
   ]

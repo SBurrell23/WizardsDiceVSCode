@@ -281,7 +281,7 @@ const loadSpellbook = async () => {
   try {
     // Add cache-busting parameter to prevent browser caching
     const cacheBuster = new Date().getTime()
-    const response = await fetch(`./spellbook1.json?v=${cacheBuster}`, {
+    const response = await fetch(`./Spellbook.json?v=${cacheBuster}`, {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -290,10 +290,25 @@ const loadSpellbook = async () => {
       }
     })
     const data = await response.json()
-    spellbook.value = data
+    spellbook.value = parseSpellbook(data)
   } catch (error) {
     console.error('Failed to load spellbook:', error)
   }
+}
+
+const parseSpellbook = (data) => {
+  const flattenedSpells = []
+  const costOrder = ['1-cost', '2-cost', '3-cost', '4-cost', '5-cost', '6-cost']
+  
+  // Iterate through each cost category in order
+  costOrder.forEach(costKey => {
+    if (data[costKey] && Array.isArray(data[costKey])) {
+      // Add all spells from this cost category to the flattened array
+      flattenedSpells.push(...data[costKey])
+    }
+  })
+  
+  return { spells: flattenedSpells }
 }
 
 // Initialize component
