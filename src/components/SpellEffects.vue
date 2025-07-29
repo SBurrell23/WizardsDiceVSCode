@@ -498,6 +498,72 @@ const aquaMortis = async () => {
   showMessage(`💧 Aqua Mortis deals ${attackRoll.value + 3} damage!`, 'damage')
 }
 
+// Fireballs: Deal (2d4) + 1 damage
+const fireballs = async () => {
+  showMessage(`🔥 Fireballs is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Wavepool: Remove (2d4) + 1 from your opponents armour
+const wavepool = async () => {
+  showMessage(`💧 Wavepool is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Rock Armour: Gain (1d4) + 4 armour
+const rockArmour = async () => {
+  showMessage(`🌍 Rock Armour is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Dust Devil: Call a number 1 through 4, roll (1d4), if the number matches deal 9 damage
+const dustDevil = async () => {
+  showMessage(`💨 Dust Devil is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Shrunken Heads: Take 4 damage, return these dice to your hand and re-roll them
+const shrunkenHeads = async () => {
+  showMessage(`💀 Shrunken Heads is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// The Lovers: If your HP is 18 or higher heal to full
+const theLovers = async () => {
+  showMessage(`💖 The Lovers is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Self-Care: Gain (1d4) as armour and (1d6) as HP
+const selfCare = async () => {
+  showMessage(`🌍 Self-Care is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Quid-Pro-Quo: Change 1 of your unspent dice to any element
+const quidProQuo = async () => {
+  showMessage(`💀 Quid-Pro-Quo is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Burning Love: Deal 3 damage and heal 4 HP
+const burningLove = async () => {
+  showMessage(`🔥 Burning Love is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Even Sacrifice: Deal 2 damage, if your opponents HP is now even re-activate 1 non-death dice at random
+const evenSacrifice = async () => {
+  showMessage(`💀 Even Sacrifice is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Scald: Deal either (1d8) damage directly to HP or (1d12) damage only to armour
+const scald = async () => {
+  showMessage(`🔥 Scald is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
 // ============================================================================
 // 3-COST SPELLS
 // ============================================================================
@@ -771,6 +837,84 @@ const highStakes = async () => {
   }
 }
 
+// Deadly Curse: Roll (1d8), deal as damage to you and 2x that to your opponent
+const deadlyCurse = async () => {
+  showMessage(`💀 Deadly Curse is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Healing Burst: Heal (1d6) + 7 HP
+const healingBurst = async () => {
+  showMessage(`💖 Healing Burst is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Scorching Wind: Roll (3d12), deal the highest roll as damage
+const scorchingWind = async () => {
+  showMessage(`🔥 Scorching Wind is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Back From The Dead: Re-activate 3 non-death dice at random
+const backFromTheDead = async () => {
+  showMessage(`💧 Back From The Dead is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Balancing Act: If your HP is evenly divisible by your armour gain 5 for both
+const balancingAct = async () => {
+  showMessage(`🌍 Balancing Act is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Updraft: Take (1d6) damage, if damage was 3 or less deal (1d8) + 2 damage, else deal (1d12) + 3 damage
+const updraft = async () => {
+  showMessage(`💀 Updraft is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Blood For Steel: Lose (1d6) HP, Gain 9 armour
+const bloodForSteel = async () => {
+  showMessage(`🌍 Blood For Steel is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Steel Hearted: Gain HP equal to that of you or your opponents armour, max of 12 HP
+const steelHearted = async () => {
+  showMessage(`🌍 Steel Hearted is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Undertow: Take 2 damage, then deal (2d6) damage
+const undertow = async () => {
+  showMessage(`💧 Undertow is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Hot Steel: Gain (1d4) + 1 armour and deal double that as damage to your opponent
+const hotSteel = async () => {
+  showMessage(`🌍 Hot Steel is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Bay Of Leaves: Gain 3 armour and HP, gain 3 additional armour for each unspent water
+const bayOfLeaves = async () => {
+  showMessage(`🌍 Bay Of Leaves is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Firenado: Set your opponents armour to (1d4)
+const firenado = async () => {
+  showMessage(`🔥 Firenado is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Final Breath: Call a number 1 through 15 then roll (1d20), if your number was lower deal that as damage, if higher take that number as damage
+const finalBreath = async () => {
+  showMessage(`💀 Final Breath is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
 // ============================================================================
 // 4-COST SPELLS
 // ============================================================================
@@ -955,6 +1099,54 @@ const evenTheOdds = async () => {
   }
 }
 
+// Shield Bash: Deal your current armour + 3 as damage
+const shieldBash = async () => {
+  showMessage(`🌍 Shield Bash is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Undercurrent: Heal (1d10) and deal (1d12) damage
+const undercurrent = async () => {
+  showMessage(`💖 Undercurrent is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Total Coverage: Gain (1d6) + 1 armour, heal (1d6) + 1 HP, and deal (1d6) + 1 damage
+const totalCoverage = async () => {
+  showMessage(`🌍 Total Coverage is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Earthen Rage: Deal (2d8) damage directly to HP
+const earthenRage = async () => {
+  showMessage(`🌍 Earthen Rage is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Monster Splash: Play any 4 cost spell at random
+const monsterSplash = async () => {
+  showMessage(`💧 Monster Splash is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Elemental Panic: Roll (1d10) + 5 and choose one: 1. deal as damage, 2. gain as armour, 3. heal as HP
+const elementalPanic = async () => {
+  showMessage(`🌍 Elemental Panic is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Lay On Hands: Roll (3d20) and heal the highest roll
+const layOnHands = async () => {
+  showMessage(`💖 Lay On Hands is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Soul Siphon: Roll (4d6), 1s or 2s are dealt as damage to you, 3 or higher is dealt as damage to your opponent
+const soulSiphon = async () => {
+  showMessage(`💨 Soul Siphon is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
 // ============================================================================
 // 5-COST SPELLS
 // ============================================================================
@@ -1072,6 +1264,30 @@ const selfDestruct = async () => {
   }
 }
 
+// Eternal Bond: Gain your current HP as armour, max of 16 armour
+const eternalBond = async () => {
+  showMessage(`🔥 Eternal Bond is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Tsunami: Set your opponents armour to 0 and deal (1d12) damage
+const tsunami = async () => {
+  showMessage(`💧 Tsunami is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Wildfire: Deal (7d4) damage to your opponent
+const wildfire = async () => {
+  showMessage(`🔥 Wildfire is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
+// Drawing Dead: Roll (4d20), the lowest roll is dealt as damage to you and the highest as damage to your opponent
+const drawingDead = async () => {
+  showMessage(`💀 Drawing Dead is not yet implemented!`, 'warning')
+  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+}
+
 
 // ============================================================================
 // SPELL MAP FOR PRODUCTION BUILD COMPATIBILITY
@@ -1086,11 +1302,17 @@ const spellMap = {
   heal,
   bloodMagic,
   blaze,
-  strongGusts,
+  fireballs,
   biggerSplash,
+  wavepool,
   wildGrowth,
+  rockArmour,
+  strongGusts,
+  dustDevil,
   unfairDuel,
+  shrunkenHeads,
   fatedHearts,
+  theLovers,
   refreshingSips,
   smog,
   hotheaded,
@@ -1098,6 +1320,11 @@ const spellMap = {
   hotCoals,
   waterjet,
   aquaMortis,
+  selfCare,
+  quidProQuo,
+  burningLove,
+  evenSacrifice,
+  scald,
   explosion,
   neverendingVines,
   secondChance,
@@ -1112,6 +1339,19 @@ const spellMap = {
   washedAshore,
   luckyRitual,
   highStakes,
+  deadlyCurse,
+  healingBurst,
+  scorchingWind,
+  backFromTheDead,
+  balancingAct,
+  updraft,
+  bloodForSteel,
+  steelHearted,
+  undertow,
+  hotSteel,
+  bayOfLeaves,
+  firenado,
+  finalBreath,
   thickArmour,
   rejuvinatingWaters,
   fieryPassion,
@@ -1120,11 +1360,23 @@ const spellMap = {
   nullify,
   fertileSoil,
   evenTheOdds,
+  shieldBash,
+  undercurrent,
+  totalCoverage,
+  earthenRage,
+  monsterSplash,
+  elementalPanic,
+  layOnHands,
+  soulSiphon,
   chainLightning,
   revive,
   deathTaxes,
   mudslide,
-  selfDestruct
+  selfDestruct,
+  eternalBond,
+  tsunami,
+  wildfire,
+  drawingDead
 }
 
 // ============================================================================
