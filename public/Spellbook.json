@@ -429,7 +429,7 @@
     {
       "name": "Elemental Panic",
       "cost": ["🌍", "💨", "🔥", "💧"],
-      "effect": "Roll (1d10) + 5 and choose one: 1. deal as damage, 2. gain as armour, 3. heal as HP",
+      "effect": "Roll (1d10) + 5 and choose one: deal as damage, gain as armour or heal as HP",
       "category": "hybrid"
     },
     {

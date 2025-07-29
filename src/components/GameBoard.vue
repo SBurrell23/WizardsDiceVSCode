@@ -277,6 +277,7 @@
       :currentPlayer="isHostTurn ? 'host' : 'guest'"
       :opponentPlayer="isHostTurn ? 'guest' : 'host'"
       :showNumericModal="showNumericModal"
+      :showUserChoiceModal="showUserChoiceModal"
       @updatePlayerStats="onUpdatePlayerStats"
       @updatePlayerResources="onUpdatePlayerResources"
       @showMessage="onShowSpellMessage"
@@ -345,6 +346,15 @@
     :default-value="numericModal.defaultValue"
     @confirm="onNumericModalConfirm"
   />
+
+  <!-- User Choice Modal -->
+  <UserChoiceModal
+    :is-visible="choiceModal.isVisible"
+    :title="choiceModal.title"
+    :prompt-text="choiceModal.promptText"
+    :choices="choiceModal.choices"
+    @choice-made="onChoiceModalChoice"
+  />
 </template>
 
 <script setup>
@@ -354,6 +364,7 @@ import NumberDice from './NumberDice.vue'
 import Spellbook from './Spellbook.vue'
 import SpellEffects from './SpellEffects.vue'
 import NumericInputModal from './NumericInputModal.vue'
+import UserChoiceModal from './UserChoiceModal.vue'
 import { ENEMY_WIZARD_NAME } from '../constants.js'
 
 // Props passed from parent component
@@ -439,6 +450,15 @@ const numericModal = ref({
   minValue: undefined,
   maxValue: undefined,
   defaultValue: 0,
+  resolve: null
+})
+
+// User choice modal state
+const choiceModal = ref({
+  isVisible: false,
+  title: '',
+  promptText: '',
+  choices: [],
   resolve: null
 })
 
@@ -708,6 +728,27 @@ const onNumericModalConfirm = (value) => {
   }
   numericModal.value.isVisible = false
   numericModal.value.resolve = null
+}
+
+// User choice modal helper functions
+const showUserChoiceModal = (title, promptText, choices) => {
+  return new Promise((resolve) => {
+    choiceModal.value = {
+      isVisible: true,
+      title,
+      promptText,
+      choices,
+      resolve
+    }
+  })
+}
+
+const onChoiceModalChoice = (choiceIndex) => {
+  if (choiceModal.value.resolve) {
+    choiceModal.value.resolve(choiceIndex)
+  }
+  choiceModal.value.isVisible = false
+  choiceModal.value.resolve = null
 }
 
 // Handle game-related messages

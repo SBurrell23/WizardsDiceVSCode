@@ -27,6 +27,10 @@ const props = defineProps({
   showNumericModal: {
     type: Function,
     required: true
+  },
+  showUserChoiceModal: {
+    type: Function,
+    required: true
   }
 })
 
@@ -1551,8 +1555,49 @@ const monsterSplash = async () => {
 
 // Elemental Panic: Roll (1d10) + 5 and choose one: 1. deal as damage, 2. gain as armour, 3. heal as HP
 const elementalPanic = async () => {
-  showMessage(`🌍 Elemental Panic is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  // Roll the dice first
+  const roll = await requestDiceRoll('1d10')
+  const rollValue = roll.value + 5
+  
+  showMessage(`🌍 Elemental Panic rolled ${rollValue}!`, 'info')
+  
+  // Present the user with choices
+  const choices = [
+    `Deal ${rollValue} damage to opponent`,
+    `Gain ${rollValue} armor`,
+    `Heal ${rollValue} HP`
+  ]
+  
+  try {
+    const choiceIndex = await props.showUserChoiceModal(
+      'Elemental Panic',
+      `You rolled (${roll.value}) + 5`,
+      choices
+    )
+    
+    // Apply the chosen effect
+    switch (choiceIndex) {
+      case 0: // Deal damage
+        dealDamage(rollValue, props.opponentPlayer)
+        showMessage(`🌍 Elemental Panic deals ${rollValue} damage!`, 'damage')
+        break
+      case 1: // Gain armor
+        gainArmor(rollValue, props.currentPlayer)
+        showMessage(`🌍 Elemental Panic gains ${rollValue} armor!`, 'defense')
+        break
+      case 2: // Heal HP
+        healHP(rollValue, props.currentPlayer)
+        showMessage(`🌍 Elemental Panic heals ${rollValue} HP!`, 'healing')
+        break
+      default:
+        showMessage(`🌍 Elemental Panic: Invalid choice!`, 'warning')
+        break
+    }
+  } catch (error) {
+    console.error('Elemental Panic choice error:', error)
+    showMessage(`🌍 Elemental Panic failed to get user choice!`, 'warning')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  }
 }
 
 // Lay On Hands: Roll (3d20) and heal the highest roll
