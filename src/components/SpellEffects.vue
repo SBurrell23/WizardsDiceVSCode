@@ -1091,7 +1091,7 @@ const firenado = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Final Breath: Call a number 1 through 15 then roll (1d20), if your number was lower deal that as damage, if higher take that number as damage
+// Final Breath: Call a number 1 through 15 then roll (1d20), if your number was lower deal it as damage, else take it as damage
 const finalBreath = async () => {
   showMessage(`💀 Final Breath is not yet implemented!`, 'warning')
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
