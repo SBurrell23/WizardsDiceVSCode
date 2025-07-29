@@ -30,8 +30,33 @@
           <button @click="muteToggle" class="volume-btn">
             {{ isMuted ? 'Unmute' : 'Mute' }}
           </button>
+          <button @click="setVolume(0.25)" class="volume-btn">25%</button>
           <button @click="setVolume(0.5)" class="volume-btn">50%</button>
-          <button @click="setVolume(1)" class="volume-btn">100%</button>
+        </div>
+        
+        <!-- Background Music Controls -->
+        <div class="volume-separator"></div>
+        
+        <div class="volume-label">Background Music</div>
+        <div class="volume-slider-container">
+          <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.1" 
+            v-model="bgMusicVolume"
+            @input="updateBgMusicVolume"
+            class="volume-slider bg-music-slider"
+          />
+          <div class="volume-percentage">{{ Math.round(bgMusicVolume * 100) }}%</div>
+        </div>
+        
+        <div class="volume-buttons">
+          <button @click="bgMusicMuteToggle" class="volume-btn">
+            {{ isBgMusicMuted ? 'Unmute' : 'Mute' }}
+          </button>
+          <button @click="setBgMusicVolume(0.25)" class="volume-btn">25%</button>
+          <button @click="setBgMusicVolume(0.5)" class="volume-btn">50%</button>
         </div>
       </div>
     </div>
@@ -42,10 +67,14 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 
 // Sound state
-const volume = ref(0.7) // Default volume 70%
+const volume = ref(0.5) // Default volume 50%
 const isMuted = ref(false)
+const bgMusicVolume = ref(0.25) // Default background music volume 25%
+const isBgMusicMuted = ref(false)
 const showVolumePanel = ref(false)
-const previousVolume = ref(0.7) // Store volume before muting
+const previousVolume = ref(0.5) // Store volume before muting
+const previousBgMusicVolume = ref(0.25) // Store background music volume before muting
+const audioUnlocked = ref(false) // Track if audio context is unlocked
 
 // Sound instances storage
 const sounds = reactive({})
@@ -54,7 +83,8 @@ const soundCategories = {
   spells: {},
   ui: {},
   ambient: {},
-  effects: {}
+  effects: {},
+  background: {}
 }
 
 // Volume control methods
@@ -97,17 +127,102 @@ const muteToggle = () => {
 const updateAllSoundsVolume = () => {
   const actualVolume = isMuted.value ? 0 : volume.value
   Object.values(sounds).forEach(sound => {
-    if (sound.audio) {
+    if (sound.audio && sound.category !== 'background') {
       sound.audio.volume = actualVolume * (sound.baseVolume || 1)
     }
   })
+  updateBackgroundMusicVolume()
+}
+
+// Background music control methods
+const updateBgMusicVolume = (event) => {
+  const newVolume = parseFloat(event.target.value)
+  bgMusicVolume.value = newVolume
+  if (newVolume > 0) {
+    isBgMusicMuted.value = false
+  }
+  updateBackgroundMusicVolume()
+  saveVolumeToStorage()
+}
+
+const setBgMusicVolume = (newVolume) => {
+  bgMusicVolume.value = newVolume
+  isBgMusicMuted.value = false
+  updateBackgroundMusicVolume()
+  saveVolumeToStorage()
+}
+
+const bgMusicMuteToggle = () => {
+  if (isBgMusicMuted.value) {
+    // Unmute
+    isBgMusicMuted.value = false
+    bgMusicVolume.value = previousBgMusicVolume.value
+  } else {
+    // Mute
+    previousBgMusicVolume.value = bgMusicVolume.value
+    isBgMusicMuted.value = true
+    bgMusicVolume.value = 0
+  }
+  updateBackgroundMusicVolume()
+  saveVolumeToStorage()
+}
+
+const updateBackgroundMusicVolume = () => {
+  const actualVolume = isBgMusicMuted.value ? 0 : bgMusicVolume.value
+  Object.values(sounds).forEach(sound => {
+    if (sound.audio && sound.category === 'background') {
+      sound.audio.volume = actualVolume * (sound.baseVolume || 1)
+    }
+  })
+}
+
+// Audio unlock for autoplay policy compliance
+const unlockAudio = async () => {
+  if (audioUnlocked.value) return true
+  
+  try {
+    // Create a silent audio context to unlock audio
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+    
+    // Create and play a silent buffer
+    const buffer = audioContext.createBuffer(1, 1, 22050)
+    const source = audioContext.createBufferSource()
+    source.buffer = buffer
+    source.connect(audioContext.destination)
+    source.start(0)
+    
+    // Resume audio context if suspended
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume()
+    }
+    
+    audioUnlocked.value = true
+    console.log('Audio context unlocked')
+    
+    // Only start background music if it's not muted and volume > 0
+    if (!isBgMusicMuted.value && bgMusicVolume.value > 0) {
+      startBackgroundMusic()
+    }
+    
+    return true
+  } catch (error) {
+    console.warn('Failed to unlock audio context:', error)
+    return false
+  }
 }
 
 // Sound management methods
 const loadSound = (soundId, soundPath, category = 'effects', baseVolume = 1) => {
   try {
     const audio = new Audio(soundPath)
-    audio.volume = (isMuted.value ? 0 : volume.value) * baseVolume
+    
+    // Set initial volume based on category
+    if (category === 'background') {
+      audio.volume = (isBgMusicMuted.value ? 0 : bgMusicVolume.value) * baseVolume
+    } else {
+      audio.volume = (isMuted.value ? 0 : volume.value) * baseVolume
+    }
+    
     audio.preload = 'auto'
     
     const soundObj = {
@@ -164,10 +279,17 @@ const playSound = (soundId, options = {}) => {
       sound.audio.currentTime = 0
     }
 
-    // Set volume
-    const targetVolume = customVolume !== null ? 
-      customVolume * (isMuted.value ? 0 : volume.value) : 
-      (isMuted.value ? 0 : volume.value) * sound.baseVolume
+    // Set volume based on category
+    let targetVolume
+    if (sound.category === 'background') {
+      targetVolume = customVolume !== null ? 
+        customVolume * (isBgMusicMuted.value ? 0 : bgMusicVolume.value) : 
+        (isBgMusicMuted.value ? 0 : bgMusicVolume.value) * sound.baseVolume
+    } else {
+      targetVolume = customVolume !== null ? 
+        customVolume * (isMuted.value ? 0 : volume.value) : 
+        (isMuted.value ? 0 : volume.value) * sound.baseVolume
+    }
 
     if (fadeIn) {
       sound.audio.volume = 0
@@ -301,6 +423,8 @@ const saveVolumeToStorage = () => {
   try {
     localStorage.setItem('wizardsDice_volume', volume.value.toString())
     localStorage.setItem('wizardsDice_muted', isMuted.value.toString())
+    localStorage.setItem('wizardsDice_bgMusicVolume', bgMusicVolume.value.toString())
+    localStorage.setItem('wizardsDice_bgMusicMuted', isBgMusicMuted.value.toString())
   } catch (error) {
     console.error('Failed to save volume settings:', error)
   }
@@ -310,6 +434,8 @@ const loadVolumeFromStorage = () => {
   try {
     const savedVolume = localStorage.getItem('wizardsDice_volume')
     const savedMuted = localStorage.getItem('wizardsDice_muted')
+    const savedBgMusicVolume = localStorage.getItem('wizardsDice_bgMusicVolume')
+    const savedBgMusicMuted = localStorage.getItem('wizardsDice_bgMusicMuted')
     
     if (savedVolume !== null) {
       volume.value = parseFloat(savedVolume)
@@ -317,6 +443,14 @@ const loadVolumeFromStorage = () => {
     
     if (savedMuted !== null) {
       isMuted.value = savedMuted === 'true'
+    }
+    
+    if (savedBgMusicVolume !== null) {
+      bgMusicVolume.value = parseFloat(savedBgMusicVolume)
+    }
+    
+    if (savedBgMusicMuted !== null) {
+      isBgMusicMuted.value = savedBgMusicMuted === 'true'
     }
   } catch (error) {
     console.error('Failed to load volume settings:', error)
@@ -335,12 +469,30 @@ onMounted(() => {
   loadVolumeFromStorage()
   document.addEventListener('click', handleClickOutside)
   
+  // Add global click listener to unlock audio on first interaction
+  const unlockOnInteraction = () => {
+    unlockAudio()
+    document.removeEventListener('click', unlockOnInteraction)
+    document.removeEventListener('keydown', unlockOnInteraction)
+    document.removeEventListener('touchstart', unlockOnInteraction)
+  }
+  
+  document.addEventListener('click', unlockOnInteraction)
+  document.addEventListener('keydown', unlockOnInteraction)
+  document.addEventListener('touchstart', unlockOnInteraction)
+  
   // Load game sounds (uncomment when you add sound files to public/sounds/)
   loadSound('diceRoll', '/sounds/dice-roll.wav', 'dice', 0.5)
   loadSound('turnChange', '/sounds/turn-change.wav', 'ui', 0.5)
   loadSound('turnChangeOver', '/sounds/turn-change-over.wav', 'ui', 0.5)
   loadSound('diceRollNumbered', '/sounds/dice-roll-number.wav', 'dice', 0.5)
   loadSound('spellCast', '/sounds/spell-cast.wav', 'spells', 0.5)
+  loadSound('gameWon', '/sounds/game-won.wav', 'ui', 0.7)
+  loadSound('gameLost', '/sounds/game-lost.wav', 'ui', 0.7)
+  
+  // Load background music
+  loadSound('backgroundMusic', '/sounds/OST 1 - Poison Ivy Manor (Loopable).mp3', 'background', 1.0)
+  
   //loadSound('damageHit', '/sounds/damage-hit.wav', 'effects', 0.7)
   //loadSound('heal', '/sounds/heal.wav', 'effects', 0.6)
   //loadSound('armorGain', '/sounds/armor-gain.wav', 'effects', 0.6)
@@ -357,6 +509,19 @@ onUnmounted(() => {
   stopAllSounds()
 })
 
+// Background music control methods
+const startBackgroundMusic = () => {
+  if (!audioUnlocked.value) {
+    console.log('Audio not unlocked yet, waiting for user interaction')
+    return false
+  }
+  return playSound('backgroundMusic', { loop: true })
+}
+
+const stopBackgroundMusic = () => {
+  return stopSound('backgroundMusic')
+}
+
 // Expose methods globally for easy access from other components
 const soundController = {
   loadSound,
@@ -368,8 +533,14 @@ const soundController = {
   isSoundPlaying,
   setVolume,
   muteToggle,
+  startBackgroundMusic,
+  stopBackgroundMusic,
+  setBgMusicVolume,
+  bgMusicMuteToggle,
+  unlockAudio,
   sounds,
-  soundCategories
+  soundCategories,
+  audioUnlocked
 }
 
 // Make available globally
@@ -432,7 +603,7 @@ defineExpose(soundController)
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border-radius: 15px;
   padding: 20px;
-  min-width: 250px;
+  min-width: 280px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(15px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -492,6 +663,14 @@ defineExpose(soundController)
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
+.bg-music-slider::-webkit-slider-thumb {
+  background: #7c3aed;
+}
+
+.bg-music-slider::-moz-range-thumb {
+  background: #7c3aed;
+}
+
 .volume-slider::-moz-range-thumb {
   width: 18px;
   height: 18px;
@@ -513,6 +692,12 @@ defineExpose(soundController)
   display: flex;
   gap: 8px;
   justify-content: space-between;
+}
+
+.volume-separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 15px 0;
 }
 
 .volume-btn {

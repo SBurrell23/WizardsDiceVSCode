@@ -1,6 +1,13 @@
 <script setup>
+import { onMounted } from 'vue'
 import LandingPage from './components/LandingPage.vue'
 import SoundController from './components/SoundController.vue'
+
+// Note: Background music will start automatically after first user interaction
+// due to browser autoplay policies
+onMounted(() => {
+  console.log('App mounted - background music will start after user interaction')
+})
 </script>
 
 <template>

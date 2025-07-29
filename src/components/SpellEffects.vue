@@ -388,10 +388,10 @@ const unfairDuel = async () => {
   
   if (playerRoll.value > opponentRoll.value) {
     dealDamage(playerRoll.value, props.currentPlayer)
-    showMessage(`💀 Unfair Duel: Roller wins! Opponent takes ${playerRoll.value} damage!`, 'damage')
+    showMessage(`💀 Unfair Duel: Opponent wins! Roller takes ${playerRoll.value} damage!`, 'damage')
   } else if (opponentRoll.value > playerRoll.value) {
     dealDamage(opponentRoll.value, props.opponentPlayer)
-    showMessage(`💀 Unfair Duel: Opponent wins! Roller takes ${opponentRoll.value} damage!`, 'damage')
+    showMessage(`💀 Unfair Duel: Roller wins! Opponent takes ${opponentRoll.value} damage!`, 'damage')
   }else{
     showMessage(`💀 Unfair Duel: It's a tie! No damage dealt.`, 'info')
   }

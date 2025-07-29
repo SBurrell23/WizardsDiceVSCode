@@ -577,6 +577,23 @@ const checkGameOver = () => {
       winner.value = 'host'
     }
     
+    // Play appropriate sound based on who won
+    if (window.soundController) {
+      if (winner.value === 'draw') {
+        // For draw, don't play any sound or play a neutral sound
+      } else {
+        // Determine if current player won or lost
+        const currentPlayerWon = (props.isHost && winner.value === 'host') || 
+                                (!props.isHost && winner.value === 'guest')
+        
+        if (currentPlayerWon) {
+          window.soundController.playSound('gameWon')
+        } else {
+          window.soundController.playSound('gameLost')
+        }
+      }
+    }
+    
     // Show modal
     showGameOverModal.value = true
     
@@ -619,6 +636,11 @@ const startNewGame = () => {
 
 // Reset all game state to initial values
 const resetGameState = () => {
+  // Clear game log
+  if (window.logbook) {
+    window.logbook.clearLogs()
+  }
+  
   // Reset player stats
   playerStats.value = {
     host: { health: 25, armor: 0, maxHealth: 25 },
@@ -649,6 +671,17 @@ const resetGameState = () => {
   
   // Clear status message
   statusMessage.value = ''
+  
+  // Log game restart
+  setTimeout(() => {
+    if (window.logbook) {
+      window.logbook.createLog(`Game restarted!`, 'blue')
+      
+      // Log current turn
+      const turnColor = isCurrentUser(currentPlayerName.value) ? 'green' : 'red'
+      window.logbook.createLog(getTurnStartMessage(currentPlayerName.value, currentTurn.value), turnColor)
+    }
+  }, 100)
   
   console.log('Game state reset for new game')
 }
@@ -845,6 +878,24 @@ const handleGameMessage = (data) => {
       gameOver.value = true
       winner.value = data.data.winner
       showGameOverModal.value = true
+      
+      // Play appropriate sound based on who won
+      if (window.soundController) {
+        if (winner.value === 'draw') {
+          window.soundController.playSound('gameWon')
+        } else {
+          // Determine if current player won or lost
+          const currentPlayerWon = (props.isHost && winner.value === 'host') || 
+                                  (!props.isHost && winner.value === 'guest')
+          
+          if (currentPlayerWon) {
+            window.soundController.playSound('gameWon')
+          } else {
+            window.soundController.playSound('gameLost')
+          }
+        }
+      }
+      
       console.log('Received game over, winner:', winner.value)
       break
     case 'new_game_starting':
@@ -852,6 +903,11 @@ const handleGameMessage = (data) => {
       isNewGameStarting.value = true
       break
     case 'new_game_reset':
+      // Clear game log
+      if (window.logbook) {
+        window.logbook.clearLogs()
+      }
+      
       // Reset game state from host
       playerStats.value = data.data.playerStats
       currentTurn.value = data.data.currentTurn
@@ -864,6 +920,18 @@ const handleGameMessage = (data) => {
       showGameOverModal.value = false
       isNewGameStarting.value = false
       statusMessage.value = ''
+      
+      // Log game restart
+      setTimeout(() => {
+        if (window.logbook) {
+          window.logbook.createLog(`Game restarted!`, 'blue')
+          
+          // Log current turn
+          const turnColor = isCurrentUser(currentPlayerName.value) ? 'green' : 'red'
+          window.logbook.createLog(getTurnStartMessage(currentPlayerName.value, currentTurn.value), turnColor)
+        }
+      }, 100)
+      
       console.log('Game reset by host')
       break
     case 'game_event':
