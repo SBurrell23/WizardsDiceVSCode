@@ -5,7 +5,7 @@
         v-for="(log, index) in logs" 
         :key="log.id"
         class="log-entry"
-        :class="[`log-${log.type}`, { 'recent': isRecentLog(log) }]"
+        :class="`log-${log.type}`"
       >
         <div class="log-timestamp">{{ formatTime(log.timestamp) }}</div>
         <div class="log-content">
@@ -41,17 +41,11 @@ const createLog = (message, colorType = 'grey') => {
     id: ++window.gameLogsStore.logIdCounter,
     message,
     type: colorType,
-    timestamp: new Date(),
-    isRecent: true
+    timestamp: new Date()
   })
 
   // Add to the beginning of the array (newest at top)
   logs.value.unshift(logEntry)
-
-  // Mark as not recent after a short time for animation
-  setTimeout(() => {
-    logEntry.isRecent = false
-  }, 3000)
 
   // Auto-scroll to top to show newest log
   nextTick(() => {
@@ -63,10 +57,6 @@ const createLog = (message, colorType = 'grey') => {
 }
 
 // UI methods
-const isRecentLog = (log) => {
-  return log.isRecent
-}
-
 const formatTime = (timestamp) => {
   return timestamp.toLocaleTimeString([], { 
     hour: '2-digit', 
@@ -139,13 +129,6 @@ defineExpose(logbook)
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   border-left: 4px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-}
-
-.log-entry.recent {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .log-timestamp {

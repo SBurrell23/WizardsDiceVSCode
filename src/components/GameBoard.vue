@@ -747,6 +747,11 @@ const handleGameMessage = (data) => {
       // Show spell dice rolling for the casting player
       console.log('Received spell_dice_start:', data.data.notation, 'result:', data.data.result, 'casting player:', data.data.castingPlayer)
       
+      // Play numbered dice roll sound for the other player
+      if (window.soundController) {
+        window.soundController.playSound('diceRollNumbered')
+      }
+      
       // Always clear any existing timeout and state first
       if (spellDiceTimeoutId) {
         clearTimeout(spellDiceTimeoutId)
@@ -883,6 +888,12 @@ const handleGameMessage = (data) => {
         spellName: data.data.spellName,
         playerName: castingPlayerName
       }
+      
+      // Play spell cast sound when the other player starts casting
+      if (window.soundController) {
+        window.soundController.playSound('spellCast')
+      }
+      
       console.log('Received spell casting started:', data.data.spellName, 'by', data.data.playerRole, 'displaying as', castingPlayerName)
       break
     case 'spell_casting_ended':
@@ -1227,6 +1238,11 @@ const processDiceRoll = (notation) => {
   isProcessingDiceRoll.value = true
   console.log('Processing dice roll:', notation)
   
+  // Play numbered dice roll sound
+  if (window.soundController) {
+    window.soundController.playSound('diceRollNumbered')
+  }
+  
   // Clear any existing timeout and dice state first
   if (spellDiceTimeoutId) {
     clearTimeout(spellDiceTimeoutId)
@@ -1489,7 +1505,6 @@ onMounted(() => {
   // Initialize game logging
   setTimeout(() => {
     if (window.logbook) {
-
 
       window.logbook.createLog(`Game started!`, 'blue')
       
