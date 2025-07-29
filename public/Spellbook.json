@@ -59,7 +59,7 @@
     {
       "name": "Wavepool",
       "cost": ["💧", "💧"],
-      "effect": "Remove (2d4) + 1 from your opponents armour",
+      "effect": "Remove (2d4) + 1 only from your opponents armour",
       "category": "utility"
     },
     {
@@ -95,7 +95,7 @@
     {
       "name": "Shrunken Heads",
       "cost": ["💀", "💀"],
-      "effect": "Take 4 damage, return these dice to your hand and re-roll them",
+      "effect": "Take 4 damage and return these dice to your hand, you may re-roll them",
       "category": "utility"
     },
     {
@@ -131,7 +131,7 @@
     {
       "name": "Risky Business",
       "cost": ["💀", "💨"],
-      "effect": "Take (1d8) damage, get as many re-rolls as the amount of damage you did NOT take",
+      "effect": "Take (1d4) damage and get triple that many re-rolls",
       "category": "utility"
     },
     {
@@ -155,31 +155,31 @@
     {
       "name": "Self-Care",
       "cost": ["🌍", "💖"],
-      "effect": "Gain (1d4) as armour and (1d6) as HP",
+      "effect": "Gain (1d4) as armour and (1d4) as HP",
       "category": "hybrid"
     },
     {
       "name": "Quid-Pro-Quo",
-      "cost": ["💀", "💨"],
-      "effect": "Change 1 of your unspent dice to any element",
+      "cost": ["💀", "🌍"],
+      "effect": "Choose to exchange up to 10 HP for 10 armour",
       "category": "utility"
     },
     {
       "name": "Burning Love",
       "cost": ["🔥", "💖"],
-      "effect": "Deal 3 damage and heal 4 HP",
+      "effect": "Deal 3 damage and heal 3 HP",
       "category": "hybrid"
     },
     {
       "name": "Even Sacrifice",
       "cost": ["💀", "💖"],
-      "effect": "Deal 2 damage, if your opponents HP is now even re-activate 1 non-death dice at random",
+      "effect": "Deal 3 damage, if your opponents HP is now even re-activate 1 non-death dice at random",
       "category": "hybrid"
     },
     {
       "name": "Scald",
       "cost": ["🔥", "💧"],
-      "effect": "Deal either (1d8) damage directly to HP or (1d12) damage only to armour",
+      "effect": "Deal (1d4) damage for each spent wind or death die, max of 10 damage",
       "category": "damage"
     }
   ],

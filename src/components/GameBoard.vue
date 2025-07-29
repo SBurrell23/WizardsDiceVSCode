@@ -390,7 +390,7 @@ const emit = defineEmits(['leave-game'])
 // Reactive data
 const statusMessage = ref('')
 const statusType = ref('info')
-const currentTurn = ref(1)
+const currentTurn = ref(7)
 const isHostTurn = ref(true) // Host always starts
 let statusMessageTimeoutId = null // Track the current timeout
 let spellDiceTimeoutId = null // Track spell dice clear timeout

@@ -437,16 +437,15 @@ const hotheaded = async () => {
   }
 }
 
-// Risky Business: Take (1d8) damage, get as many re-rolls as the amount of damage you did NOT take
+// Risky Business: Take (1d4) damage and get triple that many re-rolls
 const riskyBusiness = async () => {
-  const damageRoll = await requestDiceRoll('1d8')
+  const damageRoll = await requestDiceRoll('1d4')
   const actualDamage = damageRoll.value
   
   // Apply damage to self
   dealDamage(actualDamage, props.currentPlayer)
   
-  // Calculate rerolls: damage NOT taken = 8 (max possible) - actual roll
-  const rerollsToGain = 8 - actualDamage
+  const rerollsToGain = damageRoll.value * 3
   
   if (rerollsToGain > 0) {
     // Allow rerolling any unspent dice, up to the number of rerolls gained
@@ -500,68 +499,251 @@ const aquaMortis = async () => {
 
 // Fireballs: Deal (2d4) + 1 damage
 const fireballs = async () => {
-  showMessage(`🔥 Fireballs is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const roll1 = await requestDiceRoll('1d4')
+  const roll2 = await requestDiceRoll('1d4')
+  const totalDamage = roll1.value + roll2.value + 1
+  
+  dealDamage(totalDamage, props.opponentPlayer)
+  showMessage(`🔥 Fireballs deals ${totalDamage} damage!`, 'damage')
 }
 
-// Wavepool: Remove (2d4) + 1 from your opponents armour
+// Wavepool: Remove (2d4) + 1 only from your opponents armour
 const wavepool = async () => {
-  showMessage(`💧 Wavepool is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const roll1 = await requestDiceRoll('1d4')
+  const roll2 = await requestDiceRoll('1d4')
+  const armorReduction = roll1.value + roll2.value + 1
+  
+  const opponentArmor = props.playerStats[props.opponentPlayer].armor || 0
+  const newArmor = Math.max(0, opponentArmor - armorReduction)
+  const actualReduction = opponentArmor - newArmor
+  
+  updateStats(props.opponentPlayer, { armor: newArmor })
+  showMessage(`💧 Wavepool removes ${actualReduction} armor!`, 'utility')
 }
 
 // Rock Armour: Gain (1d4) + 4 armour
 const rockArmour = async () => {
-  showMessage(`🌍 Rock Armour is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const armorRoll = await requestDiceRoll('1d4')
+  const armorToGain = armorRoll.value + 4
+  
+  gainArmor(armorToGain, props.currentPlayer)
+  showMessage(`🌍 Rock Armour gains ${armorToGain} armour!`, 'defense')
 }
 
 // Dust Devil: Call a number 1 through 4, roll (1d4), if the number matches deal 9 damage
 const dustDevil = async () => {
-  showMessage(`💨 Dust Devil is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  // Show modal to get the called number
+  const calledNumber = await props.showNumericModal(
+    '💨 Dust Devil',
+    'Call a number from 1 through 4.',
+    'Called Number',
+    1,    // Min: 1
+    4,    // Max: 4
+    1     // Default: 1
+  )
+  showMessage(`💨 Dust Devil called a ${calledNumber}`, 'info')
+  
+  // Roll the d4
+  const roll = await requestDiceRoll('1d4')
+  
+  if (roll.value === calledNumber) {
+    dealDamage(9, props.opponentPlayer)
+    showMessage(`💨 Dust Devil hits for 9 damage!`, 'damage')
+  } else {
+    showMessage(`💨 Dust Devil missed!`, 'info')
+  }
 }
 
-// Shrunken Heads: Take 4 damage, return these dice to your hand and re-roll them
+// Shrunken Heads: Take 4 damage and return these dice to your hand, you may re-roll them
 const shrunkenHeads = async () => {
-  showMessage(`💀 Shrunken Heads is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  // Take 4 damage first
+  dealDamage(4, props.currentPlayer)
+  showMessage(`💀 Shrunken Heads inflicts 4 damage!`, 'damage')
+  
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
+  
+  // Find all used death dice (death emoji is 💀)
+  const usedDeathDice = currentPlayerResources.filter(dice => dice.used && dice.emoji === '💀')
+  
+  if (usedDeathDice.length < 2) {
+    showMessage(`💀 Shrunken Heads: Not enough spent death dice to reactivate!`, 'warning')
+    return
+  }
+  
+  // Take the first 2 spent death dice (or all if there are exactly 2)
+  const diceToReactivate = usedDeathDice.slice(0, 2)
+  
+  // Reactivate exactly 2 death dice
+  const updatedResources = currentPlayerResources.map(dice => {
+    // Check if this die is one of the first 2 death dice to reactivate
+    const isSelected = diceToReactivate.some(selected => 
+      selected.diceIndex === dice.diceIndex && 
+      selected.emoji === dice.emoji && 
+      dice.used
+    )
+    
+    if (isSelected) {
+      return { ...dice, used: false }
+    }
+    return dice
+  })
+  
+  // Update the player's resources
+  updateResources(props.currentPlayer, updatedResources)
+  
+  showMessage(`💀 Shrunken Heads is reactivating 2 💀 dice!`, 'utility')
+  
+  // Now re-roll the reactivated dice
+  await requestElementDiceReroll(
+    dice => !dice.used && dice.emoji === '💀',  // Filter: only unspent death dice
+    2,                                           // Max 2 dice (the ones we just reactivated)
+    'You may choose to re-roll your reactivated 💀 dice'
+  )
 }
 
 // The Lovers: If your HP is 18 or higher heal to full
 const theLovers = async () => {
-  showMessage(`💖 The Lovers is not yet implemented!`, 'warning')
+  const currentHP = props.playerStats[props.currentPlayer].health || 0
+  const maxHP = props.playerStats[props.currentPlayer].maxHealth || 25
+  
+  if (currentHP >= 18) {
+    const healingAmount = maxHP - currentHP
+    if (healingAmount > 0) {
+      updateStats(props.currentPlayer, { health: maxHP })
+      showMessage(`💖 The Lovers heals to full HP!`, 'healing')
+    } else {
+      showMessage(`💖 Already at full HP!`, 'info')
+    }
+  } else {
+    showMessage(`💖 HP was too low! Healed for nothing!`, 'warning')
+  }
+  
+  // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Self-Care: Gain (1d4) as armour and (1d6) as HP
+// Self-Care: Gain (1d4) as armour and (1d4) as HP
 const selfCare = async () => {
-  showMessage(`🌍 Self-Care is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const armorRoll = await requestDiceRoll('1d4')
+  const healRoll = await requestDiceRoll('1d4')
+  
+  gainArmor(armorRoll.value, props.currentPlayer)
+  healHP(healRoll.value, props.currentPlayer)
+  
+  showMessage(`🌍 Self-Care gains ${armorRoll.value} armor and heals ${healRoll.value} HP!`, 'hybrid')
 }
 
-// Quid-Pro-Quo: Change 1 of your unspent dice to any element
+// Quid-Pro-Quo: Choose to exchange up to 10 HP for 10 armour
 const quidProQuo = async () => {
-  showMessage(`💀 Quid-Pro-Quo is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const currentHP = props.playerStats[props.currentPlayer].health || 0
+  const maxExchange = Math.min(10, currentHP - 1) // Can't exchange all HP (must leave at least 1)
+  
+  if (maxExchange <= 0) {
+    showMessage(`💀 Quid-Pro-Quo: Not enough HP to exchange!`, 'warning')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+    return
+  }
+  
+  // Show modal to get the HP exchange amount
+  const hpToExchange = await props.showNumericModal(
+    '💀 Quid-Pro-Quo',
+    `Exchange HP for an equal amount of armor. You currently have ${currentHP} HP.`,
+    'HP To Exchange',
+    0,              // Min: 0 HP
+    maxExchange,    // Max: up to 10 HP or current HP - 1 (whichever is lower)
+    0               // Default: 0 HP
+  )
+  
+  if (hpToExchange > 0) {
+    // Remove HP directly (bypassing armor)
+    dealDamageToHP(hpToExchange, props.currentPlayer)
+    
+    // Gain equal armor
+    gainArmor(hpToExchange, props.currentPlayer)
+    
+    showMessage(`💀 Quid-Pro-Quo: Exchanged ${hpToExchange} HP for ${hpToExchange} armor!`, 'hybrid')
+  } else {
+    showMessage(`💀 Quid-Pro-Quo: No HP exchanged!`, 'info')
+  }
 }
 
-// Burning Love: Deal 3 damage and heal 4 HP
+// Burning Love: Deal 3 damage and heal 3 HP
 const burningLove = async () => {
-  showMessage(`🔥 Burning Love is not yet implemented!`, 'warning')
+  dealDamage(3, props.opponentPlayer)
+  healHP(3, props.currentPlayer)
+
+  showMessage(`🔥 Burning Love deals 3 damage and heals 3 HP!`, 'hybrid')
+
+  // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Even Sacrifice: Deal 2 damage, if your opponents HP is now even re-activate 1 non-death dice at random
+// Even Sacrifice: Deal 3 damage, if your opponents HP is now even re-activate 1 non-death dice at random
 const evenSacrifice = async () => {
-  showMessage(`💀 Even Sacrifice is not yet implemented!`, 'warning')
+  dealDamage(3, props.opponentPlayer)
+
+  const opponentHP = props.playerStats[props.opponentPlayer].health || 0
+  
+  await new Promise(resolve => setTimeout(resolve, 500)) // Allow time for damage to be processed
+
+  if (opponentHP % 2 === 0) {
+    // Find all used non-death dice (death emoji is 💀)
+    const currentPlayerResources = props.playerResources[props.currentPlayer]
+    const usedNonDeathDice = currentPlayerResources.filter(dice => dice.used && dice.emoji !== '💀')
+    
+    if (usedNonDeathDice.length > 0) {
+      // Pick a random used non-death die
+      const randomDie = usedNonDeathDice[Math.floor(Math.random() * usedNonDeathDice.length)]
+      
+      // Reactivate the die
+      const updatedResources = currentPlayerResources.map(dice => {
+        if (dice.diceIndex === randomDie.diceIndex && dice.emoji === randomDie.emoji && dice.used) {
+          return { ...dice, used: false }
+        }
+        return dice
+      })
+      
+      updateResources(props.currentPlayer, updatedResources)
+      showMessage(`💀 HP is now even, reactivated a ${randomDie.emoji} die!`, 'hybrid')
+    } else {
+      showMessage(`💀 HP is now even but found no non-death dice to reactivate!`, 'damage')
+    }
+  } else {
+    showMessage(`💀 Even Sacrifice: Dealt 3 damage, opponent HP was odd!`, 'damage')
+  }
+  
+  // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Scald: Deal either (1d8) damage directly to HP or (1d12) damage only to armour
+// Scald: Deal (1d4) damage for each spent wind or death die, max of 10 damage
 const scald = async () => {
-  showMessage(`🔥 Scald is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
+  
+  // Find all spent wind (💨) and death (💀) dice
+  const spentWindAndDeathDice = currentPlayerResources.filter(dice => 
+    dice.used && (dice.emoji === '💨' || dice.emoji === '💀')
+  )
+  
+  if (spentWindAndDeathDice.length === 0) {
+    showMessage(`🔥 Scald found no spent wind or death dice!`, 'warning')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+    return
+  }else{
+    showMessage(`🔥 Scald found ${spentWindAndDeathDice.length} spent dice!`, 'utility')
+  }
+
+  let totalDamage = 0
+  for (let i = 0; i < spentWindAndDeathDice.length; i++) {
+    const roll = await requestDiceRoll('1d4')
+    totalDamage += roll.value
+  }
+  
+  // Apply max damage cap of 10
+  const finalDamage = Math.min(totalDamage, 10)
+  
+  dealDamage(finalDamage, props.opponentPlayer)
+  showMessage(`🔥 Scald deals ${finalDamage} damage (from ${spentWindAndDeathDice.length} spent 💨/💀 dice)!`, 'damage')
 }
 
 // ============================================================================
