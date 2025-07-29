@@ -127,9 +127,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import Peer from 'peerjs'
 import GameBoard from './GameBoard.vue'
-
-// Constants
-const ENEMY_WIZARD_NAME = 'Enemy'
+import { ENEMY_WIZARD_NAME } from '../constants.js'
 
 // Reactive data
 const isCreatingRoom = ref(false)

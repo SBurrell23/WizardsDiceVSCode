@@ -300,11 +300,11 @@
         <div class="game-over-details">
           <div class="final-stats">
             <div class="stat-line">
-              <span class="player-label">{{ props.isHost ? 'You' : 'Enemy Wizard' }}:</span>
+              <span class="player-label">{{ props.isHost ? 'You' : ENEMY_WIZARD_NAME }}:</span>
               <span class="health-value">❤️ {{ playerStats.host.health }}</span>
             </div>
             <div class="stat-line">
-              <span class="player-label">{{ props.isHost ? 'Enemy Wizard' : 'You' }}:</span>
+              <span class="player-label">{{ props.isHost ? ENEMY_WIZARD_NAME : 'You' }}:</span>
               <span class="health-value">❤️ {{ playerStats.guest.health }}</span>
             </div>
           </div>
@@ -354,6 +354,7 @@ import NumberDice from './NumberDice.vue'
 import Spellbook from './Spellbook.vue'
 import SpellEffects from './SpellEffects.vue'
 import NumericInputModal from './NumericInputModal.vue'
+import { ENEMY_WIZARD_NAME } from '../constants.js'
 
 // Props passed from parent component
 const props = defineProps({
@@ -441,34 +442,25 @@ const numericModal = ref({
   resolve: null
 })
 
-// Computed properties for player names
+// Computed properties for player names - simplified since we know the naming convention
 const topPlayerName = computed(() => {
   // Top player is always the host
-  // If current user is the host, show "You" (unless they have a custom name), otherwise show host's name or "Enemy Wizard"
-  if (props.isHost) {
-    // Current user is the host looking at their own area
-    return props.hostName === 'Host' ? 'You' : props.hostName
-  } else {
-    // Current user is the guest looking at the host's area
-    return props.hostName === 'Enemy Wizard' ? 'Enemy Wizard' : props.hostName
-  }
+  return props.isHost ? 'You' : ENEMY_WIZARD_NAME
 })
 
 const bottomPlayerName = computed(() => {
-  // Bottom player is always the guest
-  // If current user is the guest, show "You" (unless they have a custom name), otherwise show guest's name or "Enemy Wizard"
-  if (!props.isHost) {
-    // Current user is the guest looking at their own area
-    return props.guestName === 'Guest' ? 'You' : props.guestName
-  } else {
-    // Current user is the host looking at the guest's area
-    return props.guestName === 'Enemy Wizard' ? 'Enemy Wizard' : props.guestName
-  }
+  // Bottom player is always the guest  
+  return props.isHost ? ENEMY_WIZARD_NAME : 'You'
 })
 
 const currentPlayerName = computed(() => {
   return isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
 })
+
+// Helper to determine if a player name refers to the current user
+const isCurrentUser = (playerName) => {
+  return playerName === 'You'
+}
 
 // Game logic computed properties
 const isCurrentPlayer = computed(() => {
@@ -493,20 +485,16 @@ const currentPlayerResources = computed(() => {
 
 // Helper method to get correct pronoun for turn end messages
 const getTurnEndMessage = (playerName) => {
-  if (playerName === 'You') {
-    return `${playerName} ended your turn`
-  } else {
-    return `${playerName} ended their turn`
-  }
+  return isCurrentUser(playerName) ? 
+    `You ended your turn` : 
+    `${playerName} ended their turn`
 }
 
 // Helper method to get correct pronoun for turn start messages
 const getTurnStartMessage = (playerName, turnNumber) => {
-  if (playerName === 'You') {
-    return `Your turn (Turn ${turnNumber})`
-  } else {
-    return `${playerName}'s turn (Turn ${turnNumber})`
-  }
+  return isCurrentUser(playerName) ? 
+    `Your turn (Turn ${turnNumber})` : 
+    `${playerName}'s turn (Turn ${turnNumber})`
 }
 
 // Helper method to create spell cast message
@@ -514,29 +502,23 @@ const getSpellCastMessage = (spells, playerName) => {
   if (spells.length === 1) {
     const spell = spells[0]
     const costEmojis = spell.cost.join('')
-    if (playerName === 'You') {
-      return `You cast ${spell.name} (${costEmojis})`
-    } else {
-      return `${playerName} cast ${spell.name} (${costEmojis})`
-    }
+    return isCurrentUser(playerName) ? 
+      `You cast ${spell.name} (${costEmojis})` :
+      `${playerName} cast ${spell.name} (${costEmojis})`
   } else {
     const spellNames = spells.map(s => s.name).join(', ')
-    if (playerName === 'You') {
-      return `You cast ${spellNames}`
-    } else {
-      return `${playerName} cast ${spellNames}`
-    }
+    return isCurrentUser(playerName) ? 
+      `You cast ${spellNames}` :
+      `${playerName} cast ${spellNames}`
   }
 }
 
 // Helper method to create dice roll message
 const getDiceRollMessage = (diceResources, playerName) => {
   const diceEmojis = diceResources.map(dice => dice.emoji).join('')
-  if (playerName === 'You') {
-    return `You rolled (${diceEmojis})`
-  } else {
-    return `${playerName} rolled (${diceEmojis})`
-  }
+  return isCurrentUser(playerName) ? 
+    `You rolled (${diceEmojis})` :
+    `${playerName} rolled (${diceEmojis})`
 }
 
 // Unified message display function that handles both local and remote messages
@@ -715,7 +697,8 @@ const handleGameMessage = (data) => {
       if (window.logbook) {
         const opponentPlayerName = data.data.player === 'host' ? topPlayerName.value : bottomPlayerName.value
         const diceRollMessage = getDiceRollMessage(data.data.resources, opponentPlayerName)
-        window.logbook.createLog(diceRollMessage, 'blue')
+        const logColor = isCurrentUser(opponentPlayerName) ? 'green' : 'red'
+        window.logbook.createLog(diceRollMessage, logColor)
       }
       break
     case 'spells_cast':
@@ -754,7 +737,10 @@ const handleGameMessage = (data) => {
     case 'spell_cast_log':
       // Log spell casting from other player's perspective
       if (window.logbook && data.data.spellLogMessage) {
-        window.logbook.createLog(data.data.spellLogMessage, 'purple')
+        // Extract player name from the message to determine color
+        const isFromCurrentUser = data.data.spellLogMessage.startsWith('You ')
+        const logColor = isFromCurrentUser ? 'green' : 'red'
+        window.logbook.createLog(data.data.spellLogMessage, logColor)
       }
       break
     case 'spell_dice_start':
@@ -814,7 +800,7 @@ const handleGameMessage = (data) => {
         
         // Log the new turn start
         const newTurnPlayerName = data.data.isHostTurn ? topPlayerName.value : bottomPlayerName.value
-        const turnColor = newTurnPlayerName === 'You' ? 'green' : 'red'
+        const turnColor = isCurrentUser(newTurnPlayerName) ? 'green' : 'red'
         window.logbook.createLog(getTurnStartMessage(newTurnPlayerName, data.data.turn), turnColor)
       }
       
@@ -922,7 +908,8 @@ const onDiceRolled = (result) => {
     if (window.logbook) {
       const currentPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
       const diceRollMessage = getDiceRollMessage(playerResources.value[playerKey], currentPlayerName)
-      window.logbook.createLog(diceRollMessage, 'blue')
+      const logColor = isCurrentUser(currentPlayerName) ? 'green' : 'red'
+      window.logbook.createLog(diceRollMessage, logColor)
     }
     
     // Send dice results to other player
@@ -1005,7 +992,7 @@ const endTurn = () => {
   // Log the new turn start for current player
   if (window.logbook) {
     const newTurnPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
-    const turnColor = newTurnPlayerName === 'You' ? 'green' : 'red'
+    const turnColor = isCurrentUser(newTurnPlayerName) ? 'green' : 'red'
     window.logbook.createLog(getTurnStartMessage(newTurnPlayerName, currentTurn.value), turnColor)
   }
   
@@ -1050,7 +1037,8 @@ const onCastSpells = async (spells) => {
   if (window.logbook) {
     const currentPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
     const spellLogMessage = getSpellCastMessage(spells, currentPlayerName)
-    window.logbook.createLog(spellLogMessage, 'purple')
+    const logColor = isCurrentUser(currentPlayerName) ? 'green' : 'red'
+    window.logbook.createLog(spellLogMessage, logColor)
   }
 
   // Send spell casting log to other player (from their perspective)
@@ -1503,10 +1491,10 @@ onMounted(() => {
     if (window.logbook) {
 
 
-      window.logbook.createLog(`Game started!`, 'gray')
+      window.logbook.createLog(`Game started!`, 'blue')
       
       // Log current turn
-      const turnColor = currentPlayerName.value === 'You' ? 'green' : 'red'
+      const turnColor = isCurrentUser(currentPlayerName.value) ? 'green' : 'red'
       window.logbook.createLog(getTurnStartMessage(currentPlayerName.value, currentTurn.value), turnColor)
     }
   }, 100)
