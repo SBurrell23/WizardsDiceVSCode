@@ -199,9 +199,10 @@ const handleElementDiceRerollResult = (rerolledDice) => {
 
 // Helper function to convert spell name to method name (camelCase, no spaces)
 const getMethodName = (spellName) => {
-  return spellName
-    .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters except spaces
-    .split(' ')
+  const result = spellName
+    .replace(/[^a-zA-Z0-9\s\-]/g, '') // Remove special characters except spaces and dashes
+    .split(/[\s\-]+/) // Split on both spaces and dashes
+    .filter(word => word.length > 0) // Remove empty strings
     .map((word, index) => {
       if (index === 0) {
         return word.toLowerCase()
@@ -209,6 +210,9 @@ const getMethodName = (spellName) => {
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     })
     .join('')
+  
+  console.log(`getMethodName: "${spellName}" -> "${result}"`)
+  return result
 }
 
 // Helper function to get all spell names for a specific cost tier
@@ -438,12 +442,34 @@ const unfairDuel = async () => {
   }
 }
 
-// Fated Hearts: Heal (1d6) + 2
-const fatedHearts = async () => {
-  const healRoll = await requestDiceRoll('1d6')
-  const totalHealing = healRoll.value + 2
-  healHP(totalHealing, props.currentPlayer)
-  showMessage(`❤️ Fated Hearts heals ${totalHealing} HP!`, 'healing')
+// Bleeding hearts: Choose one: heal (1d6) + 2 or deal (1d6) damage
+const bleedingHearts = async () => {
+  const choiceIndex = await props.showUserChoiceModal(
+    '💔 Bleeding Hearts',
+    'Love or hate, make your choice',
+    [
+      'Heal (1d6) + 2 HP',
+      'Deal (1d6) damage'
+    ]
+  )
+  if (choiceIndex === 0) {
+    showMessage(`💘 The caster has chosen love!`, 'info')
+  }else{
+    showMessage(`💔 The caster has chosen hate!`, 'info')
+  }
+  
+  const roll = await requestDiceRoll('1d6')
+  
+  if (choiceIndex === 0) {
+    // Heal option
+    const totalHealing = roll.value + 2
+    healHP(totalHealing, props.currentPlayer)
+    showMessage(`💘 Bleeding Hearts heals ${totalHealing} HP!`, 'healing')
+  } else if (choiceIndex === 1) {
+    // Damage option
+    dealDamage(roll.value, props.opponentPlayer)
+    showMessage(`💔 Bleeding Hearts deals ${roll.value} damage!`, 'damage')
+  }
 }
 
 // Refreshing Sips: Gain (1d4) HP for each unspent dice in your hand, max of 10 HP
@@ -550,7 +576,7 @@ const fireballs = async () => {
   
   if (totalDamage > 0) {
     dealDamage(totalDamage, props.opponentPlayer)
-    showMessage(`🔥 Fireballs deals ${totalDamage} damage (from ${unspentNonFireDice.length} unspent non-fire dice)!`, 'damage')
+    showMessage(`🔥 Fireballs deals ${totalDamage} damage!`, 'damage')
   } else {
     showMessage(`🔥 Fireballs missed!`, 'warning')
   }
@@ -1851,7 +1877,7 @@ const spellMap = {
   dustDevil,
   unfairDuel,
   shrunkenHeads,
-  fatedHearts,
+  bleedingHearts,
   theLovers,
   refreshingSips,
   smog,

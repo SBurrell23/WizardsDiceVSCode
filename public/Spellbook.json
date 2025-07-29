@@ -69,9 +69,9 @@
       "category": "damage"
     },
     {
-      "name": "Fated Hearts",
+      "name": "Bleeding Hearts",
       "cost": ["💖", "💖"],
-      "effect": "Heal (1d6) + 2",
+      "effect": "Choose one: heal (1d6) + 2 or deal (1d6) damage",
       "category": "healing"
     },
     {
