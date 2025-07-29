@@ -207,6 +207,37 @@ const getMethodName = (spellName) => {
     .join('')
 }
 
+// Helper function to get all spell names for a specific cost tier
+const getSpellsByCost = async (costTier, excludeSpells = []) => {
+  try {
+    // Fetch the spellbook data
+    const cacheBuster = new Date().getTime()
+    const response = await fetch(`./Spellbook.json?v=${cacheBuster}`, {
+      cache: 'no-cache',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    })
+    const spellbookData = await response.json()
+    
+    // Extract spell names for the specified cost tier
+    const costKey = `${costTier}-cost`
+    if (!spellbookData[costKey]) {
+      console.warn(`No spells found for cost tier: ${costKey}`)
+      return []
+    }
+    
+    return spellbookData[costKey]
+      .map(spell => spell.name)
+      .filter(name => !excludeSpells.includes(name))
+  } catch (error) {
+    console.error(`Failed to fetch ${costTier}-cost spells:`, error)
+    return []
+  }
+}
+
 // ============================================================================
 // SPELL IMPLEMENTATIONS
 // ============================================================================
@@ -227,21 +258,26 @@ const splash = async () => {
   const roll = await requestDiceRoll('1d4')
   
   if (roll.value > 2) {
-    // List of 1-cost spells
-    const oneCostSpells = ['Ember', 'Protect', 'Gust', 'Heal', 'Blood Magic']
-    
-    // Pick a random spell
-    const randomSpell = oneCostSpells[Math.floor(Math.random() * oneCostSpells.length)]
-    
-    // Convert to method name and execute
-    const methodName = getMethodName(randomSpell)
-    const spellFunction = spellMap[methodName]
-    
-    if (typeof spellFunction === 'function') {
+    try {
+      // Get all 1-cost spell names (excluding Splash to avoid infinite loops)
+      const oneCostSpells = await getSpellsByCost(1, ['Splash'])
+
+      if (oneCostSpells.length === 0) {
+        showMessage(`💦 Splash: No other 1-cost spells available!`, 'warning')
+        return
+      }
+
+      // Select a random 1-cost spell
+      const randomSpell = oneCostSpells[Math.floor(Math.random() * oneCostSpells.length)]
       showMessage(`💦 Splash casts ${randomSpell}!`, 'utility')
-      await spellFunction()
-    } else {
-      showMessage(`💦 Splash tried to cast ${randomSpell} but it's not implemented!`, 'warning')
+      await new Promise(resolve => setTimeout(resolve, 1250))
+
+      // Execute the random spell
+      await executeSpell(randomSpell)
+    } catch (error) {
+      console.error('Splash failed:', error)
+      showMessage(`💦 Splash failed to cast a spell!`, 'warning')
+      await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
     }
   } else {
     showMessage(`💦 Splash missed!`, 'info')
@@ -344,25 +380,26 @@ const strongGusts = async () => {
 
 // Bigger Splash: Cast any two cost spell at random
 const biggerSplash = async () => {
-  // List of 2-cost spells (excluding Bigger Splash to avoid infinite loops)
-  const twoCostSpells = [
-    'Blaze', 'Wild Growth', 'Strong Gusts', 'Unfair Duel', 'Fated Hearts',
-    'Refreshing Sips', 'Smog', 'Hotheaded', 'Risky Business', 'Hot Coals',
-    'Waterjet', 'Aqua Mortis'
-  ]
-  
-  // Pick a random spell
-  const randomSpell = twoCostSpells[Math.floor(Math.random() * twoCostSpells.length)]
-  
-  // Convert to method name and execute
-  const methodName = getMethodName(randomSpell)
-  const spellFunction = spellMap[methodName]
-  
-  if (typeof spellFunction === 'function') {
+  try {
+    // Get all 2-cost spell names (excluding Bigger Splash to avoid infinite loops)
+    const twoCostSpells = await getSpellsByCost(2, ['Bigger Splash'])
+
+    if (twoCostSpells.length === 0) {
+      showMessage(`💧 Bigger Splash: No other 2-cost spells available!`, 'warning')
+      return
+    }
+
+    // Select a random 2-cost spell
+    const randomSpell = twoCostSpells[Math.floor(Math.random() * twoCostSpells.length)]
     showMessage(`💧 Bigger Splash casts ${randomSpell}!`, 'utility')
-    await spellFunction()
-  } else {
-    showMessage(`💧 Bigger Splash tried to cast ${randomSpell} but it's not implemented!`, 'warning')
+    await new Promise(resolve => setTimeout(resolve, 1250))
+
+    // Execute the random spell
+    await executeSpell(randomSpell)
+  } catch (error) {
+    console.error('Splash failed:', error)
+    showMessage(`💦 Splash failed to cast a spell!`, 'warning')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
   }
 }
 
@@ -1439,32 +1476,77 @@ const evenTheOdds = async () => {
 
 // Shield Bash: Deal your current armour + 3 as damage
 const shieldBash = async () => {
-  showMessage(`🌍 Shield Bash is not yet implemented!`, 'warning')
+  const currentArmor = props.playerStats[props.currentPlayer].armor || 0
+  const damage = currentArmor + 3
+  
+  dealDamage(damage, props.opponentPlayer)
+  showMessage(`🌍 Shield Bash deals ${damage} damage (${currentArmor} armor + 3)!`, 'damage')
+  
+  // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Undercurrent: Heal (1d10) and deal (1d12) damage
 const undercurrent = async () => {
-  showMessage(`💖 Undercurrent is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const healRoll = await requestDiceRoll('1d10')
+  const damageRoll = await requestDiceRoll('1d12')
+  
+  healHP(healRoll.value, props.currentPlayer)
+  dealDamage(damageRoll.value, props.opponentPlayer)
+  
+  showMessage(`💖 Undercurrent heals ${healRoll.value} HP and deals ${damageRoll.value} damage!`, 'hybrid')
 }
 
 // Total Coverage: Gain (1d6) + 1 armour, heal (1d6) + 1 HP, and deal (1d6) + 1 damage
 const totalCoverage = async () => {
-  showMessage(`🌍 Total Coverage is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const armorRoll = await requestDiceRoll('1d6')
+  const healRoll = await requestDiceRoll('1d6')
+  const damageRoll = await requestDiceRoll('1d6')
+  
+  const armorGained = armorRoll.value + 1
+  const hpHealed = healRoll.value + 1
+  const damageDealt = damageRoll.value + 1
+  
+  gainArmor(armorGained, props.currentPlayer)
+  healHP(hpHealed, props.currentPlayer)
+  dealDamage(damageDealt, props.opponentPlayer)
+  
+  showMessage(`🌍 Total Coverage: +${armorGained} armor, +${hpHealed} HP, ${damageDealt} damage!`, 'hybrid')
 }
 
 // Earthen Rage: Deal (2d8) damage directly to HP
 const earthenRage = async () => {
-  showMessage(`🌍 Earthen Rage is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const roll1 = await requestDiceRoll('1d8')
+  const roll2 = await requestDiceRoll('1d8')
+  const totalDamage = roll1.value + roll2.value
+  
+  dealDamageToHP(totalDamage, props.opponentPlayer)
+  showMessage(`🌍 Earthen Rage deals ${totalDamage} direct HP damage!`, 'damage')
 }
 
 // Monster Splash: Play any 4 cost spell at random
 const monsterSplash = async () => {
-  showMessage(`💧 Monster Splash is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  try {
+    // Get all 4-cost spell names (excluding Monster Splash to avoid infinite loops)
+    const fourCostSpells = await getSpellsByCost(4, ['Monster Splash'])
+    
+    if (fourCostSpells.length === 0) {
+      showMessage(`🌊 Monster Splash: No other 4-cost spells available!`, 'warning')
+      return
+    }
+    
+    // Select a random 4-cost spell
+    const randomSpell = fourCostSpells[Math.floor(Math.random() * fourCostSpells.length)]
+    showMessage(`🌊 Monster Splash is casting ${randomSpell}!`, 'utility')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+
+    // Execute the random spell
+    await executeSpell(randomSpell)
+  } catch (error) {
+    console.error('Monster Splash failed:', error)
+    showMessage(`🌊 Monster Splash failed to cast a spell!`, 'warning')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  }
 }
 
 // Elemental Panic: Roll (1d10) + 5 and choose one: 1. deal as damage, 2. gain as armour, 3. heal as HP
@@ -1475,14 +1557,34 @@ const elementalPanic = async () => {
 
 // Lay On Hands: Roll (3d20) and heal the highest roll
 const layOnHands = async () => {
-  showMessage(`💖 Lay On Hands is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const roll1 = await requestDiceRoll('1d20')
+  const roll2 = await requestDiceRoll('1d20')
+  const roll3 = await requestDiceRoll('1d20')
+  
+  const highestRoll = Math.max(roll1.value, roll2.value, roll3.value)
+  
+  healHP(highestRoll, props.currentPlayer)
+  showMessage(`💖 Lay On Hands: Highest roll of ${highestRoll} heals ${highestRoll} HP!`, 'healing')
 }
 
 // Soul Siphon: Roll (4d6), 1s or 2s are dealt as damage to you, 3 or higher is dealt as damage to your opponent
 const soulSiphon = async () => {
-  showMessage(`💨 Soul Siphon is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  let totalSelfDamage = 0
+  let totalOpponentDamage = 0
+  
+  for (let i = 1; i <= 4; i++) {
+    const roll = await requestDiceRoll('1d6')
+    
+    if (roll.value <= 2) {
+      dealDamage(roll.value, props.currentPlayer)
+      totalSelfDamage += roll.value
+      showMessage(`💨 Soul Siphon inflicts ${roll.value} self-damage!`, 'damage')
+    } else {
+      dealDamage(roll.value, props.opponentPlayer)
+      totalOpponentDamage += roll.value
+      showMessage(`💨 Soul Siphon deals ${roll.value} damage!`, 'info')
+    }
+  }
 }
 
 // ============================================================================
@@ -1608,7 +1710,7 @@ const eternalBond = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Tsunami: Set your opponents armour to 0 and deal (1d12) damage
+// Tsunami: Set your opponents armour to 0 and deal (1d12) + 5 damage
 const tsunami = async () => {
   showMessage(`💧 Tsunami is not yet implemented!`, 'warning')
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))

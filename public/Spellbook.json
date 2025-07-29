@@ -485,7 +485,7 @@
     {
       "name": "Tsunami",
       "cost": ["💧", "💧", "💨", "💀", "🌍"],
-      "effect": "Set your opponents armour to 0 and deal (1d12) damage",
+      "effect": "Set your opponents armour to 0 and deal (1d12) + 5 damage",
       "category": "damage"
     },
     {
