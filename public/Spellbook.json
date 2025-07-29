@@ -283,13 +283,13 @@
     {
       "name": "Scorching Wind",
       "cost": ["🔥", "🔥", "💨"],
-      "effect": "Roll (3d12), deal the highest roll as damage",
+      "effect": "Roll (2d12) and deal the highest roll as damage, minimum of 3 damage",
       "category": "damage"
     },
     {
       "name": "Back From The Dead",
       "cost": ["💧", "💀", "💀"],
-      "effect": "Re-activate 3 non-death dice at random",
+      "effect": "Re-activate 4 random non-death dice",
       "category": "utility"
     },
     {
@@ -307,7 +307,7 @@
     {
       "name": "Blood For Steel",
       "cost": ["🌍", "💖", "💀"],
-      "effect": "Lose (1d6) HP, Gain 9 armour",
+      "effect": "Lose (1d4) HP, Gain 9 armour",
       "category": "hybrid"
     },
     {
@@ -367,9 +367,9 @@
       "category": "damage"
     },
     {
-      "name": "Deadlier Curse",
+      "name": "Even Deadlier Curse",
       "cost": ["💀", "💀", "🔥", "🔥"],
-      "effect": "Roll (2d6), deal as damage to you and 2x that to your opponent",
+      "effect": "Roll (2d6) + 1, deal as damage to you and 2x that to your opponent",
       "category": "damage"
     },
     {

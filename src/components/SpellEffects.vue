@@ -1031,13 +1031,13 @@ const healingBurst = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Scorching Wind: Roll (3d12), deal the highest roll as damage
+// Scorching Wind: Roll (2d12) and deal the highest roll as damage, minimum of 3 damage
 const scorchingWind = async () => {
   showMessage(`🔥 Scorching Wind is not yet implemented!`, 'warning')
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Back From The Dead: Re-activate 3 non-death dice at random
+// Back From The Dead: Re-activate 4 random non-death dice
 const backFromTheDead = async () => {
   showMessage(`💧 Back From The Dead is not yet implemented!`, 'warning')
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
@@ -1055,7 +1055,7 @@ const updraft = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Blood For Steel: Lose (1d6) HP, Gain 9 armour
+// Blood For Steel: Lose (1d4) HP, Gain 9 armour
 const bloodForSteel = async () => {
   showMessage(`🌍 Blood For Steel is not yet implemented!`, 'warning')
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
@@ -1168,17 +1168,17 @@ const fieryPassion = async () => {
   }
 }
 
-// Deadlier Curse: Roll (2d6), deal as damage to you and 2x that to your opponent
-const deadlierCurse = async () => {
+// Even Deadlier Curse: Roll (2d6) + 1, deal as damage to you and 2x that to your opponent
+const evenDeadlierCurse = async () => {
   const roll1 = await requestDiceRoll('1d6')
   const roll2 = await requestDiceRoll('1d6')
-  const totalRoll = roll1.value + roll2.value
+  const totalRoll = roll1.value + roll2.value + 1
   const opponentDamage = totalRoll * 2
   
   dealDamage(totalRoll, props.currentPlayer)
   dealDamage(opponentDamage, props.opponentPlayer)
   
-  showMessage(`💀 Deadlier Curse: Takes ${totalRoll} damage & inflicts ${opponentDamage} damage!`, 'damage')
+  showMessage(`💀 Even Deadlier Curse: Takes ${totalRoll} damage & inflicts ${opponentDamage} damage!`, 'damage')
 }
 
 // Fire Flower: Deal your opponents armour as direct damage to their HP, max of 13 damage
@@ -1537,7 +1537,7 @@ const spellMap = {
   thickArmour,
   rejuvinatingWaters,
   fieryPassion,
-  deadlierCurse,
+  evenDeadlierCurse,
   fireFlower,
   nullify,
   fertileSoil,
