@@ -20,7 +20,7 @@
     </div>
     
     <!-- Spells Tab Content -->
-    <div v-if="activeTab === 'spells'" class="spellbook-content">
+    <div v-show="activeTab === 'spells'" class="spellbook-content">
       <div class="spell-filters">
         <!-- Castability filters -->
         <button 
@@ -102,7 +102,7 @@
     </div>
     
     <!-- Game Log Tab Content -->
-    <div v-if="activeTab === 'log'" class="log-content">
+    <div v-show="activeTab === 'log'" class="log-content">
       <Logbook ref="logbookRef" />
     </div>
   </div>

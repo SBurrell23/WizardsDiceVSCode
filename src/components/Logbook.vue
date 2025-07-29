@@ -10,12 +10,11 @@
         <div class="log-timestamp">{{ formatTime(log.timestamp) }}</div>
         <div class="log-content">
           <div class="log-message">{{ log.message }}</div>
-          <div v-if="log.details" class="log-details">{{ log.details }}</div>
         </div>
       </div>
       
       <div v-if="logs.length === 0" class="no-logs">
-        No game events yet. Start playing to see the action!
+        No game logs yet. Start playing to see the action!
       </div>
     </div>
   </div>
@@ -24,161 +23,43 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 
-// Component state
-const logs = reactive([])
-const logsContainer = ref(null)
-let logIdCounter = 0
-
-// Log types for styling and categorization
-const LOG_TYPES = {
-  GAME_START: 'game-start',
-  TURN_START: 'turn',
-  DICE_ROLL: 'dice',
-  SPELL_CAST: 'spell',
-  DAMAGE: 'damage',
-  HEAL: 'heal',
-  ARMOR: 'armor',
-  DEATH: 'death',
-  GAME_END: 'game-end',
-  SYSTEM: 'system',
-  INFO: 'info'
+// Persistent logs storage outside component lifecycle
+if (!window.gameLogsStore) {
+  window.gameLogsStore = {
+    logs: ref([]),
+    logIdCounter: 0
+  }
 }
 
-// Main logging method
-const createLog = (message, options = {}) => {
-  const {
-    type = LOG_TYPES.INFO,
-    details = null,
-    playerName = null,
-    data = null
-  } = options
+// Component state - reference the persistent store
+const logs = window.gameLogsStore.logs
+const logsContainer = ref(null)
 
-  const logEntry = {
-    id: ++logIdCounter,
+// Main logging method - simplified with color-based types
+const createLog = (message, colorType = 'grey') => {
+  const logEntry = reactive({
+    id: ++window.gameLogsStore.logIdCounter,
     message,
-    details,
-    type,
-    playerName,
-    data,
+    type: colorType,
     timestamp: new Date(),
     isRecent: true
-  }
+  })
 
-  logs.push(logEntry)
+  // Add to the beginning of the array (newest at top)
+  logs.value.unshift(logEntry)
 
   // Mark as not recent after a short time for animation
   setTimeout(() => {
     logEntry.isRecent = false
   }, 3000)
 
-  // Auto-scroll to bottom
+  // Auto-scroll to top to show newest log
   nextTick(() => {
-    scrollToBottom()
+    scrollToTop()
   })
-
-  // Save to localStorage for persistence
-  saveLogs()
 
   console.log(`Game Log: ${message}`, logEntry)
   return logEntry
-}
-
-// Convenience methods for common log types
-const logGameStart = (playerNames) => {
-  return createLog(
-    `Game started with ${playerNames.length} players: ${playerNames.join(', ')}`,
-    { type: LOG_TYPES.GAME_START, data: { players: playerNames } }
-  )
-}
-
-const logTurnStart = (playerName) => {
-  return createLog(
-    `${playerName}'s turn started`,
-    { type: LOG_TYPES.TURN_START, playerName }
-  )
-}
-
-const logDiceRoll = (playerName, diceResults) => {
-  const diceText = diceResults.map(die => `${die.element}${die.number}`).join(', ')
-  return createLog(
-    `${playerName} rolled dice`,
-    { 
-      type: LOG_TYPES.DICE_ROLL, 
-      playerName,
-      details: `Results: ${diceText}`,
-      data: { dice: diceResults }
-    }
-  )
-}
-
-const logSpellCast = (playerName, spellName, targetName = null) => {
-  const message = targetName 
-    ? `${playerName} cast ${spellName} on ${targetName}`
-    : `${playerName} cast ${spellName}`
-  
-  return createLog(
-    message,
-    { 
-      type: LOG_TYPES.SPELL_CAST, 
-      playerName,
-      data: { spell: spellName, target: targetName }
-    }
-  )
-}
-
-const logDamage = (targetName, damage, sourceName = null) => {
-  const message = sourceName
-    ? `${targetName} took ${damage} damage from ${sourceName}`
-    : `${targetName} took ${damage} damage`
-  
-  return createLog(
-    message,
-    { 
-      type: LOG_TYPES.DAMAGE, 
-      playerName: targetName,
-      data: { damage, source: sourceName }
-    }
-  )
-}
-
-const logHeal = (targetName, healing, sourceName = null) => {
-  const message = sourceName
-    ? `${targetName} was healed for ${healing} by ${sourceName}`
-    : `${targetName} was healed for ${healing}`
-  
-  return createLog(
-    message,
-    { 
-      type: LOG_TYPES.HEAL, 
-      playerName: targetName,
-      data: { healing, source: sourceName }
-    }
-  )
-}
-
-const logArmor = (playerName, armor) => {
-  return createLog(
-    `${playerName} gained ${armor} armor`,
-    { 
-      type: LOG_TYPES.ARMOR, 
-      playerName,
-      data: { armor }
-    }
-  )
-}
-
-const logDeath = (playerName) => {
-  return createLog(
-    `${playerName} has been defeated!`,
-    { type: LOG_TYPES.DEATH, playerName }
-  )
-}
-
-const logGameEnd = (winnerName) => {
-  return createLog(
-    `Game Over! ${winnerName} wins!`,
-    { type: LOG_TYPES.GAME_END, playerName: winnerName }
-  )
 }
 
 // UI methods
@@ -194,74 +75,37 @@ const formatTime = (timestamp) => {
   })
 }
 
-const scrollToBottom = () => {
+const scrollToTop = () => {
   if (logsContainer.value) {
-    logsContainer.value.scrollTop = logsContainer.value.scrollHeight
+    logsContainer.value.scrollTop = 0
   }
 }
 
-// Persistence methods
-const saveLogs = () => {
-  try {
-    const logsData = logs.map(log => ({
-      ...log,
-      timestamp: log.timestamp.toISOString()
-    }))
-    localStorage.setItem('wizardsDice_gameLogs', JSON.stringify(logsData))
-    localStorage.setItem('wizardsDice_logCounter', logIdCounter.toString())
-  } catch (error) {
-    console.error('Failed to save logs:', error)
-  }
+// Clear all logs
+const clearLogs = () => {
+  logs.value.splice(0, logs.value.length)
+  window.gameLogsStore.logIdCounter = 0
+  console.log('Game logs cleared')
 }
 
-const loadLogs = () => {
-  try {
-    const savedLogs = localStorage.getItem('wizardsDice_gameLogs')
-    const savedCounter = localStorage.getItem('wizardsDice_logCounter')
-    
-    if (savedLogs) {
-      const logsData = JSON.parse(savedLogs)
-      logs.splice(0, logs.length, ...logsData.map(log => ({
-        ...log,
-        timestamp: new Date(log.timestamp),
-        isRecent: false
-      })))
-    }
-    
-    if (savedCounter) {
-      logIdCounter = parseInt(savedCounter, 10)
-    }
-  } catch (error) {
-    console.error('Failed to load logs:', error)
-  }
-}
-
-// Component lifecycle
+// Component lifecycle - only clear logs when explicitly requested, not on mount
 onMounted(() => {
-  loadLogs()
-  
-  // Auto-scroll to bottom after loading
+  console.log('Logbook mounted - using persistent logs store')
+  // Auto-scroll to top to show newest logs
   nextTick(() => {
-    scrollToBottom()
+    scrollToTop()
   })
-  
-  console.log('Logbook mounted')
 })
 
-// Create global API
+onUnmounted(() => {
+  console.log('Logbook unmounted - logs persist in global store')
+})
+
+// Create global API - simplified to just the main logging function
 const logbook = {
   createLog,
-  logGameStart,
-  logTurnStart,
-  logDiceRoll,
-  logSpellCast,
-  logDamage,
-  logHeal,
-  logArmor,
-  logDeath,
-  logGameEnd,
-  logs,
-  LOG_TYPES
+  clearLogs,
+  logs
 }
 
 // Make available globally
@@ -320,64 +164,37 @@ defineExpose(logbook)
   color: white;
   font-size: 0.9rem;
   font-weight: 500;
-  margin-bottom: 2px;
 }
 
-.log-details {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.8rem;
-  font-style: italic;
-}
-
-/* Log type specific styling */
-.log-game-start {
-  border-left-color: #4ade80;
-  background: rgba(74, 222, 128, 0.1);
-}
-
-.log-turn {
-  border-left-color: #60a5fa;
-  background: rgba(96, 165, 250, 0.1);
-}
-
-.log-dice {
-  border-left-color: #a78bfa;
-  background: rgba(167, 139, 250, 0.1);
-}
-
-.log-spell {
-  border-left-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.1);
-}
-
-.log-damage {
+/* Log type specific styling - color-based */
+.log-red {
   border-left-color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
 }
 
-.log-heal {
+.log-green {
   border-left-color: #10b981;
   background: rgba(16, 185, 129, 0.1);
 }
 
-.log-armor {
-  border-left-color: #6b7280;
-  background: rgba(107, 114, 128, 0.1);
+.log-blue {
+  border-left-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
 }
 
-.log-death {
-  border-left-color: #dc2626;
-  background: rgba(220, 38, 38, 0.15);
+.log-yellow {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
 }
 
-.log-game-end {
-  border-left-color: #eab308;
-  background: rgba(234, 179, 8, 0.1);
-}
-
-.log-system {
+.log-purple {
   border-left-color: #8b5cf6;
   background: rgba(139, 92, 246, 0.1);
+}
+
+.log-grey {
+  border-left-color: #6b7280;
+  background: rgba(107, 114, 128, 0.1);
 }
 
 .no-logs {

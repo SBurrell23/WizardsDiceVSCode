@@ -491,6 +491,24 @@ const currentPlayerResources = computed(() => {
   return (playerResources.value[playerKey] || []).filter(dice => !dice.used)
 })
 
+// Helper method to get correct pronoun for turn end messages
+const getTurnEndMessage = (playerName) => {
+  if (playerName === 'You') {
+    return `${playerName} ended your turn`
+  } else {
+    return `${playerName} ended their turn`
+  }
+}
+
+// Helper method to get correct pronoun for turn start messages
+const getTurnStartMessage = (playerName, turnNumber) => {
+  if (playerName === 'You') {
+    return `Your turn (Turn ${turnNumber})`
+  } else {
+    return `${playerName}'s turn (Turn ${turnNumber})`
+  }
+}
+
 // Unified message display function that handles both local and remote messages
 const displayStatusMessage = (message, type = 'info', duration = 3000, sendToOpponent = false) => {
   // Clear any existing timeout to prevent old messages from clearing new ones
@@ -744,6 +762,18 @@ const handleGameMessage = (data) => {
       if (window.soundController) {
         window.soundController.playSound('turnChange')
       }
+      
+      // Log the turn change from the other player's perspective
+      if (window.logbook) {
+        // Determine who ended their turn from this player's perspective
+        const endingPlayerName = data.data.isHostTurn ? bottomPlayerName.value : topPlayerName.value
+        window.logbook.createLog(getTurnEndMessage(endingPlayerName), 'yellow')
+        
+        // Log the new turn start
+        const newTurnPlayerName = data.data.isHostTurn ? topPlayerName.value : bottomPlayerName.value
+        window.logbook.createLog(getTurnStartMessage(newTurnPlayerName, data.data.turn), 'blue')
+      }
+      
       currentTurn.value = data.data.turn
       isHostTurn.value = data.data.isHostTurn
       gamePhase.value = 'rolling'
@@ -895,6 +925,12 @@ const endTurn = () => {
     window.soundController.playSound('turnChangeOver')
   }
   
+  // Log end turn with proper player name from current player's perspective
+  if (window.logbook) {
+    const endingPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
+    window.logbook.createLog(getTurnEndMessage(endingPlayerName), 'yellow')
+  }
+
   // Mark all unused dice as used before ending turn
   const playerKey = isHostTurn.value ? 'host' : 'guest'
   if (playerResources.value[playerKey]) {
@@ -913,6 +949,12 @@ const endTurn = () => {
     // Guest finished, advance to next turn
     currentTurn.value++
     isHostTurn.value = true
+  }
+  
+  // Log the new turn start for current player
+  if (window.logbook) {
+    const newTurnPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
+    window.logbook.createLog(getTurnStartMessage(newTurnPlayerName, currentTurn.value), 'blue')
   }
   
   // Reset to rolling phase for the next player
@@ -1393,11 +1435,12 @@ onMounted(() => {
   // Initialize game logging
   setTimeout(() => {
     if (window.logbook) {
-      const playerNames = [props.hostPlayerName, props.guestPlayerName].filter(Boolean)
-      if (playerNames.length > 0) {
-        window.logbook.logGameStart(playerNames)
-        window.logbook.logTurnStart(currentPlayerName.value)
-      }
+
+
+      window.logbook.createLog(`Game started!`, 'green')
+      
+      // Log current turn
+      window.logbook.createLog(getTurnStartMessage(currentPlayerName.value, currentTurn.value), 'blue')
     }
   }, 100)
 
