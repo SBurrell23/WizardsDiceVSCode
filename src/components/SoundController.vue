@@ -481,8 +481,8 @@ onMounted(() => {
   
   // Load game sounds (uncomment when you add sound files to public/sounds/)
   loadSound('diceRoll', '/sounds/dice-roll.wav', 'dice', 0.5)
-  loadSound('turnChange', '/sounds/turn-change.wav', 'ui', 0.5)
-  loadSound('turnChangeOver', '/sounds/turn-change-over.wav', 'ui', 0.5)
+  loadSound('turnChange', '/sounds/turn-change.mp3', 'ui', 0.5)
+  loadSound('turnChangeOver', '/sounds/turn-change-over.mp3', 'ui', 0.5)
   loadSound('diceRollNumbered', '/sounds/dice-roll-number.wav', 'dice', 0.5)
   loadSound('spellCast', '/sounds/spell-cast.wav', 'spells', 0.5)
   loadSound('gameWon', '/sounds/game-won.wav', 'ui', 0.7)

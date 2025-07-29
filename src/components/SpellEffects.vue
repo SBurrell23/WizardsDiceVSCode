@@ -1600,14 +1600,14 @@ const elementalPanic = async () => {
   
   // Present the user with choices
   const choices = [
-    `Deal ${rollValue} damage to opponent`,
+    `Deal ${rollValue} damage`,
     `Gain ${rollValue} armor`,
     `Heal ${rollValue} HP`
   ]
   
   try {
     const choiceIndex = await props.showUserChoiceModal(
-      'Elemental Panic',
+      '⛈️ Elemental Panic',
       `You rolled (${roll.value}) + 5`,
       choices
     )
