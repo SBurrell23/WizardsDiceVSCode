@@ -959,7 +959,7 @@ const evenTheOdds = async () => {
 // 5-COST SPELLS
 // ============================================================================
 
-// Chain-Lightning: Deal (1d4) damage, if roll was not a 4 deal (1d6) damage, if roll was not a 6 deal (1d10) damage
+// Chain-Lightning: Deal (1d4) damage, if roll was not a 4 deal (1d6) damage, if roll was not a 6 deal (1d12) damage
 const chainLightning = async () => {
   const d4Roll = await requestDiceRoll('1d4')
   dealDamage(d4Roll.value, props.opponentPlayer)
@@ -971,9 +971,9 @@ const chainLightning = async () => {
     showMessage(`⚡ Chain Lightning chains for ${d6Roll.value} more damage!`, 'damage')
     
     if (d6Roll.value !== 6) {
-      const d10Roll = await requestDiceRoll('1d10')
-      dealDamage(d10Roll.value, props.opponentPlayer)
-      showMessage(`⚡ Chain Lightning chains again for ${d10Roll.value} more damage!`, 'damage')
+      const d12Roll = await requestDiceRoll('1d12')
+      dealDamage(d12Roll.value, props.opponentPlayer)
+      showMessage(`⚡ Chain Lightning chains again for ${d12Roll.value} more damage!`, 'damage')
     }
   }
 }
@@ -1028,7 +1028,7 @@ const deathTaxes = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Mudslide: Roll (1d4, 1d6, 1d8, 1d10, 1d12, 1d20) and deal the highest 3 rolls as damage, max of 25 damage
+// Mudslide: Roll (1d4, 1d6, 1d8, 1d10, 1d12, 1d20) and deal the highest 3 rolls as damage, max of 24 damage
 const mudslide = async () => {
   const roll1 = await requestDiceRoll('1d4')
   const roll2 = await requestDiceRoll('1d6')
@@ -1041,8 +1041,8 @@ const mudslide = async () => {
   
   // Sort rolls in descending order and take the highest 3
   const highest3 = allRolls.sort((a, b) => b - a).slice(0, 3)
-  const totalDamage = Math.min(highest3.reduce((sum, roll) => sum + roll, 0), 25)
-  
+  const totalDamage = Math.min(highest3.reduce((sum, roll) => sum + roll, 0), 24)
+
   dealDamage(totalDamage, props.opponentPlayer)
   showMessage(`🌊 Mudslide: Highest 3 rolls (${highest3.join(', ')}) = ${totalDamage} damage!`, 'damage')
 }

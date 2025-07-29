@@ -449,7 +449,7 @@
     {
       "name": "Chain Lightning",
       "cost": ["🔥", "🔥", "💀", "💨", "💧"],
-      "effect": "Deal (1d4) damage, if roll was not a 4 deal (1d6) damage, if roll was not a 6 deal (1d10) damage",
+      "effect": "Deal (1d4) damage, if roll was not a 4 deal (1d6) damage, if roll was not a 6 deal (1d12) damage",
       "category": "damage"
     },
     {
@@ -467,7 +467,7 @@
     {
       "name": "Mudslide",
       "cost": ["💧", "💧", "💧", "💧", "🌍"],
-      "effect": "Roll (1d4, 1d6, 1d8, 1d10, 1d12, 1d20) and deal the highest 3 rolls as damage, max of 25 damage",
+      "effect": "Roll (1d4, 1d6, 1d8, 1d10, 1d12, 1d20) and deal the highest 3 rolls as damage, max of 24 damage",
       "category": "damage"
     },
     {
