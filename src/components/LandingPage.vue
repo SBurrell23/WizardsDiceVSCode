@@ -44,18 +44,6 @@
             </button>
           </div>
         </div>
-
-        <!-- Player Name Input -->
-        <div class="name-section">
-          <h3>Wizard Name</h3>
-          <input
-            v-model="playerName"
-            type="text"
-            placeholder="Enter your wizard name..."
-            class="player-name-input"
-            maxlength="20"
-          />
-        </div>
       </div>
 
       <!-- Host Room View -->
@@ -73,9 +61,9 @@
           <div class="connected-players">
             <h4>Players ({{ connectedPlayers.length + 1 }}/2):</h4>
             <ul>
-              <li>👑 {{ playerName || 'You' }} (Host)</li>
+              <li>👑 You (Host)</li>
               <li v-for="player in connectedPlayers" :key="player.id">
-                🧙‍♂️ {{ player.name || 'Enemy Wizard' }}
+                🧙‍♂️ {{ ENEMY_WIZARD_NAME }}
               </li>
             </ul>
           </div>
@@ -101,10 +89,10 @@
           <div class="connected-players">
             <h4>Players ({{ connectedPlayers.length + 1 }}/2):</h4>
             <ul>
-              <li>👑 {{ hostName || 'Enemy Wizard' }} (Host)</li>
-              <li>🧙‍♂️ {{ playerName || 'You' }} (You)</li>
+              <li>👑 {{ ENEMY_WIZARD_NAME }} (Host)</li>
+              <li>🧙‍♂️ You (You)</li>
               <li v-for="player in connectedPlayers" :key="player.id">
-                <span v-if="player.id !== peer?.id">🧙‍♂️ {{ player.name || 'Enemy Wizard' }}</span>
+                <span v-if="player.id !== peer?.id">🧙‍♂️ {{ ENEMY_WIZARD_NAME }}</span>
               </li>
             </ul>
           </div>
@@ -127,8 +115,8 @@
       :peer-instance="peer"
       :room-code="roomCode"
       :is-host="isHost"
-      :host-name="isHost ? (playerName || 'Host') : (hostName || 'Enemy Wizard')"
-      :guest-name="isHost ? (connectedPlayers[0]?.name || 'Enemy Wizard') : (playerName || 'Guest')"
+      :host-name="isHost ? 'You' : ENEMY_WIZARD_NAME"
+      :guest-name="isHost ? ENEMY_WIZARD_NAME : 'You'"
       :connection="hostConnection"
       @leave-game="leaveRoom"
     />
@@ -140,11 +128,13 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import Peer from 'peerjs'
 import GameBoard from './GameBoard.vue'
 
+// Constants
+const ENEMY_WIZARD_NAME = 'Enemy'
+
 // Reactive data
 const isCreatingRoom = ref(false)
 const roomCode = ref('')
 const joinRoomCode = ref('')
-const playerName = ref('')
 const hostName = ref('') // Store the host's name when joining a room
 const connectedPlayers = ref([])
 const statusMessage = ref('')
@@ -212,14 +202,14 @@ const createRoom = async () => {
       conn.on('open', () => {
         const playerData = {
           id: conn.peer,
-          name: conn.metadata?.name || 'Enemy Wizard'
+          name: conn.metadata?.name || ENEMY_WIZARD_NAME
         }
         connectedPlayers.value.push(playerData)
         
         // Send host info and updated player list to the joining player
         conn.send({ 
           type: 'host_info', 
-          hostName: playerName.value 
+          hostName: 'You' 
         })
         
         // Send updated player list to all connected players
@@ -266,7 +256,7 @@ const joinRoom = async () => {
     peer.on('open', () => {
       // Connect to the host
       const conn = peer.connect(joinRoomCode.value.toUpperCase(), {
-        metadata: { name: playerName.value }
+        metadata: { name: 'You' }
       })
       
       hostConnection.value = conn
