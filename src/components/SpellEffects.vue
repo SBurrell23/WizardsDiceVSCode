@@ -1021,80 +1021,236 @@ const highStakes = async () => {
 
 // Deadly Curse: Roll (1d8), deal as damage to you and 2x that to your opponent
 const deadlyCurse = async () => {
-  showMessage(`💀 Deadly Curse is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const roll = await requestDiceRoll('1d8')
+  const selfDamage = roll.value
+  const opponentDamage = roll.value * 2
+  
+  dealDamage(selfDamage, props.currentPlayer)
+  dealDamage(opponentDamage, props.opponentPlayer)
+  
+  showMessage(`💀 Deadly Curse: Self-inflicts ${selfDamage} damage & causes ${opponentDamage} damage!`, 'damage')
 }
 
 // Healing Burst: Heal (1d6) + 7 HP
 const healingBurst = async () => {
-  showMessage(`💖 Healing Burst is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const healRoll = await requestDiceRoll('1d6')
+  const totalHealing = healRoll.value + 7
+  
+  healHP(totalHealing, props.currentPlayer)
+  showMessage(`💖 Healing Burst heals ${totalHealing} HP!`, 'healing')
 }
 
 // Scorching Wind: Roll (2d12) and deal the highest roll as damage, minimum of 3 damage
 const scorchingWind = async () => {
-  showMessage(`🔥 Scorching Wind is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const roll1 = await requestDiceRoll('1d12')
+  const roll2 = await requestDiceRoll('1d12')
+  
+  const highestRoll = Math.max(roll1.value, roll2.value)
+  const finalDamage = Math.max(highestRoll, 3)
+  
+  dealDamage(finalDamage, props.opponentPlayer)
+  showMessage(`🔥 Scorching Wind deals ${finalDamage} damage!`, 'damage')
 }
 
 // Back From The Dead: Re-activate 4 random non-death dice
 const backFromTheDead = async () => {
-  showMessage(`💧 Back From The Dead is not yet implemented!`, 'warning')
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
+  
+  // Find all used non-death dice (death emoji is 💀)
+  const usedNonDeathDice = currentPlayerResources.filter(dice => dice.used && dice.emoji !== '💀')
+  
+  if (usedNonDeathDice.length === 0) {
+    showMessage('💧 Back From The Dead found no spent non-death dice to reactivate!', 'warning')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+    return
+  }
+  
+  // Determine how many dice to reactivate (max 4, but limited by available dice)
+  const diceToReactivate = Math.min(4, usedNonDeathDice.length)
+  
+  // Randomly select dice to reactivate
+  const shuffledDice = [...usedNonDeathDice].sort(() => Math.random() - 0.5)
+  const selectedDice = shuffledDice.slice(0, diceToReactivate)
+  
+  // Update resources to mark selected dice as unused
+  const updatedResources = currentPlayerResources.map(dice => {
+    // Check if this die is one of the selected dice to reactivate
+    const isSelected = selectedDice.some(selected => 
+      selected.diceIndex === dice.diceIndex && 
+      selected.emoji === dice.emoji && 
+      dice.used
+    )
+    
+    if (isSelected) {
+      return { ...dice, used: false }
+    }
+    return dice
+  })
+  
+  // Update the player's resources
+  updateResources(props.currentPlayer, updatedResources)
+  
+  // Show message with the reactivated dice
+  const diceEmojis = selectedDice.map(dice => dice.emoji).join(' ')
+  showMessage(`💧 Back From The Dead reactivates ${diceToReactivate} dice: ${diceEmojis}!`, 'utility')
+  
+  // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Balancing Act: If your HP is evenly divisible by your armour gain 5 for both
 const balancingAct = async () => {
-  showMessage(`🌍 Balancing Act is not yet implemented!`, 'warning')
+  const currentHP = props.playerStats[props.currentPlayer].health || 0
+  const currentArmor = props.playerStats[props.currentPlayer].armor || 0
+  
+  if (currentArmor === 0) {
+    showMessage(`🌍 Balancing Act: Cannot divide by zero armor!`, 'warning')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+    return
+  }
+  
+  if (currentHP % currentArmor === 0) {
+    healHP(5, props.currentPlayer)
+    gainArmor(5, props.currentPlayer)
+    showMessage(`🌍 Balancing Act: HP (${currentHP}) is divisible by armor (${currentArmor})! Gained 5 HP and 5 armor!`, 'hybrid')
+  } else {
+    showMessage(`🌍 Balancing Act: HP (${currentHP}) is not divisible by armor (${currentArmor}). No effect!`, 'info')
+  }
+  
+  // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Updraft: Take (1d6) damage, if damage was 3 or less deal (1d8) + 2 damage, else deal (1d12) + 3 damage
 const updraft = async () => {
-  showMessage(`💀 Updraft is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const damageRoll = await requestDiceRoll('1d6')
+  const selfDamage = damageRoll.value
+  
+  dealDamage(selfDamage, props.currentPlayer)
+  showMessage(`💀 Updraft: Inflicts ${selfDamage} self-damage!`, 'damage')
+  
+  if (selfDamage <= 3) {
+    const attackRoll = await requestDiceRoll('1d8')
+    const opponentDamage = attackRoll.value + 2
+    dealDamage(opponentDamage, props.opponentPlayer)
+    showMessage(`💀 Updraft: Deals ${opponentDamage} damage!`, 'damage')
+  } else {
+    const attackRoll = await requestDiceRoll('1d12')
+    const opponentDamage = attackRoll.value + 3
+    dealDamage(opponentDamage, props.opponentPlayer)
+    showMessage(`💀 Updraft: Deals ${opponentDamage} damage!`, 'damage')
+  }
 }
 
 // Blood For Steel: Lose (1d4) HP, Gain 9 armour
 const bloodForSteel = async () => {
-  showMessage(`🌍 Blood For Steel is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const hpLossRoll = await requestDiceRoll('1d4')
+  const hpLoss = hpLossRoll.value
+  
+  dealDamageToHP(hpLoss, props.currentPlayer)
+  gainArmor(9, props.currentPlayer)
+  
+  showMessage(`🌍 Blood For Steel: Loses ${hpLoss} HP and gains 9 armor!`, 'hybrid')
 }
 
 // Steel Hearted: Gain HP equal to that of you or your opponents armour, max of 12 HP
 const steelHearted = async () => {
-  showMessage(`🌍 Steel Hearted is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const playerArmor = props.playerStats[props.currentPlayer].armor || 0
+  const opponentArmor = props.playerStats[props.opponentPlayer].armor || 0
+  
+  // Choose the higher armor value
+  const armorToUse = Math.max(playerArmor, opponentArmor)
+  const healingAmount = Math.min(armorToUse, 12)
+  
+  if (healingAmount > 0) {
+    healHP(healingAmount, props.currentPlayer)
+    showMessage(`🌍 Steel Hearted: Heals ${healingAmount} HP!`, 'healing')
+  } else {
+    showMessage(`🌍 Steel Hearted: No armor found to convert to healing!`, 'warning')
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  }
 }
 
 // Undertow: Take 2 damage, then deal (2d6) damage
 const undertow = async () => {
-  showMessage(`💧 Undertow is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  dealDamage(2, props.currentPlayer)
+  showMessage(`💧 Undertow: Inflicts 2 self-damage!`, 'damage')
+  
+  const roll1 = await requestDiceRoll('1d6')
+  const roll2 = await requestDiceRoll('1d6')
+  const totalDamage = roll1.value + roll2.value
+  
+  dealDamage(totalDamage, props.opponentPlayer)
+  showMessage(`💧 Undertow: Deals ${totalDamage} damage!`, 'damage')
 }
 
 // Hot Steel: Gain (1d4) + 1 armour and deal double that as damage to your opponent
 const hotSteel = async () => {
-  showMessage(`🌍 Hot Steel is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const armorRoll = await requestDiceRoll('1d4')
+  const armorGained = armorRoll.value + 1
+  const damageToOpponent = armorGained * 2
+  
+  gainArmor(armorGained, props.currentPlayer)
+  dealDamage(damageToOpponent, props.opponentPlayer)
+  
+  showMessage(`🌍 Hot Steel: Gains ${armorGained} armor and deals ${damageToOpponent} damage!`, 'hybrid')
 }
 
 // Bay Of Leaves: Gain 3 armour and HP, gain 3 additional armour for each unspent water
 const bayOfLeaves = async () => {
-  showMessage(`🌍 Bay Of Leaves is not yet implemented!`, 'warning')
+  const currentPlayerResources = props.playerResources[props.currentPlayer]
+  const unspentWaterDice = currentPlayerResources.filter(dice => !dice.used && dice.emoji === '💧')
+  
+  const baseHealing = 3
+  const baseArmor = 3
+  const bonusArmor = unspentWaterDice.length * 3
+  const totalArmor = baseArmor + bonusArmor
+  
+  healHP(baseHealing, props.currentPlayer)
+  gainArmor(totalArmor, props.currentPlayer)
+  
+  showMessage(`🌍 Bay Of Leaves: Heals ${baseHealing} HP and gains ${totalArmor} armor (${bonusArmor} bonus from ${unspentWaterDice.length} water dice)!`, 'hybrid')
+  
+  // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Firenado: Set your opponents armour to (1d4)
 const firenado = async () => {
-  showMessage(`🔥 Firenado is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const roll = await requestDiceRoll('1d4')
+  const newArmor = roll.value
+  
+  updateStats(props.opponentPlayer, { armor: newArmor })
+
+  showMessage(`🔥 Firenado: Armor was set to ${newArmor}!`, 'info')
+
 }
 
 // Final Breath: Call a number 1 through 15 then roll (1d20), if your number was lower deal it as damage, else take it as damage
 const finalBreath = async () => {
-  showMessage(`💀 Final Breath is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  // Show modal to get the called number
+  const calledNumber = await props.showNumericModal(
+    '💀 Final Breath',
+    'Call a number from 1 through 15.',
+    'Called Number',
+    1,    // Min: 1
+    15,   // Max: 15
+    1     // Default: 1 (no risk)
+  )
+  showMessage(`💀 Final Breath called ${calledNumber}`, 'info')
+  
+  // Roll the d20
+  const roll = await requestDiceRoll('1d20')
+  
+  if (calledNumber < roll.value) {
+    // Called number was lower than roll, deal called number as damage to opponent
+    dealDamage(calledNumber, props.opponentPlayer)
+    showMessage(`💀 Final Breath: Called ${calledNumber} < ${roll.value}, deals ${calledNumber} damage!`, 'info')
+  } else {
+    // Called number was higher or equal, take calledNumber value as damage
+    dealDamage(calledNumber, props.currentPlayer)
+    showMessage(`💀 Final Breath: Called ${calledNumber} >= ${roll.value}, inflicts ${calledNumber} self-damage!`, 'damage')
+  }
 }
 
 // ============================================================================
