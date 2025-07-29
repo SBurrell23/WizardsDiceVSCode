@@ -1750,26 +1750,71 @@ const selfDestruct = async () => {
 
 // Eternal Bond: Gain your current HP as armour, max of 16 armour
 const eternalBond = async () => {
-  showMessage(`🔥 Eternal Bond is not yet implemented!`, 'warning')
+  const currentHP = props.playerStats[props.currentPlayer].health || 0
+  const armorToGain = Math.min(currentHP, 16)
+  
+  if (armorToGain > 0) {
+    gainArmor(armorToGain, props.currentPlayer)
+    showMessage(`🔥 Eternal Bond gains ${armorToGain} armor (from ${currentHP} HP)!`, 'defense')
+  } else {
+    showMessage(`🔥 Eternal Bond: No HP to convert to armor!`, 'warning')
+  }
+  
+  // Add a brief delay so the casting indicator is visible
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Tsunami: Set your opponents armour to 0 and deal (1d12) + 5 damage
 const tsunami = async () => {
-  showMessage(`💧 Tsunami is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const opponentArmor = props.playerStats[props.opponentPlayer].armor || 0
+  
+  // Remove all opponent armor
+  updateStats(props.opponentPlayer, { armor: 0 })
+  
+  showMessage(`🌊 Tsunami removes all ${opponentArmor} armor!`, 'utility')
+  
+  // Deal (1d12) + 5 damage
+  const damageRoll = await requestDiceRoll('1d12')
+  const totalDamage = damageRoll.value + 5
+  
+  dealDamage(totalDamage, props.opponentPlayer)
+  showMessage(`🌊 Tsunami deals ${totalDamage} damage!`, 'damage')
 }
 
 // Wildfire: Deal (7d4) damage to your opponent
 const wildfire = async () => {
-  showMessage(`🔥 Wildfire is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  // Roll 7d4 and deal damage after each roll
+  for (let i = 1; i <= 7; i++) {
+    const roll = await requestDiceRoll('1d4')
+    dealDamage(roll.value, props.opponentPlayer)
+    showMessage(`🔥 Wildfire roll #${i} deals ${roll.value} damage!`, 'damage')
+  }
 }
 
 // Drawing Dead: Roll (4d20), the lowest roll is dealt as damage to you and the highest as damage to your opponent
 const drawingDead = async () => {
-  showMessage(`💀 Drawing Dead is not yet implemented!`, 'warning')
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
+  const roll1 = await requestDiceRoll('1d20')
+  const roll2 = await requestDiceRoll('1d20')
+  const roll3 = await requestDiceRoll('1d20')
+  const roll4 = await requestDiceRoll('1d20')
+  
+  const allRolls = [roll1.value, roll2.value, roll3.value, roll4.value]
+  const lowestRoll = Math.min(...allRolls)
+  const highestRoll = Math.max(...allRolls)
+  
+  // Deal lowest roll as self-damage
+  if (lowestRoll > 0) {
+    dealDamage(lowestRoll, props.currentPlayer)
+    showMessage(`💀 Drawing Dead: Lowest roll inflicts ${lowestRoll} self-damage!`, 'damage')
+    await new Promise(resolve => setTimeout(resolve, 2000))
+  }
+  
+  // Deal highest roll as damage to opponent
+  if (highestRoll > 0) {
+    dealDamage(highestRoll, props.opponentPlayer)
+    showMessage(`💀 Drawing Dead: Highest roll deals ${highestRoll} damage!`, 'damage')
+    await new Promise(resolve => setTimeout(resolve, 2000))
+  }
 }
 
 
