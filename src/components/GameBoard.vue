@@ -509,6 +509,36 @@ const getTurnStartMessage = (playerName, turnNumber) => {
   }
 }
 
+// Helper method to create spell cast message
+const getSpellCastMessage = (spells, playerName) => {
+  if (spells.length === 1) {
+    const spell = spells[0]
+    const costEmojis = spell.cost.join('')
+    if (playerName === 'You') {
+      return `You cast ${spell.name} (${costEmojis})`
+    } else {
+      return `${playerName} cast ${spell.name} (${costEmojis})`
+    }
+  } else {
+    const spellNames = spells.map(s => s.name).join(', ')
+    if (playerName === 'You') {
+      return `You cast ${spellNames}`
+    } else {
+      return `${playerName} cast ${spellNames}`
+    }
+  }
+}
+
+// Helper method to create dice roll message
+const getDiceRollMessage = (diceResources, playerName) => {
+  const diceEmojis = diceResources.map(dice => dice.emoji).join('')
+  if (playerName === 'You') {
+    return `You rolled (${diceEmojis})`
+  } else {
+    return `${playerName} rolled (${diceEmojis})`
+  }
+}
+
 // Unified message display function that handles both local and remote messages
 const displayStatusMessage = (message, type = 'info', duration = 3000, sendToOpponent = false) => {
   // Clear any existing timeout to prevent old messages from clearing new ones
@@ -680,6 +710,13 @@ const handleGameMessage = (data) => {
       // Update other player's resources and stop rolling animation
       isOpponentRolling.value = false
       playerResources.value[data.data.player] = data.data.resources
+      
+      // Log opponent's dice roll
+      if (window.logbook) {
+        const opponentPlayerName = data.data.player === 'host' ? topPlayerName.value : bottomPlayerName.value
+        const diceRollMessage = getDiceRollMessage(data.data.resources, opponentPlayerName)
+        window.logbook.createLog(diceRollMessage, 'blue')
+      }
       break
     case 'spells_cast':
       // Update other player's resources after spell casting
@@ -713,6 +750,12 @@ const handleGameMessage = (data) => {
       // Update dice state immediately when other player casts spells
       playerResources.value[data.data.player] = data.data.playerResources
       console.log('Updated dice state - spells being cast by other player')
+      break
+    case 'spell_cast_log':
+      // Log spell casting from other player's perspective
+      if (window.logbook && data.data.spellLogMessage) {
+        window.logbook.createLog(data.data.spellLogMessage, 'purple')
+      }
       break
     case 'spell_dice_start':
       // Show spell dice rolling for the casting player
@@ -766,12 +809,13 @@ const handleGameMessage = (data) => {
       // Log the turn change from the other player's perspective
       if (window.logbook) {
         // Determine who ended their turn from this player's perspective
-        const endingPlayerName = data.data.isHostTurn ? bottomPlayerName.value : topPlayerName.value
-        window.logbook.createLog(getTurnEndMessage(endingPlayerName), 'yellow')
+        //const endingPlayerName = data.data.isHostTurn ? bottomPlayerName.value : topPlayerName.value
+        //window.logbook.createLog(getTurnEndMessage(endingPlayerName), 'red')
         
         // Log the new turn start
         const newTurnPlayerName = data.data.isHostTurn ? topPlayerName.value : bottomPlayerName.value
-        window.logbook.createLog(getTurnStartMessage(newTurnPlayerName, data.data.turn), 'blue')
+        const turnColor = newTurnPlayerName === 'You' ? 'green' : 'red'
+        window.logbook.createLog(getTurnStartMessage(newTurnPlayerName, data.data.turn), turnColor)
       }
       
       currentTurn.value = data.data.turn
@@ -874,6 +918,13 @@ const onDiceRolled = (result) => {
   
   // Check if all dice have been rolled
   if (playerResources.value[playerKey].length >= diceToRoll.value) {
+    // Log dice roll for current player
+    if (window.logbook) {
+      const currentPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
+      const diceRollMessage = getDiceRollMessage(playerResources.value[playerKey], currentPlayerName)
+      window.logbook.createLog(diceRollMessage, 'blue')
+    }
+    
     // Send dice results to other player
     sendGameMessage('dice_rolled', {
       player: playerKey,
@@ -926,10 +977,10 @@ const endTurn = () => {
   }
   
   // Log end turn with proper player name from current player's perspective
-  if (window.logbook) {
-    const endingPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
-    window.logbook.createLog(getTurnEndMessage(endingPlayerName), 'yellow')
-  }
+  // if (window.logbook) {
+  //   const endingPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
+  //   window.logbook.createLog(getTurnEndMessage(endingPlayerName), 'red')
+  // }
 
   // Mark all unused dice as used before ending turn
   const playerKey = isHostTurn.value ? 'host' : 'guest'
@@ -954,7 +1005,8 @@ const endTurn = () => {
   // Log the new turn start for current player
   if (window.logbook) {
     const newTurnPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
-    window.logbook.createLog(getTurnStartMessage(newTurnPlayerName, currentTurn.value), 'blue')
+    const turnColor = newTurnPlayerName === 'You' ? 'green' : 'red'
+    window.logbook.createLog(getTurnStartMessage(newTurnPlayerName, currentTurn.value), turnColor)
   }
   
   // Reset to rolling phase for the next player
@@ -992,6 +1044,20 @@ const onCastSpells = async (spells) => {
   sendGameMessage('dice_used_update', {
     player: playerKey,
     playerResources: playerResources.value[playerKey]
+  })
+
+  // Log spell casting for current player
+  if (window.logbook) {
+    const currentPlayerName = isHostTurn.value ? topPlayerName.value : bottomPlayerName.value
+    const spellLogMessage = getSpellCastMessage(spells, currentPlayerName)
+    window.logbook.createLog(spellLogMessage, 'purple')
+  }
+
+  // Send spell casting log to other player (from their perspective)
+  const opponentPlayerName = isHostTurn.value ? bottomPlayerName.value : topPlayerName.value
+  const opponentSpellLogMessage = getSpellCastMessage(spells, opponentPlayerName)
+  sendGameMessage('spell_cast_log', {
+    spellLogMessage: opponentSpellLogMessage
   })
 
   // Execute each spell using SpellEffects component
@@ -1437,10 +1503,11 @@ onMounted(() => {
     if (window.logbook) {
 
 
-      window.logbook.createLog(`Game started!`, 'green')
+      window.logbook.createLog(`Game started!`, 'gray')
       
       // Log current turn
-      window.logbook.createLog(getTurnStartMessage(currentPlayerName.value, currentTurn.value), 'blue')
+      const turnColor = currentPlayerName.value === 'You' ? 'green' : 'red'
+      window.logbook.createLog(getTurnStartMessage(currentPlayerName.value, currentTurn.value), turnColor)
     }
   }, 100)
 
