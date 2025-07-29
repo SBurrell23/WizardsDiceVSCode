@@ -1208,18 +1208,28 @@ const onUpdatePlayerStats = ({ player, updates }) => {
     // Track changes for floating indicators
     const oldStats = { ...playerStats.value[player] }
     
-    Object.assign(playerStats.value[player], updates)
+    // Apply the updates to the actual player stats - force reactivity with new object
+    playerStats.value[player] = { ...playerStats.value[player], ...updates }
     
     // Show floating indicators for changes
-    if (updates.health !== undefined && updates.health !== oldStats.health) {
-      const change = updates.health - oldStats.health
+    if (updates.health !== undefined && playerStats.value[player].health !== oldStats.health) {
+      const change = playerStats.value[player].health - oldStats.health
       showFloatingIndicator(player, 'health', change)
     }
     
-    if (updates.armor !== undefined && updates.armor !== oldStats.armor) {
-      const change = updates.armor - oldStats.armor
+    if (updates.armor !== undefined && playerStats.value[player].armor !== oldStats.armor) {
+      const change = playerStats.value[player].armor - oldStats.armor
       showFloatingIndicator(player, 'armor', change)
     }
+    
+    // Sync game state with other player immediately for real-time updates
+    sendGameMessage('game_state_sync', {
+      currentTurn: currentTurn.value,
+      isHostTurn: isHostTurn.value,
+      gamePhase: gamePhase.value,
+      playerResources: playerResources.value,
+      playerStats: playerStats.value
+    })
     
     // Check for game over after stat updates
     checkGameOver()
