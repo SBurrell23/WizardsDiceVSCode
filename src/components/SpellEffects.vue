@@ -1824,7 +1824,7 @@ const wildfire = async () => {
   for (let i = 1; i <= 7; i++) {
     const roll = await requestDiceRoll('1d4')
     dealDamage(roll.value, props.opponentPlayer)
-    showMessage(`🔥 Wildfire roll #${i} deals ${roll.value} damage!`, 'damage')
+    showMessage(`🔥 Wildfire roll ${i}/7 deals ${roll.value} damage!`, 'damage')
   }
 }
 
