@@ -3148,6 +3148,11 @@ if (typeof window !== 'undefined') {
     overflow-y: auto;
   }
   
+  /* Hide game-center on mobile to save vertical space */
+  .game-center {
+    display: none;
+  }
+  
   .spellbook-container {
     width: 100vw;
     height: 40vh;

@@ -725,4 +725,38 @@ onUnmounted(() => {
     margin: 0 auto;
   }
 }
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .container {
+    max-width: 95%;
+    padding: 0 1rem;
+  }
+  
+  .menu-section {
+    padding: 1.5rem;
+    margin: 0 auto;
+  }
+  
+  .game-title h1 {
+    font-size: 2.2rem;
+  }
+  
+  .join-input-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .room-buttons {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+  
+  .start-game-button,
+  .leave-room-button {
+    width: 100%;
+    margin-right: 0;
+  }
+}
 </style>

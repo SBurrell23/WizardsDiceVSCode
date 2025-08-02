@@ -523,7 +523,7 @@ onMounted(() => {
 .spells-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 0.75rem;
   overflow-y: scroll;
   padding-right: 0.5rem;
@@ -728,7 +728,7 @@ onMounted(() => {
   scrollbar-gutter: stable;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1200px) {
   .spellbook-header {
     padding: 1rem;
   }
@@ -738,7 +738,7 @@ onMounted(() => {
   }
   
   .spells-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   }
   
   .spellbook-footer {
@@ -752,9 +752,23 @@ onMounted(() => {
   }
 }
 
+/* Hide cost filters and search on mobile */
+@media (max-width: 935px) {
+  .spellbook-header,
+  .cost-filter,
+  .search-input,
+  .filter-divider {
+    display: none;
+  }
+  
+  .spell-filters {
+    justify-content: center;
+  }
+}
+
 @media (max-width: 480px) {
   .spells-grid {
-    grid-template-columns: 1fr;
+     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 }
 </style>
