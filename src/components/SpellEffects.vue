@@ -879,11 +879,11 @@ const secondChance = async () => {
   showMessage(`🔄 Second Chance grants ${finalValue} HP and ${finalValue} armor!`, 'hybrid')
 }
 
-// Deadly Swamp: If your opponent has 9 or more armour, remove all of it
+// Deadly Swamp: If your opponent has 10 or more armour, remove all of it
 const deadlySwamp = async () => {
   const opponentArmor = props.playerStats[props.opponentPlayer].armor || 0
   
-  if (opponentArmor >= 9) {
+  if (opponentArmor >= 10) {
     updateStats(props.opponentPlayer, { armor: 0 })
     showMessage(`🐊 Deadly Swamp removes all ${opponentArmor} armor!`, 'utility')
   } else {
@@ -1176,7 +1176,7 @@ const backFromTheDead = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Balancing Act: If your HP is evenly divisible by your armour gain 5 for both
+// Balancing Act: If your HP is evenly divisible by your armour gain 6 for both
 const balancingAct = async () => {
   const currentHP = props.playerStats[props.currentPlayer].health || 0
   const currentArmor = props.playerStats[props.currentPlayer].armor || 0
@@ -1188,9 +1188,9 @@ const balancingAct = async () => {
   }
   
   if (currentHP % currentArmor === 0) {
-    healHP(5, props.currentPlayer)
-    gainArmor(5, props.currentPlayer)
-    showMessage(`🌍 Balancing Act: HP (${currentHP}) is divisible by armor (${currentArmor})! Gained 5 HP and 5 armor!`, 'hybrid')
+    healHP(6, props.currentPlayer)
+    gainArmor(6, props.currentPlayer)
+    showMessage(`🌍 Balancing Act: HP (${currentHP}) is divisible by armor (${currentArmor})! Gained 6 HP and 6 armor!`, 'hybrid')
   } else {
     showMessage(`🌍 Balancing Act: HP (${currentHP}) is not divisible by armor (${currentArmor}). No effect!`, 'info')
   }
@@ -1293,9 +1293,9 @@ const bayOfLeaves = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Firenado: Set your opponents armour to (1d4)
+// Firenado: Set your opponents armour to (1d6)
 const firenado = async () => {
-  const roll = await requestDiceRoll('1d4')
+  const roll = await requestDiceRoll('1d6')
   const newArmor = roll.value
   
   updateStats(props.opponentPlayer, { armor: newArmor })
@@ -1431,20 +1431,13 @@ const fireFlower = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Nullify: Gain (1d10) + 6 armour, if you gained 12 or more armour lose (1d6) HP
+// Nullify: Gain (1d10) + 6 armour
 const nullify = async () => {
   const armorRoll = await requestDiceRoll('1d10')
   const armorGained = armorRoll.value + 6
   
   gainArmor(armorGained, props.currentPlayer)
-  
-  if (armorGained >= 12) {
-    const hpLossRoll = await requestDiceRoll('1d6')
-    dealDamageToHP(hpLossRoll.value, props.currentPlayer)
-    showMessage(`🛡️ Nullify: ${armorGained} armor gained, ${hpLossRoll.value} HP lost!`, 'hybrid')
-  } else {
-    showMessage(`🛡️ Nullify gains ${armorGained} armor!`, 'defense')
-  }
+  showMessage(`🛡️ Nullify gains ${armorGained} armor!`, 'defense')
 }
 
 // Fertile Soil: Sacrifice as much armor as you choose. Deal that as damage to your opponent and gain half that rounded down as HP

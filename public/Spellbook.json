@@ -205,7 +205,7 @@
     {
       "name": "Deadly Swamp",
       "cost": ["💧", "🌍", "💀"],
-      "effect": "If your opponent has 9 or more armour, remove all of it",
+      "effect": "If your opponent has 10 or more armour, remove all of it",
       "category": "utility"
     },
     {
@@ -264,7 +264,7 @@
     },
     {
       "name": "High Stakes",
-      "cost": ["💨", "💖", "💀"],
+      "cost": ["🔥", "💖", "💀"],
       "effect": "Roll (3d6) heal any 3 or higher rolls, take damage on any 2 or less rolls",
       "category": "utility"
     },
@@ -295,7 +295,7 @@
     {
       "name": "Balancing Act",
       "cost": ["🌍", "💧", "💖"],
-      "effect": "If your HP is evenly divisible by your armour gain 5 for both",
+      "effect": "If your HP is evenly divisible by your armour gain 6 for both",
       "category": "hybrid"
     },
     {
@@ -337,7 +337,7 @@
     {
       "name": "Firenado",
       "cost": ["🔥", "💨", "💧"],
-      "effect": "Set your opponents armour to (1d4)",
+      "effect": "Set your opponents armour to (1d6)",
       "category": "utility"
     },
     {
@@ -381,7 +381,7 @@
     {
       "name": "Nullify",
       "cost": ["🌍", "🌍", "💧", "💖"],
-      "effect": "Gain (1d10) + 6 armour, if you gained 12 or more armour lose (1d6) HP",
+      "effect": "Gain (1d10) + 6 armour",
       "category": "defense"
     },
     {

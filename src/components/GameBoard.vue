@@ -421,8 +421,8 @@ const playerResources = ref({
   guest: []
 })
 const playerStats = ref({
-  host: { health: 25, armor: 0, maxHealth: 25 },
-  guest: { health: 25, armor: 0, maxHealth: 25 }
+  host: { health: 30, armor: 0, maxHealth: 30 },
+  guest: { health: 30, armor: 0, maxHealth: 30 }
 })
 const diceRefs = ref([])
 const spellEffectsRef = ref(null)
@@ -663,8 +663,8 @@ const resetGameState = () => {
   
   // Reset player stats
   playerStats.value = {
-    host: { health: 25, armor: 0, maxHealth: 25 },
-    guest: { health: 25, armor: 0, maxHealth: 25 }
+    host: { health: 30, armor: 0, maxHealth: 30 },
+    guest: { health: 30, armor: 0, maxHealth: 30 }
   }
   
   // Reset game state
