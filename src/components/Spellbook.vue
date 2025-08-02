@@ -770,5 +770,13 @@ onMounted(() => {
   .spells-grid {
      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+  .spell-name{
+    font-size: 0.8rem;
+    margin-right:.10rem;
+  }
+  .spell-cost{
+    font-size: 0.8rem;
+    gap:0px;
+  }
 }
 </style>

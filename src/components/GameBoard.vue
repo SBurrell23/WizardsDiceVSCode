@@ -12,7 +12,7 @@
           <div v-if="currentlyCastingSpell && currentlyCastingSpell.playerName === topPlayerName" 
                class="casting-spell-indicator">
             <span class="casting-icon">✨</span>
-            <span class="casting-text">Casting <span class="spell-name">{{ currentlyCastingSpell.spellName }}</span></span>
+            <span class="casting-text"><span class="casting-pretext">Casting</span> <span class="spell-name">{{ currentlyCastingSpell.spellName }}</span></span>
           </div>
           <div class="player-stats">
             <div class="health-stat">
@@ -223,7 +223,7 @@
         <div v-if="currentlyCastingSpell && currentlyCastingSpell.playerName === bottomPlayerName" 
              class="casting-spell-indicator">
           <span class="casting-icon">✨</span>
-          <span class="casting-text">Casting <span class="spell-name">{{ currentlyCastingSpell.spellName }}</span></span>
+          <span class="casting-text"><span class="casting-pretext">Casting</span> <span class="spell-name">{{ currentlyCastingSpell.spellName }}</span></span>
         </div>
         <div class="player-stats">
           <div class="health-stat">
@@ -2538,7 +2538,6 @@ if (typeof window !== 'undefined') {
     margin-top: 8px;
     position: sticky;
     bottom: 0;
-    background: rgba(45, 27, 105, 0.9);
     padding: 0.5rem;
     border-radius: 8px;
     backdrop-filter: blur(10px);
@@ -2584,7 +2583,6 @@ if (typeof window !== 'undefined') {
     margin-top: 8px;
     position: sticky;
     bottom: 0;
-    background: rgba(45, 27, 105, 0.9);
     padding: 0.5rem;
     border-radius: 8px;
     backdrop-filter: blur(10px);
@@ -2635,8 +2633,8 @@ if (typeof window !== 'undefined') {
 /* Tall and narrow screens - prioritize button visibility */
 @media (min-height: 800px) and (max-width: 500px) {
   .dice-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    display: flex;
+    flex-direction: row;
     gap: 4px;
     max-height: calc(100% - 80px);
     overflow-y: auto;
@@ -2644,8 +2642,8 @@ if (typeof window !== 'undefined') {
   }
   
   .opponent-dice {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 4px;
     max-height: calc(100% - 40px);
     overflow-y: auto;
@@ -2661,7 +2659,6 @@ if (typeof window !== 'undefined') {
   .roll-action {
     position: sticky;
     bottom: 0;
-    background: rgba(45, 27, 105, 0.95);
     border: 1px solid rgba(255,255,255,0.2);
     margin-top: 10px;
     z-index: 100;
@@ -2670,6 +2667,12 @@ if (typeof window !== 'undefined') {
 
 /* Height-based responsive design for short screens */
 @media (max-height: 800px) {
+  .casting-pretext {
+    display: none;
+  }
+  .casting-text{
+    margin-left:0px;
+  }
   .game-board {
     padding: 0.5rem;
   }
@@ -2738,6 +2741,7 @@ if (typeof window !== 'undefined') {
 }
 
 @media (max-height: 700px) {
+  
   .game-board {
     padding: 0.5rem;
   }
@@ -2785,6 +2789,7 @@ if (typeof window !== 'undefined') {
 }
 
 @media (max-height: 700px) {
+  
   .game-board {
     padding: 0.25rem;
   }
@@ -2902,6 +2907,7 @@ if (typeof window !== 'undefined') {
 }
 
 @media (max-height: 500px) {
+  
   .game-board {
     padding: 0.1rem;
   }
@@ -3011,6 +3017,7 @@ if (typeof window !== 'undefined') {
 }
 
 @media (max-height: 600px) {
+  
   .game-board {
     padding: 0.25rem;
   }
@@ -3096,6 +3103,7 @@ if (typeof window !== 'undefined') {
 
 /* Combination: Short height AND narrow width */
 @media (max-height: 600px) and (max-width: 768px) {
+  
   .game-container {
     flex-direction: column;
   }
@@ -3133,6 +3141,7 @@ if (typeof window !== 'undefined') {
 }
 
 @media (max-width: 768px) {
+  
   .game-container {
     flex-direction: column;
     height: 100vh;
@@ -3144,12 +3153,12 @@ if (typeof window !== 'undefined') {
     width: 100vw;
     height: 60vh;
     flex: 0 0 60vh;
-    padding: 0.5rem;
+    padding: 0.15rem;
     overflow-y: auto;
   }
   
   /* Hide game-center on mobile to save vertical space */
-  .game-center {
+  .turn-info {
     display: none;
   }
   
@@ -3161,113 +3170,118 @@ if (typeof window !== 'undefined') {
   }
 
   .player-area {
-    min-height: 120px;
-    padding: 0.5rem;
-    margin: 0.25rem 0;
+    min-height: 80px;
+    padding: 0.25rem;
+    margin: 0.1rem 0;
     flex: 0 0 auto;
   }
 
   .player-header {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 0.5rem;
-    margin: 0.25rem;
+    margin: 0.1rem;
     align-items: center;
     justify-content: space-between;
   }
   
   .player-name-box {
-    padding: 0.2rem 0.5rem;
+    padding: 0.15rem 0.4rem;
     flex-shrink: 0;
   }
   
   .player-name {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
   }
   
   .casting-spell-indicator {
-    padding: 0.2rem 0.5rem;
+    padding: 0.15rem 0.4rem;
     margin: 0;
     flex: 1;
-    min-width: 200px;
+    min-width: 120px;
   }
   
   .casting-text {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
   }
   
   .spell-name {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
   }
   
   .player-stats {
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
   }
   
   .health-stat, .armor-stat {
-    padding: 0.2rem 0.5rem;
-    gap: 0.4rem;
+    padding: 0.15rem 0.4rem;
+    gap: 0.25rem;
   }
   
   .stat-icon {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
   
   .stat-value {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
   
   .dice-area {
     flex-direction: row;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    gap: 0.4rem;
+    padding: 0.25rem;
     justify-content: space-between;
   }
   
   .element-dice-box {
-    flex: 2;
-    min-height: 80px;
-    padding: 0.5rem;
+    flex: 2.5;
+    min-height: 60px;
+    padding: 0.3rem;
   }
   
   .number-dice-box {
     flex: 1;
     max-width: none;
-    min-width: 80px;
-    padding: 0.5rem;
+    min-width: 60px;
+    padding: 0.3rem;
   }
   
   .dice-container {
-    min-height: 60px;
-    max-height: 80px;
-    padding: 0.25rem;
-  }
-  
-  .dice-container.small {
-    min-height: 60px;
-    max-height: 60px;
+    min-height: 45px;
+    max-height: 55px;
+    padding: 0.2rem;
   }
   
   .rolled-dice {
-    width: 35px;
-    height: 35px;
-    font-size: 1.5rem;
+    width: 30px;
+    height: 30px;
+    font-size: 1.3rem;
   }
   
   .rolling-dice {
-    width: 35px;
-    height: 35px;
-    font-size: 1.5rem;
+    width: 30px;
+    height: 30px;
+    font-size: 1.3rem;
   }
   
   .dice-placeholder {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
   }
   
   .dice-placeholder.small {
-    font-size: 1.2rem;
+    font-size: 1rem;
+  }
+  
+  .roll-button, .stop-reroll-button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .roll-action, .reroll-action {
+    margin-top: 0.3rem;
   }
   
   .game-center {
@@ -3316,14 +3330,14 @@ if (typeof window !== 'undefined') {
 /* Additional breakpoint for very small screens */
 @media (max-width: 480px) {
   .game-board {
-    height: 65vh;
-    flex: 0 0 65vh;
+    height: auto;
+    flex: 0 0 auto;
     padding: 0.25rem;
   }
   
   .spellbook-container {
-    height: 35vh;
-    flex: 0 0 35vh;
+    height: auto;
+    flex: 1 1 auto;
   }
   
   .player-area {
@@ -3332,8 +3346,7 @@ if (typeof window !== 'undefined') {
   }
   
   .player-header {
-    flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.10rem;
     text-align: center;
   }
   
@@ -3343,7 +3356,6 @@ if (typeof window !== 'undefined') {
   }
   
   .dice-area {
-    flex-direction: column;
     gap: 0.25rem;
     padding: 0.25rem;
   }
@@ -3351,16 +3363,17 @@ if (typeof window !== 'undefined') {
   .element-dice-box, .number-dice-box {
     min-height: 60px;
     padding: 0.25rem;
+    min-width:70px;
   }
   
   .dice-container {
-    min-height: 50px;
-    max-height: 60px;
+    min-height: 90px;
+    height: auto;
   }
   
   .rolled-dice {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     font-size: 1.2rem;
   }
   
@@ -3380,6 +3393,19 @@ if (typeof window !== 'undefined') {
     margin-left: 0;
     margin-top: 0.25rem;
     font-size: 0.7rem;
+  }
+  .number-dice-box {
+    min-height: 70px;
+  }
+  .casting-spell-indicator{
+    padding: 0.1rem 0.3rem;
+    font-size: 0.1rem!important;
+  }
+  .casting-pretext {
+    display: none;
+  }
+  .casting-text{
+    margin-left:0px;
   }
 }
 </style>
