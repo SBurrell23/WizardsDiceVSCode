@@ -377,12 +377,12 @@ const blaze = async () => {
   showMessage(`🔥 Blaze deals ${damageDealt} damage!`, 'damage')
 }
 
-//Re-roll any 5 dice
+//Re-roll any 7 dice
 const strongGusts = async () => {
   const rerollResult = await requestElementDiceReroll(
     dice => !dice.used,  // Filter: only unspent dice
-    6,                   // Max 6 dice total
-    'Select up to 6 unspent dice to reroll'
+    7,                   // Max 7 dice total
+    'Select up to 7 unspent dice to reroll'
   )
 }
 
@@ -564,25 +564,25 @@ const aquaMortis = async () => {
   showMessage(`💧 Aqua Mortis deals ${attackRoll.value + 3} damage!`, 'damage')
 }
 
-// Fireballs: Deal 2 damage for every unspent non-fire dice in your hand, max of 8 damage
+// Fireballs: If your opponent has 13 or more HP than you, deal (2d6) damage (comeback spell!)
 const fireballs = async () => {
-  const currentPlayerResources = props.playerResources[props.currentPlayer]
-  
-  // Find all unspent non-fire dice (fire emoji is 🔥)
-  const unspentNonFireDice = currentPlayerResources.filter(dice => !dice.used && dice.emoji !== '🔥')
-  
-  // Calculate damage: 2 damage per unspent non-fire die, max 8
-  const totalDamage = Math.min(unspentNonFireDice.length * 2, 8)
-  
-  if (totalDamage > 0) {
+  const currentPlayerHP = props.playerStats[props.currentPlayer].health || 0
+  const opponentHP = props.playerStats[props.opponentPlayer].health || 0
+  const hpDifference = opponentHP - currentPlayerHP
+  const moreThanThisMuchHP = 13
+
+  if (hpDifference >= moreThanThisMuchHP) {
+    const roll1 = await requestDiceRoll('1d6')
+    const roll2 = await requestDiceRoll('1d6')
+    const totalDamage = roll1.value + roll2.value
+    
     dealDamage(totalDamage, props.opponentPlayer)
     showMessage(`🔥 Fireballs deals ${totalDamage} damage!`, 'damage')
   } else {
-    showMessage(`🔥 Fireballs missed!`, 'warning')
+    showMessage(`🔥 Fireballs fizzled! (opponent has ${hpDifference + moreThanThisMuchHP} HP more than you)`, 'warning')
+    // Add a brief delay so the casting indicator is visible
+    await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
   }
-  
-  // Add a brief delay so the casting indicator is visible
-  await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
 // Wavepool: Remove (2d4) + 1 only from your opponents armour

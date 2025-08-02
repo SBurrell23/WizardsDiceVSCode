@@ -728,7 +728,7 @@ onMounted(() => {
   scrollbar-gutter: stable;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .spellbook-header {
     padding: 1rem;
   }
@@ -738,7 +738,7 @@ onMounted(() => {
   }
   
   .spells-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
   
   .spellbook-footer {
@@ -749,6 +749,12 @@ onMounted(() => {
   .cast-actions {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .spells-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

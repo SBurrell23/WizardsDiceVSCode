@@ -59,7 +59,7 @@
     {
       "name": "Strong Gusts",
       "cost": ["💨", "💨"],
-      "effect": "Re-roll any 6 unspent dice",
+      "effect": "Re-roll any 7 unspent dice",
       "category": "utility"
     },
     {
@@ -77,7 +77,7 @@
     {
       "name": "Fireballs",
       "cost": ["🔥", "🔥"],
-      "effect": "Deal 2 damage for every unspent non-fire dice in your hand, max of 8 damage",
+      "effect": "If your opponent has 13 or more HP than you, deal (2d6) damage",
       "category": "damage"
     },
     {
