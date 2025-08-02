@@ -22,16 +22,29 @@
     <!-- Spells Tab Content -->
     <div v-show="activeTab === 'spells'" class="spellbook-content">
       <div class="spell-filters">
-        <!-- Castability filters -->
+        <!-- Castability filters container -->
+        <div class="castability-filters">
+          <button 
+            v-for="type in castabilityTypes" 
+            :key="type"
+            @click="toggleCastability(type)"
+            :class="{ active: selectedCastability === type }"
+            class="filter-button"
+          >
+            <span v-if="type === 'all'">All</span>
+            <span v-else-if="type === 'castable'">Castable</span>
+          </button>
+        </div>
+        
+        <!-- Mobile End Turn Button (only visible on 480px and below) -->
         <button 
-          v-for="type in castabilityTypes" 
-          :key="type"
-          @click="toggleCastability(type)"
-          :class="{ active: selectedCastability === type }"
-          class="filter-button"
+          v-if="showEndTurnButton"
+          @click="endTurn" 
+          :disabled="!canEndTurn"
+          class="end-turn-button mobile-end-turn"
+          :class="{ 'active': canEndTurn }"
         >
-          <span v-if="type === 'all'">All</span>
-          <span v-else-if="type === 'castable'">Castable</span>
+          End Turn
         </button>
         
         <!-- Divider -->
@@ -766,24 +779,77 @@ onMounted(() => {
   }
 }
 
+/* Mobile end turn button styling */
+.mobile-end-turn {
+  display: none;
+}
+
+.castability-filters {
+  display: flex;
+  gap: 0.5rem;
+}
+
 @media (max-width: 480px) {
   .spells-grid {
      grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+     gap:.35rem
+  }
+  .spell-card{
+    padding:.15rem .65rem;
+  }
+  .spell-header{
+    margin-bottom:0px;
+  }
+  .spell-divider{
+    margin:.1rem;
   }
   .spell-name{
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     margin-right:.10rem;
   }
+  .spell-effect{
+    font-size: 0.65rem;
+  }
   .spell-cost{
-    font-size: 0.8rem;
     gap:0px;
+  }
+  .spell-cost , .dice-icon {
+    font-size: 0.7rem;
   }
   .spell-filters {
     margin-bottom: 10px;
+    font-size:14px;
+    justify-content: space-between;
   }
   .spellbook-content{
     margin-top: 10px;
     padding-top:0px;
+    padding-bottom:0px;
+  }
+  
+  /* Show mobile end turn button */
+  .mobile-end-turn {
+    display: inline-flex;
+    padding: 0.46rem 0.9rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    font-size:14px;
+    min-width: 80px;
+  }
+  
+  .mobile-end-turn.active {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+  }
+  
+  .mobile-end-turn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Hide the regular footer end turn button on mobile */
+  .spellbook-footer .end-turn-button {
+    display: none;
   }
 }
 </style>
