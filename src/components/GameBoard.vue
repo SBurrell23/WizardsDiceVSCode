@@ -3367,8 +3367,10 @@ if (typeof window !== 'undefined') {
   }
   
   .dice-container {
-    min-height: 90px;
+    min-height: 85px;
     height: auto;
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none;  /* For Internet Explorer and Edge */
   }
   
   .rolled-dice {

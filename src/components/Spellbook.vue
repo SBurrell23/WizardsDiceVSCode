@@ -768,7 +768,7 @@ onMounted(() => {
 
 @media (max-width: 480px) {
   .spells-grid {
-     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+     grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
   }
   .spell-name{
     font-size: 0.8rem;
@@ -777,6 +777,13 @@ onMounted(() => {
   .spell-cost{
     font-size: 0.8rem;
     gap:0px;
+  }
+  .spell-filters {
+    margin-bottom: 10px;
+  }
+  .spellbook-content{
+    margin-top: 10px;
+    padding-top:0px;
   }
 }
 </style>

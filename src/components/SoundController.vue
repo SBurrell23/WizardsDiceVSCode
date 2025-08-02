@@ -725,7 +725,7 @@ defineExpose(soundController)
 @media (max-height: 600px) {
   .sound-controller {
     top: 10px;
-    right: 10px;
+    left: 10px;
   }
   
   .volume-icon {
@@ -741,12 +741,18 @@ defineExpose(soundController)
   }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .sound-controller {
-    top: 15px;
-    right: 15px;
+    top: 5px;
+    left: 5px;
   }
-  
+
+  .volume-icon {
+    width: 25px;
+    height: 25px;
+    font-size: 1rem;
+  }
+
   .volume-panel {
     min-width: 200px;
     padding: 15px;
