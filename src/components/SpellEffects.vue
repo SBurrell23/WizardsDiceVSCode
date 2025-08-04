@@ -504,16 +504,16 @@ const hotheaded = async () => {
   }
 }
 
-// Risky Business: Take (1d4) damage and get triple that many re-rolls
+// Risky Business: Take (1d4) damage and get quadruple that many re-rolls
 const riskyBusiness = async () => {
   const damageRoll = await requestDiceRoll('1d4')
   const actualDamage = damageRoll.value
   
   // Apply damage to self
   dealDamage(actualDamage, props.currentPlayer)
-  
-  const rerollsToGain = damageRoll.value * 3
-  
+
+  const rerollsToGain = damageRoll.value * 4
+
   if (rerollsToGain > 0) {
     // Allow rerolling any unspent dice, up to the number of rerolls gained
     await requestElementDiceReroll(
@@ -679,12 +679,12 @@ const shrunkenHeads = async () => {
   )
 }
 
-// The Lovers: If your HP is 18 or higher heal to full
+// The Lovers: If your HP is 23 or higher heal to full
 const theLovers = async () => {
   const currentHP = props.playerStats[props.currentPlayer].health || 0
   const maxHP = props.playerStats[props.currentPlayer].maxHealth || 25
-  
-  if (currentHP >= 18) {
+
+  if (currentHP >= 23) {
     const healingAmount = maxHP - currentHP
     if (healingAmount > 0) {
       updateStats(props.currentPlayer, { health: maxHP })
@@ -921,8 +921,8 @@ const evenSteven = async () => {
     // Trigger a re-roll for any unspent dice
     await requestElementDiceReroll(
       dice => !dice.used,  // Filter: only unspent dice
-      1,                   // Max 1 reroll
-      'Even Steven grants a re-roll! Select an unspent die'
+      4,                   // Max 4 rerolls
+      'Even Steven grants re-rolls! Select unspent die to reroll'
     )
   }
 }
@@ -1794,7 +1794,7 @@ const eternalBond = async () => {
   await new Promise(resolve => setTimeout(resolve, DEFAULT_SPELL_CAST_DELAY))
 }
 
-// Tsunami: Set your opponents armour to 0 and deal (1d12) + 5 damage
+// Tsunami: Set your opponents armour to 0 and deal (1d12) + 3 damage
 const tsunami = async () => {
   const opponentArmor = props.playerStats[props.opponentPlayer].armor || 0
   
@@ -1803,9 +1803,9 @@ const tsunami = async () => {
   
   showMessage(`🌊 Tsunami removes all ${opponentArmor} armor!`, 'utility')
   
-  // Deal (1d12) + 5 damage
+  // Deal (1d12) + 3 damage
   const damageRoll = await requestDiceRoll('1d12')
-  const totalDamage = damageRoll.value + 5
+  const totalDamage = damageRoll.value + 3
   
   dealDamage(totalDamage, props.opponentPlayer)
   showMessage(`🌊 Tsunami deals ${totalDamage} damage!`, 'damage')

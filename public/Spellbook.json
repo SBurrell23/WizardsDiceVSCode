@@ -107,7 +107,7 @@
     {
       "name": "The Lovers",
       "cost": ["💖", "💖"],
-      "effect": "If your HP is 18 or higher heal to full",
+      "effect": "If your HP is 23 or higher heal to full",
       "category": "healing"
     },
     {
@@ -131,7 +131,7 @@
     {
       "name": "Risky Business",
       "cost": ["💀", "💨"],
-      "effect": "Take (1d4) damage and get triple that many re-rolls",
+      "effect": "Take (1d4) damage and get quadruple that many re-rolls",
       "category": "utility"
     },
     {
@@ -217,7 +217,7 @@
     {
       "name": "Even Steven",
       "cost": ["💨", "💨", "🔥"],
-      "effect": "Roll (1d6) + 4 as damage, if the roll was an even number gain a re-roll",
+      "effect": "Roll (1d6) + 4 as damage, if the roll was an even number gain a 4 re-rolls",
       "category": "damage"
     },
     {
@@ -485,7 +485,7 @@
     {
       "name": "Tsunami",
       "cost": ["💧", "💧", "💨", "💀", "🌍"],
-      "effect": "Set your opponents armour to 0 and deal (1d12) + 5 damage",
+      "effect": "Set your opponents armour to 0 and deal (1d12) + 3 damage",
       "category": "damage"
     },
     {
