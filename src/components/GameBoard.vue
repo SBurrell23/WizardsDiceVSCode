@@ -3353,6 +3353,8 @@ if (typeof window !== 'undefined') {
   .casting-spell-indicator {
     min-width: auto;
     width: 100%;
+    margin-left:5px;
+    margin-right:5px;
   }
   
   .dice-area {
@@ -3393,8 +3395,7 @@ if (typeof window !== 'undefined') {
   
   .status-message {
     margin-left: 0;
-    margin-top: 0.25rem;
-    font-size: 0.7rem;
+    font-size: 0.69rem;
   }
   .number-dice-box {
     min-height: 70px;
