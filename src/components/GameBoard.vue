@@ -1741,7 +1741,6 @@ if (typeof window !== 'undefined') {
   flex: 0 0 50%;
   width: 50vw;
   height: 100vh;
-  background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -1780,7 +1779,7 @@ if (typeof window !== 'undefined') {
     0 0 30px rgba(251, 191, 36, 0.5),
     0 8px 32px rgba(0,0,0,0.1),
     inset 0 0 25px rgba(251, 191, 36, 0.20);
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 234, 0, 0.061);
 }
 
 .top-player {
@@ -2245,7 +2244,7 @@ if (typeof window !== 'undefined') {
 }
 
 .roll-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -2260,7 +2259,7 @@ if (typeof window !== 'undefined') {
 
 .roll-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102,126,234,0.3);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
 }
 
 .roll-button:disabled {
@@ -2276,7 +2275,7 @@ if (typeof window !== 'undefined') {
 }
 
 .stop-reroll-button {
-  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -2291,7 +2290,7 @@ if (typeof window !== 'undefined') {
 
 .stop-reroll-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(255,68,68,0.4);
+  box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
 }
 
 .status-message.success {
