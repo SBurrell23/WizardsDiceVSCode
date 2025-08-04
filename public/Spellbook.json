@@ -217,7 +217,7 @@
     {
       "name": "Even Steven",
       "cost": ["💨", "💨", "🔥"],
-      "effect": "Roll (1d6) + 4 as damage, if the roll was an even number gain a 4 re-rolls",
+      "effect": "Roll (1d6) + 4 as damage, if the roll was an even number gain 4 re-rolls",
       "category": "damage"
     },
     {
